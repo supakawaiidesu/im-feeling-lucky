@@ -1,0 +1,9 @@
+┣ 📂lib
+┃ ┗ 📜utils.ts
+┣ 📂pages
+┃ ┣ 📜_app.tsx
+┃ ┗ 📜index.tsx
+┣ 📂styles
+┃ ┣ 📜globals.css
+┃ ┗ 📜Home.module.css
+┗ 📜wagmi.ts
