@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { usePositions, Position } from "../../../hooks/use-positions"
 import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
+import { usePositionActions } from "../../../hooks/use-position-actions"
 
 interface PositionsTableProps {
   address: string | undefined;
@@ -10,6 +11,7 @@ interface PositionsTableProps {
 
 export function PositionsTable({ address }: PositionsTableProps) {
   const { positions, loading, error } = usePositions(address);
+  const { closePosition, closingPositions } = usePositionActions();
   const [hoveredPosition, setHoveredPosition] = useState<string | null>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const cellRefs = useRef<{ [key: string]: HTMLTableCellElement | null }>({});
@@ -38,6 +40,12 @@ export function PositionsTable({ address }: PositionsTableProps) {
     cellRefs.current[positionId] = el;
   };
 
+  const handleClosePosition = (position: Position) => {
+    if (address) {
+      closePosition(Number(position.positionId), address, position.isLong, Number(position.markPrice));
+    }
+  };
+
   return (
     <div className="mx-4 mb-4 border rounded-lg">
       <div className="flex items-center p-2 border-b">
@@ -61,26 +69,25 @@ export function PositionsTable({ address }: PositionsTableProps) {
             <TableHead>Mark Price</TableHead>
             <TableHead>Liq. Price</TableHead>
             <TableHead>PNL</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center">Loading positions...</TableCell>
+              <TableCell colSpan={8} className="text-center">Loading positions...</TableCell>
             </TableRow>
           ) : error ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-red-500">{error}</TableCell>
+              <TableCell colSpan={8} className="text-center text-red-500">{error}</TableCell>
             </TableRow>
           ) : positions.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center">No open positions</TableCell>
+              <TableCell colSpan={8} className="text-center">No open positions</TableCell>
             </TableRow>
           ) : (
             positions.map((position) => (
-              <TableRow 
-                key={position.positionId}
-              >
+              <TableRow key={position.positionId}>
                 <TableCell>{position.market}</TableCell>
                 <TableCell className={position.isLong ? "text-green-500" : "text-red-500"}>
                   {position.isLong ? "+" : "-"}{position.size}
@@ -97,13 +104,22 @@ export function PositionsTable({ address }: PositionsTableProps) {
                 >
                   {position.pnl}
                 </TableCell>
+                <TableCell>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleClosePosition(position)}
+                    disabled={closingPositions[Number(position.positionId)]}
+                  >
+                    {closingPositions[Number(position.positionId)] ? 'Closing...' : 'Close'}
+                  </Button>
+                </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
 
-      {/* Tooltip Portal */}
       {portalContainer && hoveredPosition && createPortal(
         (() => {
           const cell = cellRefs.current[hoveredPosition];

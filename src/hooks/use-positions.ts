@@ -7,7 +7,7 @@ export interface Position {
   entryPrice: string;
   markPrice: string;
   pnl: string;
-  positionId: string;
+  positionId: string;  // Keep as string to match the data
   isLong: boolean;
   margin: string;
   liquidationPrice: string;
