@@ -1,10 +1,10 @@
 import { useState } from "react"
-import { Header } from "../components/Header"
-import { PairSelector } from "../components/PairSelector"
-import { OrderCard } from "../components/OrderCard"
-import { ChartControls } from "../components/ChartControls"
-import { Chart } from "../components/Chart"
-import { PositionsTable } from "../components/PositionsTable"
+import { Header } from "../components/shared/Header"
+import { PairSelector } from "../components/features/trading/PairSelector"
+import { OrderCard } from "../components/features/trading/OrderCard"
+import { ChartControls } from "../components/features/trading/ChartControls"
+import { Chart } from "../components/features/trading/Chart"
+import { PositionsTable } from "../components/features/trading/PositionsTable"
 
 const mockPositions = [
   { market: 'ETH-PERP', size: '0.5', entryPrice: '2930.50', markPrice: '2938.90', pnl: '+$4.20' },
