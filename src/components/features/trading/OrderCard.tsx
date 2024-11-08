@@ -1,9 +1,9 @@
 import { useAccount } from 'wagmi'
-import { Button } from "./ui/button"
-import { Card, CardContent } from "./ui/card"
-import { Input } from "./ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
+import { Button } from "../../ui/button"
+import { Card, CardContent } from "../../ui/card"
+import { Input } from "../../ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { useState } from "react"
 
 interface OrderCardProps {

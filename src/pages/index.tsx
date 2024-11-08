@@ -2,9 +2,9 @@ import { useState } from "react"
 import { Header } from "../components/shared/Header"
 import { PairSelector } from "../components/features/trading/PairSelector"
 import { OrderCard } from "../components/features/trading/OrderCard"
-import { ChartControls } from "../components/features/trading/ChartControls"
 import { Chart } from "../components/features/trading/Chart"
 import { PositionsTable } from "../components/features/trading/PositionsTable"
+import { PairHeader } from "../components/features/trading/PairHeader"
 
 const mockPositions = [
   { market: 'ETH-PERP', size: '0.5', entryPrice: '2930.50', markPrice: '2938.90', pnl: '+$4.20' },
@@ -35,10 +35,7 @@ export default function TradingInterface() {
 
         {/* Chart and Positions */}
         <div className="flex flex-col flex-1">
-          <ChartControls 
-            timeframe={timeframe} 
-            onTimeframeChange={setTimeframe} 
-          />
+          <PairHeader />
           <Chart />
           <PositionsTable positions={mockPositions} />
         </div>
