@@ -70,7 +70,7 @@ export const PairHeader: React.FC<PairHeaderProps> = ({ selectedPair = "ETH/USD"
         <div>
           <div className="text-muted-foreground">Current Funding</div>
           <div className={marketData.fundingRate >= 0 ? "text-green-500" : "text-red-500"}>
-            {(marketData.fundingRate * 100).toFixed(4)}%
+            {marketData.fundingRate.toFixed(4)}%
           </div>
         </div>
         <div>
