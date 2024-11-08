@@ -1,6 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { useMarketData } from "@/hooks/use-market-data"
-import { cn } from "@/lib/utils"
+import { useMarketData } from "../../../hooks/use-market-data"
+import { usePrices } from "../../../lib/websocket-price-context"
+import { cn } from "../../../lib/utils"
 
 interface PairSelectorProps {
   selectedPair: string
@@ -9,6 +10,7 @@ interface PairSelectorProps {
 
 export function PairSelector({ selectedPair, onPairChange }: PairSelectorProps) {
   const { allMarkets, loading } = useMarketData()
+  const { prices } = usePrices()
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -17,11 +19,18 @@ export function PairSelector({ selectedPair, onPairChange }: PairSelectorProps) 
     }).format(num)
   }
 
-  const formatPrice = (price: string) => {
+  const getWebsocketPrice = (pair: string) => {
+    const basePair = pair.split('/')[0].toLowerCase()
+    return prices[basePair]?.price
+  }
+
+  const formatPrice = (pair: string) => {
+    const price = getWebsocketPrice(pair)
+    if (!price) return '...'
     return new Intl.NumberFormat('en-US', {
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2
-    }).format(parseFloat(price))
+      maximumFractionDigits: 4,
+      minimumFractionDigits: 4
+    }).format(price)
   }
 
   const formatFundingRate = (rate: number) => {
@@ -56,7 +65,7 @@ export function PairSelector({ selectedPair, onPairChange }: PairSelectorProps) 
               <div className="flex items-center text-sm">
                 <div className="flex items-center min-w-[150px]">
                   <span>{market.pair}</span>
-                  <span className="ml-2">{formatPrice(market.price)}</span>
+                  <span className="ml-2">{formatPrice(market.pair)}</span>
                 </div>
                 <div className="text-muted-foreground">
                   Long: ${formatNumber(market.availableLiquidity.long)} Short: ${formatNumber(market.availableLiquidity.short)} Funding: <span className={cn(

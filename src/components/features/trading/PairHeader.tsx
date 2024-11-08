@@ -1,15 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useMarketData } from '../../../hooks/use-market-data';
+import { usePrices } from '../../../lib/websocket-price-context';
 
 interface PairHeaderProps {
   selectedPair?: string;
 }
 
+type FundingTimeframe = '1h' | '1d' | '1y';
+
 export const PairHeader: React.FC<PairHeaderProps> = ({ selectedPair = "ETH/USD" }) => {
+  const [fundingTimeframe, setFundingTimeframe] = useState<FundingTimeframe>('1h');
   const { marketData, loading, error } = useMarketData({ 
     selectedPair,
-    pollInterval: 10000 // 10 second polling
+    pollInterval: 10000
   });
+
+  const { prices } = usePrices();
+  const basePair = selectedPair.split('/')[0].toLowerCase();
+  const currentPrice = prices[basePair]?.price;
 
   if (error) {
     return (
@@ -31,52 +39,83 @@ export const PairHeader: React.FC<PairHeaderProps> = ({ selectedPair = "ETH/USD"
     );
   }
 
-  const totalOpenInterest = marketData.longOpenInterest + marketData.shortOpenInterest;
-  const annualizedFunding = marketData.fundingRate * 365 * 100; // Convert to annual percentage
+  const getFundingRate = () => {
+    const rate = marketData.fundingRate;
+    switch (fundingTimeframe) {
+      case '1d':
+        return rate * 24;
+      case '1y':
+        return rate * 24 * 365;
+      default:
+        return rate;
+    }
+  };
+
+  const nextTimeframe = (): FundingTimeframe => {
+    switch (fundingTimeframe) {
+      case '1h':
+        return '1d';
+      case '1d':
+        return '1y';
+      case '1y':
+        return '1h';
+    }
+  };
 
   return (
     <div className="flex items-center justify-between p-4 text-sm border-b">
       <div className="flex items-center space-x-8">
-        <div>
-          <div className="text-lg font-bold">{parseFloat(marketData.price).toLocaleString()}</div>
-          <div className="text-muted-foreground">{marketData.pair}</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">Utilization</div>
-          <div>{marketData.utilization.toFixed(2)}%</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">Total Open Interest</div>
-          <div>${totalOpenInterest.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">Long Borrow Rate</div>
-          <div>{(marketData.borrowRateForLong * 100).toFixed(4)}%</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">Short Borrow Rate</div>
-          <div>{(marketData.borrowRateForShort * 100).toFixed(4)}%</div>
-        </div>
-      </div>
-      <div className="flex items-center space-x-8">
-        <div>
-          <div className="text-muted-foreground">Long OI</div>
-          <div>${marketData.longOpenInterest.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">Short OI</div>
-          <div>${marketData.shortOpenInterest.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">Current Funding</div>
-          <div className={marketData.fundingRate >= 0 ? "text-green-500" : "text-red-500"}>
-            {marketData.fundingRate.toFixed(4)}%
+        {/* Price Group */}
+        <div className="flex items-center pr-8 space-x-8 border-r">
+          <div>
+            <div className="text-lg font-bold">
+              {currentPrice ? currentPrice.toLocaleString() : 'Loading...'}
+            </div>
+            <div className="text-muted-foreground">{selectedPair}</div>
           </div>
         </div>
-        <div>
-          <div className="text-muted-foreground">Annualized Funding</div>
-          <div className={annualizedFunding >= 0 ? "text-green-500" : "text-red-500"}>
-            {annualizedFunding.toFixed(2)}%
+
+        {/* Open Interest Group */}
+        <div className="flex items-center px-8 space-x-8 border-r">
+          <div>
+            <div className="text-muted-foreground">Long OI</div>
+            <div>
+              ${marketData.longOpenInterest.toLocaleString()} / ${marketData.maxLongOpenInterest.toLocaleString()}
+            </div>
+          </div>
+          <div>
+            <div className="text-muted-foreground">Short OI</div>
+            <div>
+              ${marketData.shortOpenInterest.toLocaleString()} / ${marketData.maxShortOpenInterest.toLocaleString()}
+            </div>
+          </div>
+        </div>
+
+        {/* Long/Short Ratio Group */}
+        <div className="flex items-center px-8 space-x-8 border-r">
+          <div>
+            <div className="text-muted-foreground">Long/Short Ratio</div>
+            <div>
+              {marketData.longShortRatio.longPercentage.toFixed(1)}% / {marketData.longShortRatio.shortPercentage.toFixed(1)}%
+            </div>
+          </div>
+        </div>
+
+        {/* Funding Rate Group */}
+        <div className="flex items-center pl-8 space-x-8">
+          <div>
+            <div className="text-muted-foreground">
+              Funding Rate
+              <button 
+                onClick={() => setFundingTimeframe(nextTimeframe())}
+                className="ml-2 px-2 py-0.5 text-xs rounded bg-secondary hover:bg-secondary/80"
+              >
+                {fundingTimeframe}
+              </button>
+            </div>
+            <div className={getFundingRate() >= 0 ? "text-green-500" : "text-red-500"}>
+              {getFundingRate().toFixed(4)}%
+            </div>
           </div>
         </div>
       </div>

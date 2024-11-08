@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useAccount } from "wagmi"
 import { Header } from "../components/shared/Header"
 import { PairSelector } from "../components/features/trading/PairSelector"
 import { OrderCard } from "../components/features/trading/OrderCard"
@@ -6,15 +7,11 @@ import { Chart } from "../components/features/trading/Chart"
 import { PositionsTable } from "../components/features/trading/PositionsTable"
 import { PairHeader } from "../components/features/trading/PairHeader"
 
-const mockPositions = [
-  { market: 'ETH/USD', size: '0.5', entryPrice: '2930.50', markPrice: '2938.90', pnl: '+$4.20' },
-  { market: 'BTC/USD', size: '0.1', entryPrice: '35000.00', markPrice: '35100.00', pnl: '+$10.00' },
-]
-
 export default function TradingInterface() {
   const [selectedPair, setSelectedPair] = useState("ETH/USD")
   const [leverage, setLeverage] = useState("20")
   const [timeframe, setTimeframe] = useState("1h")
+  const { address } = useAccount()
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-background text-foreground">
@@ -37,7 +34,7 @@ export default function TradingInterface() {
         <div className="flex flex-col flex-1">
           <PairHeader selectedPair={selectedPair} />
           <Chart />
-          <PositionsTable positions={mockPositions} />
+          <PositionsTable address={address} />
         </div>
       </div>
     </div>
