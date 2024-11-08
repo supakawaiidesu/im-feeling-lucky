@@ -7,12 +7,12 @@ import { PositionsTable } from "../components/features/trading/PositionsTable"
 import { PairHeader } from "../components/features/trading/PairHeader"
 
 const mockPositions = [
-  { market: 'ETH-PERP', size: '0.5', entryPrice: '2930.50', markPrice: '2938.90', pnl: '+$4.20' },
-  { market: 'BTC-PERP', size: '0.1', entryPrice: '35000.00', markPrice: '35100.00', pnl: '+$10.00' },
+  { market: 'ETH/USD', size: '0.5', entryPrice: '2930.50', markPrice: '2938.90', pnl: '+$4.20' },
+  { market: 'BTC/USD', size: '0.1', entryPrice: '35000.00', markPrice: '35100.00', pnl: '+$10.00' },
 ]
 
 export default function TradingInterface() {
-  const [selectedPair, setSelectedPair] = useState("ETH-PERP")
+  const [selectedPair, setSelectedPair] = useState("ETH/USD")
   const [leverage, setLeverage] = useState("20")
   const [timeframe, setTimeframe] = useState("1h")
 
@@ -35,7 +35,7 @@ export default function TradingInterface() {
 
         {/* Chart and Positions */}
         <div className="flex flex-col flex-1">
-          <PairHeader />
+          <PairHeader selectedPair={selectedPair} />
           <Chart />
           <PositionsTable positions={mockPositions} />
         </div>

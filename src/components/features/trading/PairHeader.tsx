@@ -1,50 +1,83 @@
 import React from 'react';
+import { useMarketData } from '../../../hooks/use-market-data';
 
-export const PairHeader = () => {
+interface PairHeaderProps {
+  selectedPair?: string;
+}
+
+export const PairHeader: React.FC<PairHeaderProps> = ({ selectedPair = "ETH/USD" }) => {
+  const { marketData, loading, error } = useMarketData({ 
+    selectedPair,
+    pollInterval: 10000 // 10 second polling
+  });
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-4 text-red-500">
+        Error loading market data: {error.message}
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center p-4">Loading market data...</div>;
+  }
+
+  if (!marketData) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        No market data available for {selectedPair}
+      </div>
+    );
+  }
+
+  const totalOpenInterest = marketData.longOpenInterest + marketData.shortOpenInterest;
+  const annualizedFunding = marketData.fundingRate * 365 * 100; // Convert to annual percentage
+
   return (
     <div className="flex items-center justify-between p-4 text-sm border-b">
       <div className="flex items-center space-x-8">
         <div>
-          <div className="text-lg font-bold">2,931.90</div>
-          <div className="text-muted-foreground">$2,931.12</div>
+          <div className="text-lg font-bold">{parseFloat(marketData.price).toLocaleString()}</div>
+          <div className="text-muted-foreground">{marketData.pair}</div>
         </div>
         <div>
-          <div className="text-muted-foreground">24h Change</div>
-          <div className="text-green-500">+1.61%</div>
+          <div className="text-muted-foreground">Utilization</div>
+          <div>{marketData.utilization.toFixed(2)}%</div>
         </div>
         <div>
-          <div className="text-muted-foreground">24h Volume USDC</div>
-          <div>32,013,632</div>
+          <div className="text-muted-foreground">Total Open Interest</div>
+          <div>${totalOpenInterest.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-muted-foreground">Oracle Price</div>
-          <div>2,933.90</div>
+          <div className="text-muted-foreground">Long Borrow Rate</div>
+          <div>{(marketData.borrowRateForLong * 100).toFixed(4)}%</div>
         </div>
         <div>
-          <div className="text-muted-foreground">Spot Index Price</div>
-          <div>2,933.87</div>
+          <div className="text-muted-foreground">Short Borrow Rate</div>
+          <div>{(marketData.borrowRateForShort * 100).toFixed(4)}%</div>
         </div>
       </div>
       <div className="flex items-center space-x-8">
         <div>
-          <div className="text-muted-foreground">Open Interest USDC</div>
-          <div>8,962,259</div>
+          <div className="text-muted-foreground">Long OI</div>
+          <div>${marketData.longOpenInterest.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-muted-foreground">Predicted Funding</div>
-          <div className="text-green-500">+0.0009%</div>
+          <div className="text-muted-foreground">Short OI</div>
+          <div>${marketData.shortOpenInterest.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-muted-foreground">Countdown</div>
-          <div>07:43</div>
+          <div className="text-muted-foreground">Current Funding</div>
+          <div className={marketData.fundingRate >= 0 ? "text-green-500" : "text-red-500"}>
+            {(marketData.fundingRate * 100).toFixed(4)}%
+          </div>
         </div>
         <div>
           <div className="text-muted-foreground">Annualized Funding</div>
-          <div className="text-green-500">+8.15%</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">The Tie</div>
-          <div>24h Sentiment</div>
+          <div className={annualizedFunding >= 0 ? "text-green-500" : "text-red-500"}>
+            {annualizedFunding.toFixed(2)}%
+          </div>
         </div>
       </div>
     </div>
