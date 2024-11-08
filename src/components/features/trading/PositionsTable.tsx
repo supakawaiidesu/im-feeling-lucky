@@ -42,7 +42,15 @@ export function PositionsTable({ address }: PositionsTableProps) {
 
   const handleClosePosition = (position: Position) => {
     if (address) {
-      closePosition(Number(position.positionId), address, position.isLong, Number(position.markPrice));
+      // Parse the size value to a number and pass it to closePosition
+      const positionSize = parseFloat(position.size);
+      closePosition(
+        Number(position.positionId), 
+        address, 
+        position.isLong, 
+        Number(position.markPrice),
+        positionSize
+      );
     }
   };
 

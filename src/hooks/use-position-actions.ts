@@ -19,7 +19,8 @@ export function usePositionActions() {
     positionId: number,
     address: string,
     isLong: boolean,
-    currentPrice: number
+    currentPrice: number,
+    size: number  // Add size parameter
   ) => {
     if (!walletClient || !address || !publicClient) {
       toast({
@@ -38,7 +39,7 @@ export function usePositionActions() {
         description: "Preparing transaction...",
       });
 
-      const allowedPrice = isLong ? currentPrice * 1.01 : currentPrice * 0.99;
+      const allowedPrice = isLong ? currentPrice * 0.95 : currentPrice * 1.05;
 
       const response = await fetch('https://unidexv4-api-production.up.railway.app/api/closeposition', {
         method: 'POST',
@@ -47,7 +48,7 @@ export function usePositionActions() {
         },
         body: JSON.stringify({
           positionId,
-          sizeDelta: 100,
+          sizeDelta: size,  // Use the actual position size
           allowedPrice,
         }),
       });
