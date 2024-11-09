@@ -18,7 +18,7 @@ interface OrderCardProps {
 
 export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProps) {
   const { isConnected } = useAccount()
-  const { smartAccount } = useSmartAccount()
+  const { smartAccount, error } = useSmartAccount()
   const [amount, setAmount] = useState("")
   const [isLong, setIsLong] = useState(true)
   const { placeMarketOrder, placingOrders } = useMarketOrderActions()
@@ -61,6 +61,7 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
   return (
     <Card>
       <CardContent className="p-4">
+        {error && <div className="mb-4 text-red-500">Error: {error.message}</div>}
         <div className="flex items-center justify-between mb-4">
           <span className="font-semibold">Leverage</span>
           <Select value={leverage} onValueChange={onLeverageChange}>
