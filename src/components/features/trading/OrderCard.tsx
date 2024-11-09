@@ -5,6 +5,7 @@ import { Input } from "../../ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { useState } from "react"
+import { useMarketOrderActions } from '../../../hooks/use-market-order-actions'
 
 interface OrderCardProps {
   leverage: string
@@ -12,8 +13,34 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ leverage, onLeverageChange }: OrderCardProps) {
-  const { isConnected } = useAccount()
+  const { isConnected, address } = useAccount()
   const [amount, setAmount] = useState("")
+  const [isLong, setIsLong] = useState(true)
+  const { placeMarketOrder, placingOrders } = useMarketOrderActions()
+
+  const handlePlaceOrder = () => {
+    if (!isConnected || !address) return;
+
+    const orderDetails = {
+      pair: 1, // Example pair ID for BTC/USD
+      isLong,
+      maxAcceptablePrice: 67000, // Example value
+      slippagePercent: 100, // Example value for 1%
+      margin: parseFloat(amount) * 0.1, // Example margin calculation
+      size: parseFloat(amount),
+      userAddress: address
+    };
+
+    placeMarketOrder(
+      orderDetails.pair,
+      orderDetails.isLong,
+      orderDetails.maxAcceptablePrice,
+      orderDetails.slippagePercent,
+      orderDetails.margin,
+      orderDetails.size,
+      orderDetails.userAddress
+    );
+  };
 
   return (
     <Card>
@@ -43,8 +70,20 @@ export function OrderCard({ leverage, onLeverageChange }: OrderCardProps) {
 
           <TabsContent value="market" className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="default" className="w-full bg-green-600 hover:bg-green-700">Long</Button>
-              <Button variant="default" className="w-full bg-red-600 hover:bg-red-700">Short</Button>
+              <Button 
+                variant="default" 
+                className="w-full bg-green-600 hover:bg-green-700"
+                onClick={() => setIsLong(true)}
+              >
+                Long
+              </Button>
+              <Button 
+                variant="default" 
+                className="w-full bg-red-600 hover:bg-red-700"
+                onClick={() => setIsLong(false)}
+              >
+                Short
+              </Button>
             </div>
 
             <div className="space-y-2">
@@ -63,9 +102,10 @@ export function OrderCard({ leverage, onLeverageChange }: OrderCardProps) {
 
             <Button 
               className="w-full" 
-              disabled={!isConnected}
+              disabled={!isConnected || placingOrders}
+              onClick={handlePlaceOrder}
             >
-              {isConnected ? "Place Market Order" : "Connect Wallet to Trade"}
+              {isConnected ? (placingOrders ? "Placing Order..." : "Place Market Order") : "Connect Wallet to Trade"}
             </Button>
           </TabsContent>
         </Tabs>
