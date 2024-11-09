@@ -54,13 +54,13 @@ Retrieves global market information for a trading pair.
 #### Sample cURL Command:
 
 ```bash
-curl "http://localhost:3000/api/globalinfo?assetId=1&address=0x1234567890123456789012345678901234567890"
+curl "https://unidexv4-api-production.up.railway.app/api/globalinfo?assetId=1&address=0x1234567890123456789012345678901234567890"
 ```
 
 Or without specifying an address:
 
 ```bash
-curl "http://localhost:3000/api/globalinfo?assetId=1"
+curl "https://unidexv4-api-production.up.railway.app/api/globalinfo?assetId=1"
 ```
 
 This will retrieve global information for asset ID 1 (e.g., BTC/USD). If an address is provided, it will be used in the query; otherwise, the zero address will be used.
@@ -160,7 +160,7 @@ Creates a new position order.
 
 Sample cURL Command:
 ```bash
-curl -X POST http://localhost:3000/api/newposition \
+curl -X POST https://unidexv4-api-production.up.railway.app/api/newposition \
      -H "Content-Type: application/json" \
      -d '{
   "pair": 1,
@@ -220,7 +220,7 @@ Retrieves the ETH and margin wallet balances for a specific user.
 #### Sample cURL Command:
 
 ```bash
-curl "http://localhost:3000/api/userbalances?address=0x1234567890123456789012345678901234567890"
+curl "https://unidexv4-api-production.up.railway.app/api/userbalances?address=0x1234567890123456789012345678901234567890"
 ```
 
 This will retrieve the ETH and mUSD (margin wallet) balances for the specified address.
@@ -300,7 +300,7 @@ For tokens already on Arbitrum, use the wallet operations endpoint for direct de
 
 1. **Deposit USDC**:
 ```bash
-curl -X POST http://localhost:3000/api/wallet \
+curl -X POST https://unidexv4-api-production.up.railway.app/api/wallet \
      -H "Content-Type: application/json" \
      -d '{
   "type": "deposit",
@@ -311,7 +311,7 @@ curl -X POST http://localhost:3000/api/wallet \
 
 2. **Withdraw USDC**:
 ```bash
-curl -X POST http://localhost:3000/api/wallet \
+curl -X POST https://unidexv4-api-production.up.railway.app/api/wallet \
      -H "Content-Type: application/json" \
      -d '{
   "type": "withdraw",
@@ -474,13 +474,13 @@ Retrieves comprehensive market data for all trading pairs, including prices, int
 #### Sample cURL Command:
 
 ```bash
-curl "http://localhost:3000/api/markets"
+curl "https://unidexv4-api-production.up.railway.app/api/markets"
 ```
 
 Or with a specific address:
 
 ```bash
-curl "http://localhost:3000/api/markets?address=0x1234567890123456789012345678901234567890"
+curl "https://unidexv4-api-production.up.railway.app/api/markets?address=0x1234567890123456789012345678901234567890"
 ```
 
 #### Error Response:
