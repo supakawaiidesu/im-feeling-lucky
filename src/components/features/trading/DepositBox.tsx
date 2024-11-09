@@ -44,7 +44,6 @@ export default function DepositWithdrawBox() {
   // Effect to refetch balances after smart account setup
   useEffect(() => {
     if (smartAccount?.address) {
-      console.log('1CT account detected, fetching balances...');
       refetchBalances();
     }
   }, [smartAccount?.address, refetchBalances]);

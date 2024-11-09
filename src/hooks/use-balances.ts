@@ -61,10 +61,8 @@ export function useBalances() {
   // Debug logs for addresses
   useEffect(() => {
     if (smartAccount?.address) {
-      console.log('Smart Account Address for balance check:', smartAccount.address)
     }
     if (eoaAddress) {
-      console.log('EOA Address for balance check:', eoaAddress)
     }
   }, [smartAccount?.address, eoaAddress])
 
@@ -108,15 +106,10 @@ export function useBalances() {
 
   // Enhanced debug logs
   useEffect(() => {
-    console.log('Smart Account Data:', smartAccountData)
-    console.log('EOA USDC Balance:', eoaUsdcBalance)
-    console.log('Smart Account Loading:', isSmartAccountLoading)
-    console.log('Smart Account Error:', isSmartAccountError)
+
     if (smartAccountError) {
       console.error('Smart Account Error Details:', smartAccountError)
     }
-    console.log('EOA Loading:', isEoaLoading)
-    console.log('EOA Error:', isEoaError)
     if (eoaError) {
       console.error('EOA Error Details:', eoaError)
     }
@@ -134,19 +127,16 @@ export function useBalances() {
   // Manual refetch function with error handling
   const refetchBalances = async () => {
     try {
-      console.log('Refetching balances...')
       await Promise.all([
         refetchSmartAccount(),
         refetchEoa()
       ])
-      console.log('Balance refetch complete')
     } catch (error) {
       console.error('Error refetching balances:', error)
     }
   }
 
   if (!smartAccountData && !isSmartAccountLoading && smartAccount?.address) {
-    console.log('No smart account data but address exists, triggering refetch')
     refetchBalances()
   }
 

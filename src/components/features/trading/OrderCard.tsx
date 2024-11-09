@@ -212,7 +212,7 @@ export function OrderCard({
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex justify-between">
                 <span>Margin</span>
-                <span>{calculatedMargin.toFixed(4)} USD</span>
+                <span>{calculatedMargin.toFixed(2)} USD</span>
               </div>
               <div className="flex justify-between">
                 <span>Entry Price</span>

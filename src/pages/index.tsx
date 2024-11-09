@@ -11,7 +11,6 @@ import { useMarketData } from "../hooks/use-market-data"
 export default function TradingInterface() {
   const [selectedPair, setSelectedPair] = useState("ETH/USD")
   const [leverage, setLeverage] = useState("20")
-  const [timeframe, setTimeframe] = useState("1h")
   const { address } = useAccount()
   const { allMarkets } = useMarketData()
 
