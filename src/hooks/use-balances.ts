@@ -45,6 +45,15 @@ export interface Balances {
   formattedEoaUsdcBalance: string
 }
 
+// Function to truncate to 2 decimal places without rounding
+function truncateToTwoDecimals(value: string): string {
+  const parts = value.split('.');
+  if (parts.length === 2) {
+    return `${parts[0]}.${parts[1].slice(0, 2)}`;
+  }
+  return value;
+}
+
 export function useBalances() {
   const { smartAccount } = useSmartAccount()
   const { address: eoaAddress } = useAccount()
@@ -162,8 +171,8 @@ export function useBalances() {
     formattedEthBalance: formatUnits(ethBalance, 18),
     formattedUsdcBalance: formatUnits(usdcBalance, 6),
     formattedUsdcAllowance: formatUnits(usdcAllowance, 6),
-    formattedMusdBalance: formatUnits(musdBalance, 30),
-    eoaUsdcBalance: eoaUsdcBalance || BigInt(0), // Changed from 0n to BigInt(0)
+    formattedMusdBalance: truncateToTwoDecimals(formatUnits(musdBalance, 30)),
+    eoaUsdcBalance: eoaUsdcBalance || BigInt(0),
     formattedEoaUsdcBalance: eoaUsdcBalance ? formatUnits(eoaUsdcBalance, 6) : '0',
   }
 
