@@ -1,29 +1,91 @@
-This is a [RainbowKit](https://rainbowkit.com) + [wagmi](https://wagmi.sh) + [Next.js](https://nextjs.org/) project bootstrapped with [`create-rainbowkit`](/packages/create-rainbowkit).
+# Builders Workshop UI
 
-## Getting Started
+A Next.js application with RainbowKit wallet integration and ZeroDev Smart Accounts.
 
-First, run the development server:
+## Features
 
+- 🔐 Account Abstraction with ZeroDev SDK
+- 🌈 RainbowKit for wallet connections
+- ⚡ Viem for Ethereum interactions
+- 🔄 ERC-4337 support
+- ⚛️ Next.js for the frontend
+
+## Setup
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Configure environment variables:
+- Copy `.env.local.example` to `.env.local`
+- Set `NEXT_PUBLIC_BUNDLER_RPC_URL` from your ZeroDev dashboard
+- Set `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` from WalletConnect Cloud
+- Configure `NEXT_PUBLIC_ENABLE_TESTNETS` based on your needs
+
+3. Update the configuration:
+- In `src/wagmi.ts`, replace `YOUR_PROJECT_ID` with your WalletConnect Project ID
+
+4. Run the development server:
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Smart Account Integration
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+This project uses ZeroDev's SDK to enable smart accounts with the following features:
 
-## Learn More
+- Kernel v3.1 smart accounts
+- ERC-4337 account abstraction
+- ECDSA validator for signature validation
+- Automatic account creation upon wallet connection
 
-To learn more about this stack, take a look at the following resources:
+## Usage
 
-- [RainbowKit Documentation](https://rainbowkit.com) - Learn how to customize your wallet connection flow.
-- [wagmi Documentation](https://wagmi.sh) - Learn how to interact with Ethereum.
-- [Next.js Documentation](https://nextjs.org/docs) - Learn how to build a Next.js application.
+The `useSmartAccount` hook provides access to the smart account functionality:
 
-You can check out [the RainbowKit GitHub repository](https://github.com/rainbow-me/rainbowkit) - your feedback and contributions are welcome!
+```typescript
+const { smartAccount, kernelClient, isLoading, error } = useSmartAccount();
+```
 
-## Deploy on Vercel
+- `smartAccount`: The created Kernel smart account instance
+- `kernelClient`: The client for interacting with the smart account
+- `isLoading`: Loading state during account setup
+- `error`: Any errors that occurred during setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Environment Variables
 
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- `NEXT_PUBLIC_BUNDLER_RPC_URL`: Your ZeroDev bundler RPC URL (required)
+- `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`: Your WalletConnect Project ID (required)
+- `NEXT_PUBLIC_ENABLE_TESTNETS`: Enable testnet chains (optional, defaults to false)
+
+## Architecture
+
+The integration is structured as follows:
+
+1. **Wallet Connection**: RainbowKit handles the initial wallet connection
+2. **Smart Account Creation**: The `useSmartAccount` hook creates a Kernel smart account when a wallet connects
+3. **Transaction Handling**: Use the `kernelClient` to send transactions through the smart account
+
+## Networks
+
+By default, the application supports:
+- Arbitrum (mainnet)
+- Sepolia (testnet, when enabled)
+
+Additional networks can be added by modifying the chains configuration in `src/wagmi.ts`.
+
+## Development
+
+To modify the smart account integration:
+
+1. Update the `useSmartAccount` hook in `src/hooks/use-smart-account.ts`
+2. Modify the network configuration in `src/wagmi.ts`
+3. Adjust environment variables in `.env.local`
+
+## Resources
+
+- [ZeroDev Documentation](https://docs.zerodev.app/)
+- [RainbowKit Documentation](https://www.rainbowkit.com/docs/introduction)
+- [Viem Documentation](https://viem.sh/)
+- [ERC-4337 Specification](https://eips.ethereum.org/EIPS/eip-4337)

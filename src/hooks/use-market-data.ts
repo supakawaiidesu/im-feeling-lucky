@@ -48,7 +48,7 @@ interface UseMarketDataResult {
 const API_BASE_URL = 'https://unidexv4-api-production.up.railway.app';
 
 export function useMarketData({ 
-  pollInterval = 10000, // Default 10 second polling
+  pollInterval = 30000, // Default 10 second polling
   selectedPair 
 }: UseMarketDataOptions = {}): UseMarketDataResult {
   const [marketData, setMarketData] = useState<Market | null>(null);

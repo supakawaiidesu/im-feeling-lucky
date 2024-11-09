@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 
 interface PriceData {
   [key: string]: {
@@ -12,6 +12,8 @@ interface PriceContextType {
 
 const PriceContext = createContext<PriceContextType | undefined>(undefined);
 
+const THROTTLE_INTERVAL = 500; // Update every 500ms
+
 export const usePrices = () => {
   const context = useContext(PriceContext);
   if (context === undefined) {
@@ -22,6 +24,25 @@ export const usePrices = () => {
 
 export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [prices, setPrices] = useState<PriceData>({});
+  const priceBuffer = useRef<PriceData>({});
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const flushPriceUpdates = useCallback(() => {
+    if (Object.keys(priceBuffer.current).length > 0) {
+      setPrices(prevPrices => ({
+        ...prevPrices,
+        ...priceBuffer.current
+      }));
+      priceBuffer.current = {};
+    }
+    timeoutRef.current = null;
+  }, []);
+
+  const scheduleUpdate = useCallback(() => {
+    if (timeoutRef.current === null) {
+      timeoutRef.current = setTimeout(flushPriceUpdates, THROTTLE_INTERVAL);
+    }
+  }, [flushPriceUpdates]);
 
   useEffect(() => {
     const ws = new WebSocket('wss://pricefeed-production.up.railway.app/');
@@ -32,7 +53,15 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setPrices((prevPrices) => ({ ...prevPrices, ...data }));
+      
+      // Update the buffer instead of state directly
+      priceBuffer.current = {
+        ...priceBuffer.current,
+        ...data
+      };
+
+      // Schedule a throttled update
+      scheduleUpdate();
     };
 
     ws.onerror = (error) => {
@@ -44,9 +73,12 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       ws.close();
     };
-  }, []);
+  }, [scheduleUpdate]);
 
   return (
     <PriceContext.Provider value={{ prices }}>

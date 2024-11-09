@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { usePublicClient, useWalletClient } from 'wagmi';
+import { usePublicClient } from 'wagmi';
 import { useToast } from './use-toast';
+import { useSmartAccount } from './use-smart-account';
 
 interface MarketOrderResponse {
   calldata: string;
@@ -12,9 +13,9 @@ interface MarketOrderResponse {
 
 export function useMarketOrderActions() {
   const [placingOrders, setPlacingOrders] = useState<boolean>(false);
-  const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const { toast } = useToast();
+  const { smartAccount, kernelClient } = useSmartAccount();
 
   const placeMarketOrder = async (
     pair: number,
@@ -22,10 +23,9 @@ export function useMarketOrderActions() {
     currentPrice: number,
     slippagePercent: number,
     margin: number,
-    size: number,
-    userAddress: string
+    size: number
   ) => {
-    if (!walletClient || !userAddress || !publicClient) {
+    if (!kernelClient || !smartAccount?.address || !publicClient) {
       toast({
         title: "Error",
         description: "Please connect your wallet first",
@@ -43,7 +43,7 @@ export function useMarketOrderActions() {
       });
 
       // Calculate maxAcceptablePrice with 6 decimal precision
-      const slippageMultiplier = isLong ? 0.95 : 1.05;
+      const slippageMultiplier = isLong ? 1.05 : 0.95;
       const maxAcceptablePrice = Number((currentPrice * slippageMultiplier).toFixed(6));
 
       const response = await fetch('https://unidexv4-api-production.up.railway.app/api/newposition', {
@@ -59,7 +59,7 @@ export function useMarketOrderActions() {
           slippagePercent,
           margin,
           size,
-          userAddress,
+          userAddress: smartAccount.address,
         }),
       });
 
@@ -83,11 +83,9 @@ export function useMarketOrderActions() {
         description: "Please confirm the transaction in your wallet",
       });
 
-      const hash = await walletClient.sendTransaction({
-        account: userAddress as `0x${string}`,
-        to: data.vaultAddress as `0x${string}`,
-        data: data.calldata as `0x${string}`,
-        value: BigInt(0),
+      const tx = await kernelClient.sendTransaction({
+        to: data.vaultAddress,
+        data: data.calldata,
       });
 
       toast({
@@ -95,7 +93,7 @@ export function useMarketOrderActions() {
         description: "Waiting for confirmation...",
       });
 
-      await publicClient.waitForTransactionReceipt({ hash });
+      await kernelClient.waitForTransactionReceipt({ hash: tx });
 
       toast({
         title: "Success",

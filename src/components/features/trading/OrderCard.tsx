@@ -8,6 +8,7 @@ import { useState } from "react"
 import { useMarketOrderActions } from '../../../hooks/use-market-order-actions'
 import { usePrices } from '../../../lib/websocket-price-context'
 import { useMarketData } from '../../../hooks/use-market-data'
+import { useSmartAccount } from '../../../hooks/use-smart-account'
 
 interface OrderCardProps {
   leverage: string
@@ -16,7 +17,8 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProps) {
-  const { isConnected, address } = useAccount()
+  const { isConnected } = useAccount()
+  const { smartAccount, error } = useSmartAccount()
   const [amount, setAmount] = useState("")
   const [isLong, setIsLong] = useState(true)
   const { placeMarketOrder, placingOrders } = useMarketOrderActions()
@@ -30,7 +32,7 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
   const currentPrice = basePair ? prices[basePair]?.price : undefined
 
   const handlePlaceOrder = () => {
-    if (!isConnected || !address) return;
+    if (!isConnected || !smartAccount?.address) return;
 
     if (!currentPrice) {
       console.error('Price not available for asset')
@@ -43,8 +45,7 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
       currentPrice,
       slippagePercent: 100, // 1% slippage
       margin: parseFloat(amount) * 0.1,
-      size: parseFloat(amount),
-      userAddress: address
+      size: parseFloat(amount)
     };
 
     placeMarketOrder(
@@ -53,14 +54,14 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
       orderDetails.currentPrice,
       orderDetails.slippagePercent,
       orderDetails.margin,
-      orderDetails.size,
-      orderDetails.userAddress
+      orderDetails.size
     );
   };
 
   return (
     <Card>
       <CardContent className="p-4">
+        {error && <div className="mb-4 text-red-500">Error: {error.message}</div>}
         <div className="flex items-center justify-between mb-4">
           <span className="font-semibold">Leverage</span>
           <Select value={leverage} onValueChange={onLeverageChange}>
@@ -118,11 +119,13 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
 
             <Button 
               className="w-full" 
-              disabled={!isConnected || placingOrders || !currentPrice}
+              disabled={!isConnected || !smartAccount?.address || placingOrders || !currentPrice}
               onClick={handlePlaceOrder}
             >
               {!isConnected 
-                ? "Connect Wallet to Trade" 
+                ? "Connect Wallet to Trade"
+                : !smartAccount?.address
+                ? "Smart Account Not Ready"
                 : !currentPrice 
                   ? "Waiting for price..." 
                   : placingOrders 

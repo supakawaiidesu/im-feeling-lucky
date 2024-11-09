@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { usePublicClient, useWalletClient } from 'wagmi';
-import { parseEther } from 'viem';
+import { usePublicClient } from 'wagmi';
 import { useToast } from './use-toast';
+import { useSmartAccount } from './use-smart-account';
 
 interface ClosePositionResponse {
   calldata: string;
@@ -11,18 +11,17 @@ interface ClosePositionResponse {
 
 export function usePositionActions() {
   const [closingPositions, setClosingPositions] = useState<{ [key: number]: boolean }>({});
-  const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const { toast } = useToast();
+  const { smartAccount, kernelClient } = useSmartAccount();
 
   const closePosition = async (
     positionId: number,
-    address: string,
     isLong: boolean,
     currentPrice: number,
-    size: number  // Add size parameter
+    size: number
   ) => {
-    if (!walletClient || !address || !publicClient) {
+    if (!kernelClient || !smartAccount?.address || !publicClient) {
       toast({
         title: "Error",
         description: "Please connect your wallet first",
@@ -48,7 +47,7 @@ export function usePositionActions() {
         },
         body: JSON.stringify({
           positionId,
-          sizeDelta: size,  // Use the actual position size
+          sizeDelta: size,
           allowedPrice,
         }),
       });
@@ -64,11 +63,9 @@ export function usePositionActions() {
         description: "Please confirm the transaction in your wallet",
       });
 
-      const hash = await walletClient.sendTransaction({
-        account: address as `0x${string}`,
-        to: data.vaultAddress as `0x${string}`,
-        data: data.calldata as `0x${string}`,
-        value: parseEther("0"),
+      const tx = await kernelClient.sendTransaction({
+        to: data.vaultAddress,
+        data: data.calldata,
       });
 
       toast({
@@ -76,7 +73,7 @@ export function usePositionActions() {
         description: "Waiting for confirmation...",
       });
 
-      await publicClient.waitForTransactionReceipt({ hash });
+      await kernelClient.waitForTransactionReceipt({ hash: tx });
 
       toast({
         title: "Success",
