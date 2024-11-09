@@ -4,7 +4,7 @@ import { Card, CardContent } from "../../ui/card"
 import { Input } from "../../ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useMarketOrderActions } from '../../../hooks/use-market-order-actions'
 import { usePrices } from '../../../lib/websocket-price-context'
 import { useMarketData } from '../../../hooks/use-market-data'
@@ -31,6 +31,19 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
   const basePair = pair?.split('/')[0].toLowerCase()
   const currentPrice = basePair ? prices[basePair]?.price : undefined
 
+  // Calculate margin based on amount and leverage
+  const calculatedMargin = useMemo(() => {
+    if (!amount || !leverage) return 0
+    // Margin = Amount / Leverage
+    return parseFloat(amount) / parseFloat(leverage)
+  }, [amount, leverage])
+
+  // Calculate size (should be equal to the input amount)
+  const calculatedSize = useMemo(() => {
+    if (!amount) return 0
+    return parseFloat(amount)
+  }, [amount])
+
   const handlePlaceOrder = () => {
     if (!isConnected || !smartAccount?.address) return;
 
@@ -39,13 +52,20 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
       return
     }
 
+    console.log('Placing order with:', {
+      amount,
+      leverage,
+      calculatedMargin,
+      calculatedSize
+    })
+
     const orderDetails = {
       pair: parseInt(assetId, 10),
       isLong,
       currentPrice,
       slippagePercent: 100, // 1% slippage
-      margin: parseFloat(amount) * 0.1,
-      size: parseFloat(amount)
+      margin: calculatedMargin,
+      size: calculatedSize
     };
 
     placeMarketOrder(
@@ -112,7 +132,7 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
                 onChange={(e) => setAmount(e.target.value)}
               />
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Available: 0.00</span>
+                <span>Margin: {calculatedMargin.toFixed(4)}</span>
                 <span>≈ ${currentPrice ? (parseFloat(amount || "0") * currentPrice).toFixed(2) : "0.00"}</span>
               </div>
             </div>

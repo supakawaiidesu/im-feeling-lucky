@@ -49,16 +49,6 @@ export default function DepositWithdrawBox() {
     }
   }, [smartAccount?.address, refetchBalances]);
 
-  // Effect to show toast when balances fail to load
-  useEffect(() => {
-    if (isBalancesError && smartAccount) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load balances. Please refresh the page.',
-        variant: 'destructive',
-      });
-    }
-  }, [isBalancesError, smartAccount, toast]);
 
   if (!isOpen) {
     return (
@@ -365,7 +355,7 @@ export default function DepositWithdrawBox() {
                 parseFloat(smartAccountAmount) > parseFloat(balances.formattedUsdcBalance)
               }
             >
-              {isTransferring ? 'Processing...' : 'Withdraw to EOA'}
+              {isTransferring ? 'Processing...' : 'Withdraw'}
             </Button>
           </div>
         </TabsContent>
