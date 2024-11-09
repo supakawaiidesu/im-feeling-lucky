@@ -10,7 +10,7 @@ interface PositionsTableProps {
 }
 
 export function PositionsTable({ address }: PositionsTableProps) {
-  const { positions, loading, error } = usePositions(address);
+  const { positions, loading, error } = usePositions();
   const { closePosition, closingPositions } = usePositionActions();
   const [hoveredPosition, setHoveredPosition] = useState<string | null>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
@@ -41,17 +41,14 @@ export function PositionsTable({ address }: PositionsTableProps) {
   };
 
   const handleClosePosition = (position: Position) => {
-    if (address) {
-      // Parse the size value to a number and pass it to closePosition
-      const positionSize = parseFloat(position.size);
-      closePosition(
-        Number(position.positionId), 
-        address, 
-        position.isLong, 
-        Number(position.markPrice),
-        positionSize
-      );
-    }
+    // Parse the size value to a number and pass it to closePosition
+    const positionSize = parseFloat(position.size);
+    closePosition(
+      Number(position.positionId), 
+      position.isLong, 
+      Number(position.markPrice),
+      positionSize
+    );
   };
 
   return (

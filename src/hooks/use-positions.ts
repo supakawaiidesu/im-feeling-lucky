@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePrices } from '../lib/websocket-price-context';
+import { useSmartAccount } from './use-smart-account';
 
 export interface Position {
   market: string;
@@ -118,7 +119,7 @@ function calculatePnL(
   };
 }
 
-export function usePositions(address: string | undefined) {
+export function usePositions() {
   const [rawPositions, setRawPositions] = useState<{
     position: APIPosition;
     positionId: string;
@@ -128,15 +129,16 @@ export function usePositions(address: string | undefined) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { prices } = usePrices();
+  const { smartAccount } = useSmartAccount();
 
   const fetchPositions = useCallback(async () => {
-    if (!address) {
+    if (!smartAccount?.address) {
       setRawPositions([]);
       return;
     }
 
     try {
-      const response = await fetch(`https://unidexv4-api-production.up.railway.app/api/positions?address=${address}`);
+      const response = await fetch(`https://unidexv4-api-production.up.railway.app/api/positions?address=${smartAccount.address}`);
       if (!response.ok) {
         throw new Error('Failed to fetch positions');
       }
@@ -157,7 +159,7 @@ export function usePositions(address: string | undefined) {
     } finally {
       setLoading(false);
     }
-  }, [address]);
+  }, [smartAccount?.address]);
 
   useEffect(() => {
     fetchPositions();
