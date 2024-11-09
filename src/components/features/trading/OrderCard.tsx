@@ -1,85 +1,124 @@
-import React, { useState, useMemo } from 'react'
-import { useAccount } from 'wagmi'
-import { Button } from "../../ui/button"
-import { Card, CardContent } from "../../ui/card"
-import { Input } from "../../ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
-import { useMarketOrderActions } from '../../../hooks/use-market-order-actions'
-import { usePrices } from '../../../lib/websocket-price-context'
-import { useMarketData } from '../../../hooks/use-market-data'
-import { useSmartAccount } from '../../../hooks/use-smart-account'
-import { useBalances } from '../../../hooks/use-balances'
+import React, { useState, useMemo } from "react";
+import { useAccount } from "wagmi";
+import { Button } from "../../ui/button";
+import { Card, CardContent } from "../../ui/card";
+import { Input } from "../../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
+import { useMarketOrderActions } from "../../../hooks/use-market-order-actions";
+import { usePrices } from "../../../lib/websocket-price-context";
+import { useMarketData } from "../../../hooks/use-market-data";
+import { useSmartAccount } from "../../../hooks/use-smart-account";
+import { useBalances } from "../../../hooks/use-balances";
 
 interface OrderCardProps {
-  leverage: string
-  onLeverageChange: (value: string) => void
-  assetId: string
+  leverage: string;
+  onLeverageChange: (value: string) => void;
+  assetId: string;
 }
 
-export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProps) {
-  const { isConnected } = useAccount()
-  const { smartAccount, error } = useSmartAccount()
-  const [amount, setAmount] = useState("")
-  const [isLong, setIsLong] = useState(true)
-  const { placeMarketOrder, placingOrders } = useMarketOrderActions()
-  const { prices } = usePrices()
-  const { allMarkets } = useMarketData()
-  const { balances } = useBalances()
+export function OrderCard({
+  leverage,
+  onLeverageChange,
+  assetId,
+}: OrderCardProps) {
+  const { isConnected } = useAccount();
+  const { smartAccount, error } = useSmartAccount();
+  const [amount, setAmount] = useState("");
+  const [isLong, setIsLong] = useState(true);
+  const { placeMarketOrder, placingOrders } = useMarketOrderActions();
+  const { prices } = usePrices();
+  const { allMarkets } = useMarketData();
+  const { balances } = useBalances();
 
   // Get the pair name from market data using assetId
-  const market = allMarkets.find(m => m.assetId === assetId)
-  const pair = market?.pair
-  const basePair = pair?.split('/')[0].toLowerCase()
-  const currentPrice = basePair ? prices[basePair]?.price : undefined
+  const market = allMarkets.find((m) => m.assetId === assetId);
+  const pair = market?.pair;
+  const basePair = pair?.split("/")[0].toLowerCase();
+  const currentPrice = basePair ? prices[basePair]?.price : undefined;
 
   // Calculate various trade details
   const calculatedMargin = useMemo(() => {
-    if (!amount || !leverage) return 0
-    return parseFloat(amount) / parseFloat(leverage)
-  }, [amount, leverage])
+    if (!amount || !leverage) return 0;
+    return parseFloat(amount) / parseFloat(leverage);
+  }, [amount, leverage]);
 
   const calculatedSize = useMemo(() => {
-    if (!amount) return 0
-    return parseFloat(amount)
-  }, [amount])
+    if (!amount) return 0;
+    return parseFloat(amount);
+  }, [amount]);
 
   const liquidationPrice = useMemo(() => {
-    if (!currentPrice || !leverage) return null
+    if (!currentPrice || !leverage) return null;
 
-    // Liquidation happens at -90% PNL
-    // For a leveraged position, the price movement needed is:
-    // -90% / leverage = required price movement percentage
-    const priceMovementPercentage = 0.9 / parseFloat(leverage)
+    const priceMovementPercentage = 0.9 / parseFloat(leverage);
 
-    // For longs: entry_price * (1 - movement%) = liq_price
-    // For shorts: entry_price * (1 + movement%) = liq_price
     if (isLong) {
-      return currentPrice * (1 - priceMovementPercentage)
+      return currentPrice * (1 - priceMovementPercentage);
     } else {
-      return currentPrice * (1 + priceMovementPercentage)
+      return currentPrice * (1 + priceMovementPercentage);
     }
-  }, [currentPrice, leverage, isLong])
+  }, [currentPrice, leverage, isLong]);
 
-  // Calculate fees (example rates - adjust as needed)
+  // Calculate fees using market data
   const fees = useMemo(() => {
-    if (!amount || !currentPrice) return {
-      tradingFee: 0,
-      borrowingFee: 0
-    }
-    const notionalValue = parseFloat(amount) * currentPrice
+    if (!amount || !market || !currentPrice)
+      return {
+        tradingFee: 0,
+        hourlyInterest: 0,
+        tradingFeePercent: 0,
+        hourlyInterestPercent: 0,
+      };
+
+    const size = parseFloat(amount);
+
+    // Trading fee calculation remains the same
+    const tradingFeePercent = isLong
+      ? market.longTradingFee
+      : market.shortTradingFee;
+    const tradingFee = size * tradingFeePercent;
+
+    // Get borrow rate (already in hourly form)
+    const borrowRate = isLong
+      ? market.borrowRateForLong
+      : market.borrowRateForShort;
+
+    // Funding rate is already hourly
+    const hourlyFundingRate = market.fundingRate;
+
+    // For longs: pay positive funding rate, receive negative
+    // For shorts: receive positive funding rate, pay negative
+    const effectiveFundingRate = isLong
+      ? -hourlyFundingRate
+      : hourlyFundingRate;
+
+    // Combine borrow and funding rates for total hourly interest
+    const totalHourlyRatePercent = borrowRate + effectiveFundingRate;
+    const hourlyInterest = size * (totalHourlyRatePercent / 100);
+
+    // Return the hourlyInterestPercent with the same sign as hourlyInterest
+    // This ensures the percentage matches whether we're gaining or losing money
     return {
-      tradingFee: notionalValue * 0.001, // 0.1% trading fee
-      borrowingFee: notionalValue * 0.0002 // 0.02% hourly borrowing fee
-    }
-  }, [amount, currentPrice])
+      tradingFee,
+      hourlyInterest,
+      tradingFeePercent,
+      hourlyInterestPercent:
+        hourlyInterest >= 0 ? -totalHourlyRatePercent : totalHourlyRatePercent,
+    };
+  }, [amount, market, currentPrice, isLong]);
 
   // Handle max button click
   const handleMaxClick = () => {
     if (balances?.formattedMusdBalance) {
-      setAmount(balances.formattedMusdBalance)
+      setAmount(balances.formattedMusdBalance);
     }
-  }
+  };
 
   const handlePlaceOrder = () => {
     if (!isConnected || !smartAccount?.address || !currentPrice) return;
@@ -92,13 +131,15 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
       calculatedMargin,
       calculatedSize
     );
-  }
+  };
 
   return (
     <Card>
       <CardContent className="p-4">
-        {error && <div className="mb-4 text-red-500">Error: {error.message}</div>}
-        
+        {error && (
+          <div className="mb-4 text-red-500">Error: {error.message}</div>
+        )}
+
         <div className="flex items-center justify-between mb-4">
           <span className="font-semibold">Leverage</span>
           <Select value={leverage} onValueChange={onLeverageChange}>
@@ -117,23 +158,33 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
 
         <Tabs defaultValue="market">
           <TabsList className="w-full mb-4">
-            <TabsTrigger value="market" className="flex-1">Market</TabsTrigger>
-            <TabsTrigger value="limit" className="flex-1">Limit</TabsTrigger>
-            <TabsTrigger value="stop" className="flex-1">Stop</TabsTrigger>
+            <TabsTrigger value="market" className="flex-1">
+              Market
+            </TabsTrigger>
+            <TabsTrigger value="limit" className="flex-1">
+              Limit
+            </TabsTrigger>
+            <TabsTrigger value="stop" className="flex-1">
+              Stop
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="market" className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
-              <Button 
+              <Button
                 variant={isLong ? "default" : "outline"}
-                className={`w-full ${isLong ? "bg-green-600 hover:bg-green-700" : ""}`}
+                className={`w-full ${
+                  isLong ? "bg-green-600 hover:bg-green-700" : ""
+                }`}
                 onClick={() => setIsLong(true)}
               >
                 Long
               </Button>
-              <Button 
+              <Button
                 variant={!isLong ? "default" : "outline"}
-                className={`w-full ${!isLong ? "bg-red-600 hover:bg-red-700" : ""}`}
+                className={`w-full ${
+                  !isLong ? "bg-red-600 hover:bg-red-700" : ""
+                }`}
                 onClick={() => setIsLong(false)}
               >
                 Short
@@ -143,7 +194,7 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm">Amount</label>
-                <div 
+                <div
                   className="text-sm cursor-pointer text-muted-foreground hover:text-primary"
                   onClick={handleMaxClick}
                 >
@@ -168,43 +219,60 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
                 <span>${currentPrice?.toFixed(2) || "0.00"}</span>
               </div>
               <div className="flex justify-between">
-                <span>Notional Size</span>
-                <span>${currentPrice ? (parseFloat(amount || "0") * currentPrice).toFixed(2) : "0.00"}</span>
+                <span>Position Size</span>
+                <span>${calculatedSize.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Liquidation Price</span>
-                <span className="text-red-500">${liquidationPrice?.toFixed(2) || "0.00"}</span>
+                <span className="text-red-500">
+                  ${liquidationPrice?.toFixed(2) || "0.00"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span>Trading Fee</span>
-                <span>${fees.tradingFee.toFixed(4)}</span>
+                <span>Trading Fee </span>
+                <span>
+                  ${fees.tradingFee.toFixed(2)} ({fees.tradingFeePercent}%)
+                </span>
               </div>
               <div className="flex justify-between">
-                <span>Hourly Interest Fee</span>
-                <span>${fees.borrowingFee.toFixed(4)}</span>
+                <span>Hourly Interest</span>
+                <span
+                  className={
+                    fees.hourlyInterest >= 0 ? "text-red-400" : "text-green-400"
+                  }
+                >
+                  {fees.hourlyInterest >= 0 ? "-" : "+"}$
+                  {Math.abs(fees.hourlyInterest).toFixed(2)} (
+                  {Math.abs(fees.hourlyInterestPercent).toFixed(4)}%)
+                </span>
               </div>
             </div>
 
-            <Button 
-              className="w-full" 
-              disabled={!isConnected || !smartAccount?.address || placingOrders || !currentPrice}
+            <Button
+              className="w-full"
+              disabled={
+                !isConnected ||
+                !smartAccount?.address ||
+                placingOrders ||
+                !currentPrice
+              }
               onClick={handlePlaceOrder}
             >
-              {!isConnected 
+              {!isConnected
                 ? "Connect Wallet to Trade"
                 : !smartAccount?.address
                 ? "Smart Account Not Ready"
-                : !currentPrice 
-                  ? "Waiting for price..." 
-                  : placingOrders 
-                    ? "Placing Order..." 
-                    : `Place Market ${isLong ? "Long" : "Short"}`}
+                : !currentPrice
+                ? "Waiting for price..."
+                : placingOrders
+                ? "Placing Order..."
+                : `Place Market ${isLong ? "Long" : "Short"}`}
             </Button>
           </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
-  )
+  );
 }
 
-export default OrderCard
+export default OrderCard;
