@@ -44,7 +44,7 @@ export default function DepositWithdrawBox() {
   // Effect to refetch balances after smart account setup
   useEffect(() => {
     if (smartAccount?.address) {
-      console.log('Smart account detected, fetching balances...');
+      console.log('1CT account detected, fetching balances...');
       refetchBalances();
     }
   }, [smartAccount?.address, refetchBalances]);
@@ -73,13 +73,13 @@ export default function DepositWithdrawBox() {
       await setupSessionKey();
       toast({
         title: 'Success',
-        description: 'Smart Account successfully created',
+        description: '1CT Account successfully created',
       });
       refetchBalances();
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to setup smart account',
+        description: error.message || 'Failed to setup 1CT account',
         variant: 'destructive',
       });
     }
@@ -156,7 +156,7 @@ export default function DepositWithdrawBox() {
       if (balances && parseFloat(smartAccountAmount) > parseFloat(balances.formattedUsdcBalance)) {
         toast({
           title: 'Error',
-          description: 'Insufficient USDC balance in Smart Account',
+          description: 'Insufficient USDC balance in 1CT Wallet',
           variant: 'destructive',
         });
         return;
@@ -200,7 +200,7 @@ export default function DepositWithdrawBox() {
       if (balances && parseFloat(tradingAmount) > parseFloat(balances.formattedUsdcBalance)) {
         toast({
           title: 'Error',
-          description: 'Insufficient USDC balance in Smart Account',
+          description: 'Insufficient USDC balance in 1CT Wallet',
           variant: 'destructive',
         });
         return;
@@ -270,7 +270,7 @@ export default function DepositWithdrawBox() {
 
       <div className="grid grid-cols-3 gap-4 p-4 text-sm rounded-lg bg-muted/50">
         <div>
-          <div className="font-medium mb-1.5">EOA Wallet</div>
+          <div className="font-medium mb-1.5">Web Wallet</div>
           <div className="truncate">{eoaAddress || 'Not connected'}</div>
           <div className="mt-1 font-medium">
             {isLoadingBalances ? 'Loading...' : 
@@ -279,7 +279,7 @@ export default function DepositWithdrawBox() {
         </div>
 
         <div>
-          <div className="font-medium mb-1.5">Smart Account</div>
+          <div className="font-medium mb-1.5">1CT Wallet</div>
           <div className="truncate">{smartAccount?.address || 'Not created'}</div>
           <div className="mt-1 font-medium">
             {isLoadingBalances ? 'Loading...' : 
@@ -288,7 +288,7 @@ export default function DepositWithdrawBox() {
         </div>
 
         <div>
-          <div className="font-medium mb-1.5">Trading Contract</div>
+          <div className="font-medium mb-1.5">Margin Balance</div>
           <div className="truncate">Deposited Balance</div>
           <div className="mt-1 font-medium">
             {isLoadingBalances ? 'Loading...' : 
@@ -305,7 +305,7 @@ export default function DepositWithdrawBox() {
               onClick={handleSetupSmartAccount}
               disabled={isSigningSessionKey}
             >
-              {isSigningSessionKey ? 'Setting up...' : 'Setup Smart Account'}
+              {isSigningSessionKey ? 'Setting up...' : 'Setup 1CT Wallet'}
             </Button>
           </AlertDescription>
         </Alert>
@@ -313,8 +313,8 @@ export default function DepositWithdrawBox() {
 
       <Tabs defaultValue="smart-account" className="w-full">
         <TabsList className="w-full">
-          <TabsTrigger value="smart-account" className="flex-1">Smart Account</TabsTrigger>
-          <TabsTrigger value="trading" className="flex-1">Trading Contract</TabsTrigger>
+          <TabsTrigger value="smart-account" className="flex-1">1CT Wallet</TabsTrigger>
+          <TabsTrigger value="trading" className="flex-1">Margin Balance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="smart-account" className="space-y-4">
@@ -352,7 +352,7 @@ export default function DepositWithdrawBox() {
                 parseFloat(smartAccountAmount) > parseFloat(balances.formattedEoaUsdcBalance)
               }
             >
-              {isTransferring ? 'Processing...' : 'Deposit to Smart Account'}
+              {isTransferring ? 'Processing...' : 'Deposit to 1CT Wallet'}
             </Button>
             <Button
               className="flex-1"
@@ -422,18 +422,17 @@ export default function DepositWithdrawBox() {
                 isLoadingBalances
               }
             >
-              {isLoading ? 'Processing...' : 'Withdraw from Trading'}
+              {isLoading ? 'Processing...' : 'Withdraw'}
             </Button>
           </div>
         </TabsContent>
       </Tabs>
 
       <div className="space-y-1 text-xs text-muted-foreground">
-        <p>Note: Operation Flow</p>
+        <p>How to use UniDex's 1CT and Margin Wallet</p>
         <ol className="pl-2 list-decimal list-inside">
-          <li>Transfer USDC between EOA and Smart Account using the Smart Account tab</li>
-          <li>Use the Trading Contract tab to deposit/withdraw from trading</li>
-          <li>Approvals are required for first-time trading contract deposits</li>
+          <li>Transfer USDC between Web and 1CT Wallet using the 1CT tab</li>
+          <li>Use the Margin Balance tab manage your margin contract balance</li>
         </ol>
       </div>
     </Card>
