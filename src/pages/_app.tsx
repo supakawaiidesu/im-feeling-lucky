@@ -10,6 +10,7 @@ import { ThemeProvider } from 'next-themes';
 import { config } from '../wagmi';
 import { arbitrum } from 'viem/chains';
 import { PriceProvider } from '../lib/websocket-price-context';
+import { ToastProvider } from '@/components/ui/use-toast';
 
 const client = new QueryClient();
 
@@ -26,7 +27,9 @@ function MyApp({ Component, pageProps }: AppProps) {
             initialChain={arbitrum}
           >
             <PriceProvider>
-              <Component {...pageProps} />
+              <ToastProvider>
+                <Component {...pageProps} />
+              </ToastProvider>
             </PriceProvider>
           </RainbowKitProvider>
         </QueryClientProvider>
