@@ -45,11 +45,21 @@ export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProp
   }, [amount])
 
   const liquidationPrice = useMemo(() => {
-    if (!currentPrice || !amount || !leverage) return null
-    const direction = isLong ? 1 : -1
-    const liquidationPercent = 1 - (1 / parseFloat(leverage))
-    return currentPrice * (1 - (direction * liquidationPercent))
-  }, [currentPrice, amount, leverage, isLong])
+    if (!currentPrice || !leverage) return null
+
+    // Liquidation happens at -90% PNL
+    // For a leveraged position, the price movement needed is:
+    // -90% / leverage = required price movement percentage
+    const priceMovementPercentage = 0.9 / parseFloat(leverage)
+
+    // For longs: entry_price * (1 - movement%) = liq_price
+    // For shorts: entry_price * (1 + movement%) = liq_price
+    if (isLong) {
+      return currentPrice * (1 - priceMovementPercentage)
+    } else {
+      return currentPrice * (1 + priceMovementPercentage)
+    }
+  }, [currentPrice, leverage, isLong])
 
   // Calculate fees (example rates - adjust as needed)
   const fees = useMemo(() => {
