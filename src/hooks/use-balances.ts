@@ -74,13 +74,7 @@ export function useBalances() {
     query: {
       enabled: !!smartAccount?.address,
       retry: 3,
-      retryDelay: 1000,
-      onError: (error: any) => {
-        console.error('Smart account balance fetch error:', error)
-      },
-      onSuccess: (data: any) => {
-        console.log('Smart account balance fetch success:', data)
-      }
+      retryDelay: 1000
     }
   })
 
@@ -99,13 +93,7 @@ export function useBalances() {
     query: {
       enabled: !!eoaAddress,
       retry: 3,
-      retryDelay: 1000,
-      onError: (error: any) => {
-        console.error('EOA USDC balance fetch error:', error)
-      },
-      onSuccess: (data: any) => {
-        console.log('EOA USDC balance fetch success:', data)
-      }
+      retryDelay: 1000
     }
   })
 
@@ -175,7 +163,7 @@ export function useBalances() {
     formattedUsdcBalance: formatUnits(usdcBalance, 6),
     formattedUsdcAllowance: formatUnits(usdcAllowance, 6),
     formattedMusdBalance: formatUnits(musdBalance, 30),
-    eoaUsdcBalance: eoaUsdcBalance || 0n,
+    eoaUsdcBalance: eoaUsdcBalance || BigInt(0), // Changed from 0n to BigInt(0)
     formattedEoaUsdcBalance: eoaUsdcBalance ? formatUnits(eoaUsdcBalance, 6) : '0',
   }
 
