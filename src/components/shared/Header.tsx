@@ -2,7 +2,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Button } from "../ui/button"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
-import { DepositBox } from "../features/trading/DepositBox"
+import DepositWithdrawBox from "../features/trading/DepositBox"
 
 export function Header() {
   const { theme, setTheme } = useTheme()
@@ -24,7 +24,7 @@ export function Header() {
         </nav>
       </div>
       <div className="flex items-center ml-auto space-x-4">
-        <DepositBox />
+        <DepositWithdrawBox />
         {mounted && (
           <Button
             variant="ghost"
