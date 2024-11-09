@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useWalletClient, usePublicClient } from 'wagmi';
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
-import { createKernelAccount, createKernelAccountClient } from "@zerodev/sdk";
+import { createKernelAccount, createKernelAccountClient, createZeroDevPaymasterClient } from "@zerodev/sdk";
 import { ENTRYPOINT_ADDRESS_V07 } from "permissionless";
 import { walletClientToSmartAccountSigner } from 'permissionless';
 import { http } from 'viem';
 
 const bundlerRpcUrl = process.env.NEXT_PUBLIC_BUNDLER_RPC_URL;
+const PAYMASTER_RPC = "https://rpc.zerodev.app/api/v2/paymaster/424715b6-9633-4489-87cd-c15cc8043178?selfFunded=true";
 
 export function useSmartAccount() {
   const { data: walletClient } = useWalletClient();
@@ -49,6 +50,19 @@ export function useSmartAccount() {
         entryPoint: ENTRYPOINT_ADDRESS_V07,
         chain: publicClient.chain,
         bundlerTransport: http(bundlerRpcUrl),
+        middleware: {
+          sponsorUserOperation: async ({ userOperation }) => {
+            const zerodevPaymaster = createZeroDevPaymasterClient({
+              chain: publicClient.chain,
+              entryPoint: ENTRYPOINT_ADDRESS_V07,
+              transport: http(PAYMASTER_RPC),
+            });
+            return zerodevPaymaster.sponsorUserOperation({
+              userOperation,
+              entryPoint: ENTRYPOINT_ADDRESS_V07,
+            });
+          }
+        }
       });
 
       setSmartAccount(account);

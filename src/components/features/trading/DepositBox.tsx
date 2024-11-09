@@ -299,7 +299,7 @@ export const DepositBox = () => {
           <Button
             className="flex-1"
             onClick={() => handleWalletOperation('deposit')}
-            disabled={isLoading || !amount || !balances || parseFloat(amount) > parseFloat(balances.formattedUsdcBalance) || needsApproval}
+            disabled={isLoading || !amount || !balances || parseFloat(amount) > parseFloat(balances.formattedUsdcBalance) || needsApproval || undefined}
           >
             {isLoading ? 'Processing...' : 'Deposit'}
           </Button>
