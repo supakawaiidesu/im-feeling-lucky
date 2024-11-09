@@ -6,12 +6,18 @@ import { OrderCard } from "../components/features/trading/OrderCard"
 import { Chart } from "../components/features/trading/Chart"
 import { PositionsTable } from "../components/features/trading/PositionsTable"
 import { PairHeader } from "../components/features/trading/PairHeader"
+import { useMarketData } from "../hooks/use-market-data"
 
 export default function TradingInterface() {
   const [selectedPair, setSelectedPair] = useState("ETH/USD")
   const [leverage, setLeverage] = useState("20")
   const [timeframe, setTimeframe] = useState("1h")
   const { address } = useAccount()
+  const { allMarkets } = useMarketData()
+
+  // Find the assetId for the selected pair
+  const selectedMarket = allMarkets.find(market => market.pair === selectedPair)
+  const assetId = selectedMarket ? selectedMarket.assetId : ""
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-background text-foreground">
@@ -27,6 +33,7 @@ export default function TradingInterface() {
           <OrderCard 
             leverage={leverage} 
             onLeverageChange={setLeverage} 
+            assetId={assetId} // Pass the assetId to OrderCard
           />
         </div>
 

@@ -19,7 +19,7 @@ export function useMarketOrderActions() {
   const placeMarketOrder = async (
     pair: number,
     isLong: boolean,
-    currentPrice: number, // Added currentPrice parameter
+    currentPrice: number,
     slippagePercent: number,
     margin: number,
     size: number,
@@ -42,8 +42,9 @@ export function useMarketOrderActions() {
         description: "Preparing transaction...",
       });
 
-      // Calculate maxAcceptablePrice using the same logic as allowedPrice
-      const maxAcceptablePrice = isLong ? currentPrice * 0.95 : currentPrice * 1.05;
+      // Calculate maxAcceptablePrice with 6 decimal precision
+      const slippageMultiplier = isLong ? 0.95 : 1.05;
+      const maxAcceptablePrice = Number((currentPrice * slippageMultiplier).toFixed(6));
 
       const response = await fetch('https://unidexv4-api-production.up.railway.app/api/newposition', {
         method: 'POST',

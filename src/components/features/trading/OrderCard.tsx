@@ -6,27 +6,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { useState } from "react"
 import { useMarketOrderActions } from '../../../hooks/use-market-order-actions'
+import { usePrices } from '../../../lib/websocket-price-context'
+import { useMarketData } from '../../../hooks/use-market-data'
 
 interface OrderCardProps {
   leverage: string
   onLeverageChange: (value: string) => void
+  assetId: string
 }
 
-export function OrderCard({ leverage, onLeverageChange }: OrderCardProps) {
+export function OrderCard({ leverage, onLeverageChange, assetId }: OrderCardProps) {
   const { isConnected, address } = useAccount()
   const [amount, setAmount] = useState("")
   const [isLong, setIsLong] = useState(true)
   const { placeMarketOrder, placingOrders } = useMarketOrderActions()
+  const { prices } = usePrices()
+  const { allMarkets } = useMarketData()
+
+  // Get the pair name from market data using assetId
+  const market = allMarkets.find(m => m.assetId === assetId)
+  const pair = market?.pair
+  const basePair = pair?.split('/')[0].toLowerCase()
+  const currentPrice = basePair ? prices[basePair]?.price : undefined
 
   const handlePlaceOrder = () => {
     if (!isConnected || !address) return;
 
+    if (!currentPrice) {
+      console.error('Price not available for asset')
+      return
+    }
+
     const orderDetails = {
-      pair: 1, // Example pair ID for BTC/USD
+      pair: parseInt(assetId, 10),
       isLong,
-      maxAcceptablePrice: 67000, // Example value
-      slippagePercent: 100, // Example value for 1%
-      margin: parseFloat(amount) * 0.1, // Example margin calculation
+      currentPrice,
+      slippagePercent: 100, // 1% slippage
+      margin: parseFloat(amount) * 0.1,
       size: parseFloat(amount),
       userAddress: address
     };
@@ -34,7 +50,7 @@ export function OrderCard({ leverage, onLeverageChange }: OrderCardProps) {
     placeMarketOrder(
       orderDetails.pair,
       orderDetails.isLong,
-      orderDetails.maxAcceptablePrice,
+      orderDetails.currentPrice,
       orderDetails.slippagePercent,
       orderDetails.margin,
       orderDetails.size,
@@ -96,16 +112,22 @@ export function OrderCard({ leverage, onLeverageChange }: OrderCardProps) {
               />
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Available: 0.00</span>
-                <span>≈ $0.00</span>
+                <span>≈ ${currentPrice ? (parseFloat(amount || "0") * currentPrice).toFixed(2) : "0.00"}</span>
               </div>
             </div>
 
             <Button 
               className="w-full" 
-              disabled={!isConnected || placingOrders}
+              disabled={!isConnected || placingOrders || !currentPrice}
               onClick={handlePlaceOrder}
             >
-              {isConnected ? (placingOrders ? "Placing Order..." : "Place Market Order") : "Connect Wallet to Trade"}
+              {!isConnected 
+                ? "Connect Wallet to Trade" 
+                : !currentPrice 
+                  ? "Waiting for price..." 
+                  : placingOrders 
+                    ? "Placing Order..." 
+                    : "Place Market Order"}
             </Button>
           </TabsContent>
         </Tabs>
