@@ -69,7 +69,7 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
   };
 
   return (
-    <div className=" p-2 mx-0.25 my-2 h-[55px] border rounded-lg shadow-sm bg-background">
+    <div className=" p-2 mx-0.25 my-2 h-[55px] border rounded-lg shadow-sm bg-[hsl(var(--component-background))]">
       <div className="flex items-center text-sm">
         {/* Price Group */}
         <div className="flex items-center min-w-[100px] pr-2 border-r">

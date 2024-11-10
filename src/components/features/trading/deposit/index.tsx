@@ -50,7 +50,11 @@ export default function DepositBox() {
 
   if (!isOpen) {
     return (
-      <Button variant="outline" onClick={() => setIsOpen(true)}>
+      <Button 
+        variant="outline" 
+        onClick={() => setIsOpen(true)}
+        className="bg-[hsl(var(--component-background))]"
+      >
         Deposit/Withdraw
       </Button>
     )
@@ -239,7 +243,7 @@ export default function DepositBox() {
   const needsApproval = balances ? parseFloat(tradingAmount || '0') > parseFloat(balances.formattedUsdcAllowance) : false
 
   return (
-    <Card className="absolute z-50 p-6 space-y-6 top-14 right-4 w-[480px] bg-background border-border">
+    <Card className="absolute z-50 p-6 space-y-6 top-14 right-4 w-[480px] bg-[hsl(var(--component-background))]">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Balance Management</h3>
         <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>×</Button>
