@@ -73,7 +73,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
             <TableHead>Entry Price</TableHead>
             <TableHead>Mark Price</TableHead>
             <TableHead>Liq. Price</TableHead>
-            <TableHead>PNL</TableHead>
+            <TableHead>uPnL</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>

@@ -63,58 +63,60 @@ export const PairHeader: React.FC<PairHeaderProps> = ({ selectedPair = "ETH/USD"
   };
 
   return (
-    <div className="flex items-center justify-between p-4 text-sm border-b">
-      <div className="flex items-center space-x-8">
-        {/* Price Group */}
-        <div className="flex items-center pr-8 space-x-8 border-r">
-          <div>
-            <div className="text-lg font-bold">
-              {currentPrice ? currentPrice.toLocaleString() : 'Loading...'}
-            </div>
-            <div className="text-muted-foreground">{selectedPair}</div>
-          </div>
-        </div>
-
-        {/* Open Interest Group */}
-        <div className="flex items-center px-8 space-x-8 border-r">
-          <div>
-            <div className="text-muted-foreground">Long OI</div>
+    <div className="p-2 mx-0.25 my-2 border rounded-lg shadow-sm bg-background">
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center space-x-2">
+          {/* Price Group */}
+          <div className="flex items-center pr-16 space-x-2 border-r">
             <div>
-              ${marketData.longOpenInterest.toLocaleString()} / ${marketData.maxLongOpenInterest.toLocaleString()}
+              <div className="font-bold text-md">
+                {currentPrice ? currentPrice.toLocaleString() : 'Loading...'}
+              </div>
+              <div className="text-muted-foreground">{selectedPair}</div>
             </div>
           </div>
-          <div>
-            <div className="text-muted-foreground">Short OI</div>
-            <div>
-              ${marketData.shortOpenInterest.toLocaleString()} / ${marketData.maxShortOpenInterest.toLocaleString()}
-            </div>
-          </div>
-        </div>
 
-        {/* Long/Short Ratio Group */}
-        <div className="flex items-center px-8 space-x-8 border-r">
-          <div>
-            <div className="text-muted-foreground">Long/Short Ratio</div>
+          {/* Open Interest Group */}
+          <div className="flex items-center px-8 space-x-8 border-r">
             <div>
-              {marketData.longShortRatio.longPercentage.toFixed(1)}% / {marketData.longShortRatio.shortPercentage.toFixed(1)}%
+              <div className="text-muted-foreground">Long OI</div>
+              <div>
+                ${marketData.longOpenInterest.toLocaleString()} / ${marketData.maxLongOpenInterest.toLocaleString()}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Short OI</div>
+              <div>
+                ${marketData.shortOpenInterest.toLocaleString()} / ${marketData.maxShortOpenInterest.toLocaleString()}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Funding Rate Group */}
-        <div className="flex items-center pl-8 space-x-8">
-          <div>
-            <div className="text-muted-foreground">
-              Funding Rate
-              <button 
-                onClick={() => setFundingTimeframe(nextTimeframe())}
-                className="ml-2 px-2 py-0.5 text-xs rounded bg-secondary hover:bg-secondary/80"
-              >
-                {fundingTimeframe}
-              </button>
+          {/* Long/Short Ratio Group */}
+          <div className="flex items-center px-8 space-x-8 border-r">
+            <div>
+              <div className="text-muted-foreground">Long/Short Ratio</div>
+              <div>
+                {marketData.longShortRatio.longPercentage.toFixed(1)}% / {marketData.longShortRatio.shortPercentage.toFixed(1)}%
+              </div>
             </div>
-            <div className={getFundingRate() >= 0 ? "text-green-500" : "text-red-500"}>
-              {getFundingRate().toFixed(4)}%
+          </div>
+
+          {/* Funding Rate Group */}
+          <div className="flex items-center pl-8 space-x-8">
+            <div>
+              <div className="text-muted-foreground">
+                Funding Rate
+                <button 
+                  onClick={() => setFundingTimeframe(nextTimeframe())}
+                  className="ml-2 px-2 py-0.5 text-xs rounded bg-secondary hover:bg-secondary/80"
+                >
+                  {fundingTimeframe}
+                </button>
+              </div>
+              <div className={getFundingRate() >= 0 ? "text-green-500" : "text-red-500"}>
+                {getFundingRate().toFixed(4)}%
+              </div>
             </div>
           </div>
         </div>
