@@ -82,6 +82,9 @@ export function Chart() {
       style={{ 
         flex: '1 1 auto',
         minHeight: '600px',
+        borderRadius: '0.75rem', // This adds rounded corners
+        overflow: 'hidden', // This ensures the chart content respects the border radius
+        marginBottom: '0.75rem', // Added 2rem (32px) margin at the bottom
       }} 
     />
   )

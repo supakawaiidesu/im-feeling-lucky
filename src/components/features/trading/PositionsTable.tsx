@@ -52,7 +52,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
   };
 
   return (
-    <div className="mx-4 mb-4 border rounded-lg">
+    <div className="mb-4 border rounded-lg ">
       <div className="flex items-center p-2 border-b">
         <Button variant="ghost" size="sm">
           Positions
@@ -174,7 +174,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
                         parseFloat(position.fees.positionFee) +
                         parseFloat(position.fees.borrowFee) +
                         parseFloat(position.fees.fundingFee)
-                      ).toFixed(6)}
+                      ).toFixed(2)}
                     </span>
                   </div>
                 </div>

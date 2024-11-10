@@ -133,9 +133,9 @@ function calculatePnL(
       `+$${finalPnL.toFixed(2)}` :
       `-$${Math.abs(finalPnL).toFixed(2)}`,
     fees: {
-      positionFee: totalPositionFee.toFixed(6),
-      borrowFee: totalBorrowFee.toFixed(6),
-      fundingFee: totalFundingFee.toFixed(6)
+      positionFee: totalPositionFee.toFixed(2),
+      borrowFee: totalBorrowFee.toFixed(2),
+      fundingFee: totalFundingFee.toFixed(2)
     }
   };
 }
@@ -188,12 +188,12 @@ export function usePositions() {
       return {
         positionId: posIds[index].toString(),
         market,
-        size: Number(formatUnits(position.size, SCALING_FACTOR)).toFixed(3),
+        size: Number(formatUnits(position.size, SCALING_FACTOR)).toFixed(2),
         entryPrice: entryPrice.toFixed(2),
         markPrice: currentPrice ? currentPrice.toFixed(2) : 'Loading...',
         pnl,
         isLong: position.isLong,
-        margin: Number(formatUnits(position.collateral, SCALING_FACTOR)).toFixed(3),
+        margin: Number(formatUnits(position.collateral, SCALING_FACTOR)).toFixed(2),
         liquidationPrice: currentPrice ? calculateLiquidationPrice(position, entryPrice) : 'Loading...',
         fees
       };
