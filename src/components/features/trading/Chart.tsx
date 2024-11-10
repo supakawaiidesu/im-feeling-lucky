@@ -35,7 +35,7 @@ export function Chart() {
           enabled_features: ['show_exchange_logos'],
           theme: 'dark',
           overrides: {
-            'paneProperties.background': 'hsl(240 10% 3.9%)', // matches your --background dark theme variable
+            'paneProperties.background': '#0c0c0f', // converted from hsl(240 10% 3.9%)
           },
           load_last_chart: false,
           saved_data: null,
@@ -44,7 +44,7 @@ export function Chart() {
           range: '1D',
           allow_symbol_change: false,
           favorites: { intervals: ['1', '5', '15', '30', '60', '240', '1D'] as ResolutionString[] },
-          loading_screen: { backgroundColor: "hsl(240 10% 3.9%)" }, // matches your --background dark theme variable
+          loading_screen: { backgroundColor: "#0c0c0f" }, // matches your --background dark theme variable
           visible_range: {
             from: now - (24 * 60 * 60),
             to: now
