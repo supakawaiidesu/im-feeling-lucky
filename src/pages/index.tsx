@@ -24,16 +24,18 @@ export default function TradingInterface() {
 
       <div className="flex flex-1">
         {/* Trading Panel */}
-        <div className="p-4 w-80">
+        <div className="flex flex-col px-2">
           <PairSelector 
             selectedPair={selectedPair} 
             onPairChange={setSelectedPair} 
           />
-          <OrderCard 
-            leverage={leverage} 
-            onLeverageChange={setLeverage} 
-            assetId={assetId} // Pass the assetId to OrderCard
-          />
+          <div className="pt-0.25">
+            <OrderCard 
+              leverage={leverage} 
+              onLeverageChange={setLeverage} 
+              assetId={assetId}
+            />
+          </div>
         </div>
 
         {/* Chart and Positions */}

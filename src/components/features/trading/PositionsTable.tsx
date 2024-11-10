@@ -84,7 +84,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
             </TableRow>
           ) : error ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-red-500">{error}</TableCell>
+              <TableCell colSpan={8} className="text-center text-red-500">{error.message}</TableCell>
             </TableRow>
           ) : positions.length === 0 ? (
             <TableRow>
