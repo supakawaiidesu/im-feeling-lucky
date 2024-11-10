@@ -24,7 +24,7 @@ export default function TradingInterface() {
 
       <div className="flex flex-1">
         {/* Trading Panel */}
-        <div className="p-4 border-r w-80">
+        <div className="p-4 w-80">
           <PairSelector 
             selectedPair={selectedPair} 
             onPairChange={setSelectedPair} 
