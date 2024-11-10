@@ -41,7 +41,7 @@ export function PairSelector({ selectedPair, onPairChange }: PairSelectorProps) 
     return (
       <div className="flex items-center mx-0.25 my-2" >
         <Select value={selectedPair} onValueChange={onPairChange}>
-          <SelectTrigger className="w-[290px] h-[55px] bg-background border rounded-lg shadow-sm">
+          <SelectTrigger className="w-[290px] h-[55px] bg-[hsl(var(--component-background))] border rounded-lg shadow-sm">
             <SelectValue>Loading...</SelectValue>
           </SelectTrigger>
         </Select>
@@ -52,10 +52,10 @@ export function PairSelector({ selectedPair, onPairChange }: PairSelectorProps) 
   return (
     <div className="flex items-center mx-0.25 my-2">
       <Select value={selectedPair} onValueChange={onPairChange}>
-        <SelectTrigger className="w-[290px] h-[55px] bg-background border rounded-lg shadow-sm">
+        <SelectTrigger className="w-[290px] h-[55px] bg-[hsl(var(--component-background))] border rounded-lg shadow-sm">
           <SelectValue>{selectedPair}</SelectValue>
         </SelectTrigger>
-        <SelectContent className="w-[800px]">
+        <SelectContent className="w-[800px] bg-[hsl(var(--component-background))]">
           {allMarkets.map((market) => (
             <SelectItem 
               key={market.pair} 

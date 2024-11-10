@@ -48,9 +48,10 @@ a {
     --radius: 0.5rem;
   }
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 252 16% 6%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+    --component-background: 250 12% 10%;
+    --card:250 12% 10%;
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;

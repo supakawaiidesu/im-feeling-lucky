@@ -52,7 +52,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
   };
 
   return (
-    <div className="mb-4 border rounded-lg ">
+    <div className="mb-4 border rounded-lg bg-[hsl(var(--component-background))]">
       <div className="flex items-center p-2 border-b">
         <Button variant="ghost" size="sm">
           Positions
