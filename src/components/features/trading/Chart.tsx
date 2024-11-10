@@ -10,6 +10,9 @@ declare global {
 
 const chartingLibraryPath = '/static/charting_library/'
 
+// Calculate time ranges
+const now = Math.floor(Date.now() / 1000)
+
 export function Chart() {
   useEffect(() => {
     const loadTradingView = async () => {
@@ -25,19 +28,36 @@ export function Chart() {
           locale: 'en',
           library_path: chartingLibraryPath,
           datafeed: datafeed,
-          symbol: 'BTCUSD',
-          interval: '1W' as ResolutionString,
+          symbol: 'Crypto.BTC/USD',
+          interval: '15' as ResolutionString,
           autosize: true,
           debug: true,
           enabled_features: ['show_exchange_logos'],
           theme: 'dark',
           overrides: {
-            'paneProperties.background': '#110F23',
+            'paneProperties.background': 'hsl(240 10% 3.9%)', // matches your --background dark theme variable
           },
+          load_last_chart: false,
+          saved_data: null,
+          auto_save_delay: 0,
+          max_bars: 300,
+          range: '1D',
+          allow_symbol_change: false,
+          favorites: { intervals: ['1', '5', '15', '30', '60', '240', '1D'] as ResolutionString[] },
+          loading_screen: { backgroundColor: "hsl(240 10% 3.9%)" }, // matches your --background dark theme variable
+          visible_range: {
+            from: now - (24 * 60 * 60),
+            to: now
+          },
+          auto_scale: true,
+          initial_data: {
+            resolution: '15' as ResolutionString,
+            from: now - (24 * 60 * 60),
+            to: now
+          }
         })
 
         widget.onChartReady(() => {
-          console.log('Chart is ready')
           const chart = widget.chart()
           chart.getSeries().setChartStyleProperties(1, {
             upColor: '#E6DAFE',
@@ -47,7 +67,7 @@ export function Chart() {
             wickUpColor: '#E4DADB',
             wickDownColor: '#E4DADB',
           })
-        })
+        });
       } catch (error) {
         console.error('Error initializing TradingView:', error)
       }
@@ -61,7 +81,7 @@ export function Chart() {
       id="tv_chart_container" 
       style={{ 
         flex: '1 1 auto',
-        minHeight: '500px',
+        minHeight: '600px',
       }} 
     />
   )

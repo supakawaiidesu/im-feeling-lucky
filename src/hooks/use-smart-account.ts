@@ -17,7 +17,7 @@ import {
 import { toSudoPolicy } from "@zerodev/permissions/policies";
 
 const bundlerRpcUrl = process.env.NEXT_PUBLIC_BUNDLER_RPC_URL;
-const PAYMASTER_RPC = "https://rpc.zerodev.app/api/v2/paymaster/424715b6-9633-4489-87cd-c15cc8043178?selfFunded=true";
+const PAYMASTER_RPC = process.env.NEXT_PUBLIC_PAYMASTER_RPC;
 
 export function useSmartAccount() {
   const { data: walletClient } = useWalletClient();
