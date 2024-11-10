@@ -14,7 +14,7 @@ export const config = getDefaultConfig({
   projectId: 'YOUR_PROJECT_ID',
   chains,
   transports: {
-    [arbitrum.id]: http('https://rpc.ankr.com/arbitrum'),
+    [arbitrum.id]: http(process.env.NEXT_PUBLIC_ARBITRUM_RPC || 'https://rpc.ankr.com/arbitrum'),
   },
   ssr: true,
 });
