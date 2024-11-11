@@ -36,7 +36,7 @@ export default function DepositBox() {
   const [isLoading, setIsLoading] = useState(false)
   const [isApproving, setIsApproving] = useState(false)
   
-  const { smartAccount, kernelClient, setupSessionKey, isSigningSessionKey } = useSmartAccount()
+  const { smartAccount, kernelClient, setupSessionKey, isSigningSessionKey, isInitialized } = useSmartAccount()  // Add isInitialized
   const { address: eoaAddress } = useAccount()
   const { toast } = useToast()
   const { balances, isLoading: isLoadingBalances, refetchBalances } = useBalances()
@@ -250,13 +250,14 @@ export default function DepositBox() {
       </div>
 
       <BalanceDisplay
-        eoaAddress={eoaAddress}
-        smartAccountAddress={smartAccount?.address}
-        eoaBalance={balances ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2) : '0.00'}
-        smartAccountBalance={balances ? parseFloat(balances.formattedUsdcBalance).toFixed(2) : '0.00'}
-        marginBalance={balances ? parseFloat(balances.formattedMusdBalance).toFixed(2) : '0.00'}
-        isLoading={isLoadingBalances}
-      />
+  eoaAddress={eoaAddress}
+  smartAccountAddress={smartAccount?.address}
+  eoaBalance={balances ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2) : '0.00'}
+  smartAccountBalance={balances ? parseFloat(balances.formattedUsdcBalance).toFixed(2) : '0.00'}
+  marginBalance={balances ? parseFloat(balances.formattedMusdBalance).toFixed(2) : '0.00'}
+  isLoading={isLoadingBalances}
+  isEffectivelyInitialized={isInitialized || !!smartAccount?.address}  // Add this prop
+/>
 
       {!smartAccount && eoaAddress && (
         <Alert>

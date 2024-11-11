@@ -22,6 +22,8 @@ const PAYMASTER_RPC = process.env.NEXT_PUBLIC_PAYMASTER_RPC;
 export function useSmartAccount() {
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [smartAccount, setSmartAccount] = useState<any>(null);
   const [kernelClient, setKernelClient] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,15 +31,83 @@ export function useSmartAccount() {
   const [isSigningSessionKey, setIsSigningSessionKey] = useState(false);
   const [sessionKeyAddress, setSessionKeyAddress] = useState<string | null>(null);
 
+  // Add this effect to sync isInitialized with account state
+  useEffect(() => {
+    if (smartAccount?.address && !isInitialized) {
+      console.log("Syncing initialization state with account presence");
+      setIsInitialized(true);
+    }
+  }, [smartAccount?.address, isInitialized]);
+
+  const triggerReload = useCallback(() => {
+    // Store a flag indicating we just completed setup
+    sessionStorage.setItem('sessionKeyJustCreated', 'true');
+    // Reload the page
+    window.location.reload();
+  }, []);
+
+  const updateAccountState = useCallback((kernelAccount: any, client: any) => {
+    console.log("Updating account state with:", { 
+      address: kernelAccount.address,
+      hasClient: !!client 
+    });
+    
+    // Use Promise.all to ensure all state updates happen together
+    Promise.all([
+      new Promise(resolve => {
+        setSmartAccount(kernelAccount);
+        resolve(null);
+      }),
+      new Promise(resolve => {
+        setKernelClient(client);
+        resolve(null);
+      }),
+      new Promise(resolve => {
+        setSessionKeyAddress(kernelAccount.address);
+        resolve(null);
+      }),
+      new Promise(resolve => {
+        setIsInitialized(true);
+        resolve(null);
+      }),
+      new Promise(resolve => {
+        setIsInitializing(false);
+        resolve(null);
+      })
+    ]).then(() => {
+      console.log("All state updates completed");
+    });
+  }, []);
+
+  const dispatchInitEvent = useCallback((kernelAccount: any) => {
+    console.log("Dispatching init event for address:", kernelAccount.address);
+    window.dispatchEvent(new CustomEvent('smartAccountInitialized', {
+      detail: { 
+        address: kernelAccount.address,
+        account: kernelAccount 
+      }
+    }));
+  }, []);
+
   // Initialize from stored session
   const initializeFromStoredSession = useCallback(async () => {
-    if (!publicClient) return;
+    if (!publicClient) {
+      setIsInitializing(false);
+      setIsInitialized(false);
+      return false;
+    }
 
+    setIsInitializing(true);
     const storedSessionKey = localStorage.getItem('sessionKey');
+    
+    // Check if we just completed setup
+    const justCreated = sessionStorage.getItem('sessionKeyJustCreated');
+    if (justCreated) {
+      sessionStorage.removeItem('sessionKeyJustCreated');
+    }
     
     if (storedSessionKey) {
       try {
-        // Deserialize the permission account
         const kernelAccount = await deserializePermissionAccount(
           publicClient,
           ENTRYPOINT_ADDRESS_V07,
@@ -45,7 +115,6 @@ export function useSmartAccount() {
           storedSessionKey
         );
 
-        // Create kernel client with paymaster
         const kernelPaymaster = createZeroDevPaymasterClient({
           chain: publicClient.chain,
           entryPoint: ENTRYPOINT_ADDRESS_V07,
@@ -62,18 +131,31 @@ export function useSmartAccount() {
           }
         });
 
-        setSmartAccount(kernelAccount);
-        setKernelClient(client);
-        setSessionKeyAddress(kernelAccount.address);
+        updateAccountState(kernelAccount, client);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        dispatchInitEvent(kernelAccount);
+
+        // Show success toast if we just created the session
+        if (justCreated) {
+          window.dispatchEvent(new CustomEvent('showSuccessToast', {
+            detail: { message: '1CT Account successfully created' }
+          }));
+        }
+        
         return true;
       } catch (err) {
         console.warn('Failed to initialize from stored session:', err);
         localStorage.removeItem('sessionKey');
+        setIsInitialized(false);
         return false;
+      } finally {
+        setIsInitializing(false);
       }
     }
+    setIsInitializing(false);
+    setIsInitialized(false);
     return false;
-  }, [publicClient]);
+  }, [publicClient, updateAccountState, dispatchInitEvent]);
 
   // Setup new session key
   const setupSessionKey = useCallback(async () => {
@@ -102,46 +184,29 @@ export function useSmartAccount() {
         kernelVersion: KERNEL_V3_1
       });
 
-      // Create master account
-      const masterAccount = await createKernelAccount(publicClient, {
-        plugins: {
-          sudo: ecdsaValidator,
-        },
-        entryPoint: ENTRYPOINT_ADDRESS_V07,
-        kernelVersion: KERNEL_V3_1
-      });
-
-      // Create permission validator for the session key
-      const permissionPlugin = await toPermissionValidator(publicClient, {
-        entryPoint: ENTRYPOINT_ADDRESS_V07,
-        signer: sessionKeySigner,
-        policies: [
-          // Using sudo policy for now - can be replaced with more restrictive policies
-          toSudoPolicy({}),
-        ],
-        kernelVersion: KERNEL_V3_1
-      });
-
       // Create kernel account with session key permissions
       const kernelAccount = await createKernelAccount(publicClient, {
         plugins: {
           sudo: ecdsaValidator,
-          regular: permissionPlugin,
+          regular: await toPermissionValidator(publicClient, {
+            entryPoint: ENTRYPOINT_ADDRESS_V07,
+            signer: sessionKeySigner,
+            policies: [toSudoPolicy({})],
+            kernelVersion: KERNEL_V3_1
+          })
         },
         entryPoint: ENTRYPOINT_ADDRESS_V07,
         kernelVersion: KERNEL_V3_1
       });
 
-      // Serialize the permission account with private key
+      // Store session key
       const serializedSessionKey = await serializePermissionAccount(
         kernelAccount,
         sessionPrivateKey
       );
-
-      // Store serialized session key
       localStorage.setItem('sessionKey', serializedSessionKey);
 
-      // Create kernel client with paymaster
+      // Create kernel client
       const kernelPaymaster = createZeroDevPaymasterClient({
         chain: publicClient.chain,
         entryPoint: ENTRYPOINT_ADDRESS_V07,
@@ -158,22 +223,37 @@ export function useSmartAccount() {
         }
       });
 
-      setSmartAccount(kernelAccount);
-      setKernelClient(client);
-      setSessionKeyAddress(kernelAccount.address);
+      // Update state
+      updateAccountState(kernelAccount, client);
+      
+      // Trigger reload after successful setup
+      triggerReload();
 
     } catch (err) {
       console.error('Session key setup error:', err);
       setError(err instanceof Error ? err : new Error('Failed to setup session key'));
+      setIsInitialized(false);
     } finally {
       setIsSigningSessionKey(false);
     }
-  }, [walletClient, publicClient]);
+  }, [walletClient, publicClient, updateAccountState, dispatchInitEvent, triggerReload]);
 
-  // Try to initialize from stored session on mount
+  // Initialize on mount
   useEffect(() => {
-    initializeFromStoredSession();
-  }, [initializeFromStoredSession]);
+    if (publicClient) {
+      initializeFromStoredSession();
+    }
+  }, [initializeFromStoredSession, publicClient]);
+
+  // Monitor state changes
+  useEffect(() => {
+    console.log("Smart account state changed:", {
+      address: smartAccount?.address,
+      isInitialized,
+      isInitializing,
+      hasClient: !!kernelClient
+    });
+  }, [smartAccount?.address, isInitialized, isInitializing, kernelClient]);
 
   return {
     smartAccount,
@@ -182,6 +262,8 @@ export function useSmartAccount() {
     error,
     setupSessionKey,
     isSigningSessionKey,
-    sessionKeyAddress
+    sessionKeyAddress,
+    isInitialized,
+    isInitializing
   };
 }
