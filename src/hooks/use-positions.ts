@@ -170,17 +170,17 @@ export function usePositions() {
     }
 
     const formattedPositions = positionsData.map((position: ContractPosition, index: number) => {
-      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] || 
-                    `Token${position.tokenId.toString()}/USD`;
+      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] ||
+        `Token${position.tokenId.toString()}/USD`;
       const priceKey = TOKEN_ID_TO_PRICE_KEY[position.tokenId.toString()];
       const currentPrice = priceKey && prices[priceKey]?.price;
       const entryPrice = Number(formatUnits(position.averagePrice, SCALING_FACTOR));
 
       const { pnl, fees } = currentPrice ?
         calculatePnL(
-          position, 
-          currentPrice, 
-          paidFeesData[index], 
+          position,
+          currentPrice,
+          paidFeesData[index],
           accruedFeesData[index]
         ) :
         { pnl: 'Loading...', fees: { positionFee: '0', borrowFee: '0', fundingFee: '0' } };

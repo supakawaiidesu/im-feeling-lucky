@@ -22,7 +22,8 @@ export function OrderCard({
   const { isConnected } = useAccount();
   const { smartAccount, error } = useSmartAccount();
   const [activeTab, setActiveTab] = useState("market");
-  const { placeMarketOrder, placeLimitOrder, placingOrders } = useMarketOrderActions();
+  const { placeMarketOrder, placeLimitOrder, placingOrders } =
+    useMarketOrderActions();
   const { allMarkets } = useMarketData();
 
   const {
@@ -37,7 +38,9 @@ export function OrderCard({
     handleStopLossChange,
   } = useOrderForm({ leverage });
 
-  const calculatedMargin = formState.amount ? parseFloat(formState.amount) / parseFloat(leverage) : 0;
+  const calculatedMargin = formState.amount
+    ? parseFloat(formState.amount) / parseFloat(leverage)
+    : 0;
 
   const tradeDetails = useTradeCalculations({
     amount: formState.amount,
@@ -55,10 +58,12 @@ export function OrderCard({
     if (!isConnected || !smartAccount?.address) return;
 
     const calculatedSize = formState.amount ? parseFloat(formState.amount) : 0;
-    const tpsl = formState.tpslEnabled ? {
-      takeProfit: formState.takeProfit,
-      stopLoss: formState.stopLoss
-    } : {};
+    const tpsl = formState.tpslEnabled
+      ? {
+          takeProfit: formState.takeProfit,
+          stopLoss: formState.stopLoss,
+        }
+      : {};
 
     if (activeTab === "market" && tradeDetails.entryPrice) {
       placeMarketOrder(
@@ -93,7 +98,10 @@ export function OrderCard({
         )}
 
         <div className="mb-4">
-          <LeverageDialog leverage={leverage} onLeverageChange={onLeverageChange} />
+          <LeverageDialog
+            leverage={leverage}
+            onLeverageChange={onLeverageChange}
+          />
         </div>
 
         <Tabs defaultValue="market" onValueChange={setActiveTab}>
@@ -120,20 +128,20 @@ export function OrderCard({
 
           <div className="flex justify-between text-sm text-muted-foreground">
             <TabsList className="flex gap-4 p-0 bg-transparent border-0">
-              <TabsTrigger 
-                value="market" 
+              <TabsTrigger
+                value="market"
                 className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
               >
                 Market
               </TabsTrigger>
-              <TabsTrigger 
-                value="limit" 
+              <TabsTrigger
+                value="limit"
                 className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
               >
                 Limit
               </TabsTrigger>
-              <TabsTrigger 
-                value="stop" 
+              <TabsTrigger
+                value="stop"
                 className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
               >
                 Stop
@@ -190,7 +198,9 @@ export function OrderCard({
               ? "Enter Limit Price"
               : placingOrders
               ? "Placing Order..."
-              : `Place ${activeTab === "market" ? "Market" : "Limit"} ${formState.isLong ? "Long" : "Short"}`}
+              : `Place ${activeTab === "market" ? "Market" : "Limit"} ${
+                  formState.isLong ? "Long" : "Short"
+                }`}
           </Button>
         </Tabs>
       </CardContent>
