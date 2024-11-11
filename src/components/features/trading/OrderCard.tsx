@@ -75,6 +75,12 @@ export function OrderCard({
     return parseFloat(amount);
   }, [amount]);
 
+  // Calculate notional size
+  const notionalSize = useMemo(() => {
+    if (!calculatedSize || !currentPrice) return 0;
+    return calculatedSize / currentPrice;
+  }, [calculatedSize, currentPrice]);
+
   const liquidationPrice = useMemo(() => {
     if (!currentPrice || !leverage) return null;
 
@@ -255,8 +261,10 @@ export function OrderCard({
                 <span>${currentPrice?.toFixed(2) || "0.00"}</span>
               </div>
               <div className="flex justify-between">
-                <span>Position Size</span>
-                <span>${calculatedSize.toFixed(2)}</span>
+                <span>Notional Size</span>
+                <span>
+                  {notionalSize.toFixed(4)} {market?.pair?.split("/")[0]}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Liquidation Price</span>
