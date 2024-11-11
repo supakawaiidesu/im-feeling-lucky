@@ -96,12 +96,12 @@ export function Chart() {
         widget.onChartReady(() => {
           const chart = widget.chart();
           chart.getSeries().setChartStyleProperties(1, {
-            upColor: "#E6DAFE",
-            downColor: "#7142CF",
-            borderUpColor: "#E6DAFE",
-            borderDownColor: "#7142CF",
-            wickUpColor: "#E4DADB",
-            wickDownColor: "#E4DADB",
+            upColor: "#3df57b",
+            downColor: "#ea435c",
+            borderUpColor: "#3df57b",
+            borderDownColor: "#ea435c",
+            wickUpColor: "#3df57b",
+            wickDownColor: "#ea435c",
           });
         });
       } catch (error) {

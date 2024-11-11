@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "../../../ui/button";
 import { Card, CardContent } from "../../../ui/card";
@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs";
 import { useMarketOrderActions } from "../../../../hooks/use-market-order-actions";
 import { useSmartAccount } from "../../../../hooks/use-smart-account";
 import { useMarketData } from "../../../../hooks/use-market-data";
+import { usePrices } from "../../../../lib/websocket-price-context"; // Add this import
 import { LeverageDialog } from "../LeverageDialog";
 import { MarketOrderForm } from "./components/MarketOrderForm";
 import { LimitOrderForm } from "./components/LimitOrderForm";
@@ -25,6 +26,7 @@ export function OrderCard({
   const { placeMarketOrder, placeLimitOrder, placingOrders } =
     useMarketOrderActions();
   const { allMarkets } = useMarketData();
+  const { prices } = usePrices(); // Add this hook
 
   const {
     formState,
@@ -36,6 +38,7 @@ export function OrderCard({
     toggleTPSL,
     handleTakeProfitChange,
     handleStopLossChange,
+    setFormState, // Make sure useOrderForm exports this
   } = useOrderForm({ leverage });
 
   const calculatedMargin = formState.amount
@@ -53,6 +56,22 @@ export function OrderCard({
 
   // Get the pair name from market data using assetId
   const market = allMarkets.find((m) => m.assetId === assetId);
+  
+  // Update form state with current price
+  useEffect(() => {
+    const pair = market?.pair;
+    const basePair = pair?.split("/")[0].toLowerCase();
+    const currentPrice = basePair ? prices[basePair]?.price : undefined;
+
+    if (currentPrice) {
+      setFormState((prev: any) => ({
+        ...prev,
+        entryPrice: activeTab === "market" ? currentPrice : 
+                   activeTab === "limit" && formState.limitPrice ? 
+                   Number(formState.limitPrice) : currentPrice
+      }));
+    }
+  }, [prices, assetId, allMarkets, activeTab, formState.limitPrice, setFormState]);
 
   const handlePlaceOrder = () => {
     if (!isConnected || !smartAccount?.address) return;

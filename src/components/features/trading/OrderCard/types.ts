@@ -24,4 +24,5 @@ export interface OrderFormState {
   tpslEnabled: boolean;
   takeProfit: string;
   stopLoss: string;
+  entryPrice?: number; // Add this
 }

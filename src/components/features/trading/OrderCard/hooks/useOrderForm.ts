@@ -16,6 +16,7 @@ interface UseOrderFormReturn {
   toggleTPSL: () => void;
   handleTakeProfitChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleStopLossChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setFormState: React.Dispatch<React.SetStateAction<OrderFormState>>; // Add this
 }
 
 export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormReturn {
@@ -28,6 +29,7 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
     tpslEnabled: false,
     takeProfit: "",
     stopLoss: "",
+    entryPrice: 0
   });
 
   // Calculate max leveraged amount
@@ -117,5 +119,6 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
     toggleTPSL,
     handleTakeProfitChange,
     handleStopLossChange,
+    setFormState,
   };
 }
