@@ -14,7 +14,7 @@ type ActiveTab = 'positions' | 'orders' | 'trades';
 
 export function PositionsTable({ address }: PositionsTableProps) {
   const { positions, loading: positionsLoading, error: positionsError } = usePositions();
-  const { orders, loading: ordersLoading, error: ordersError } = useOrders();
+  const { orders, triggerOrders, loading: ordersLoading, error: ordersError } = useOrders();
   const { closePosition, closingPositions } = usePositionActions();
   const [activeTab, setActiveTab] = useState<ActiveTab>('positions');
   const [hoveredPosition, setHoveredPosition] = useState<string | null>(null);
@@ -137,61 +137,74 @@ export function PositionsTable({ address }: PositionsTableProps) {
           </>
         );
 
-      case 'orders':
-        return (
-          <>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Market</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Margin</TableHead>
-                <TableHead>Limit Price</TableHead>
-                <TableHead>Stop Loss</TableHead>
-                <TableHead>Take Profit</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {ordersLoading ? (
+        case 'orders':
+          return (
+            <>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center">Loading orders...</TableCell>
+                  <TableHead>Market</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Margin</TableHead>
+                  <TableHead>Limit Price</TableHead>
+                  <TableHead>Stop Price</TableHead>
+                  <TableHead>Stop Loss</TableHead>
+                  <TableHead>Take Profit</TableHead>
+                  <TableHead>Created</TableHead>
                 </TableRow>
-              ) : ordersError ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center text-red-500">{ordersError.message}</TableCell>
-                </TableRow>
-              ) : orders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center">No open orders</TableCell>
-                </TableRow>
-              ) : (
-                orders.map((order) => {
-                  // Determine if order is stop loss or take profit
-                  const isStopLoss = order.type === "Stop" || order.type === "StopLimit";
-                  const isTakeProfit = order.type === "TakeProfit" || order.type === "TakeProfitLimit";
-                  
-                  // Set the appropriate prices based on order type
-                  const entryPrice = order.limitPrice !== "0.00" ? order.limitPrice : "-";
-                  const stopLoss = isStopLoss ? order.stopPrice : "-";
-                  const takeProfit = isTakeProfit ? order.stopPrice : "-";
-
-                  return (
-                    <TableRow key={order.orderId}>
-                      <TableCell>{order.market}</TableCell>
-                      <TableCell>{order.type}</TableCell>
-                      <TableCell className={order.isLong ? "text-green-500" : "text-red-500"}>
-                        {order.isLong ? "+" : "-"}{order.size}
-                      </TableCell>
-                      <TableCell>{order.margin}</TableCell>
-                      <TableCell>{entryPrice}</TableCell>
-                      <TableCell className="text-red-500">{stopLoss}</TableCell>
-                      <TableCell className="text-green-500">{takeProfit}</TableCell>
-                      <TableCell>{order.timestamp}</TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
+              </TableHeader>
+              <TableBody>
+                {ordersLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center">Loading orders...</TableCell>
+                  </TableRow>
+                ) : ordersError ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center text-red-500">{ordersError.message}</TableCell>
+                  </TableRow>
+                ) : orders.length === 0 && (!triggerOrders || triggerOrders.length === 0) ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center">No open orders</TableCell>
+                  </TableRow>
+                ) : (
+                  <>
+                    {/* Regular Orders */}
+                    {orders.map((order) => (
+                      <TableRow key={order.orderId}>
+                        <TableCell>{order.market}</TableCell>
+                        <TableCell>{order.type}</TableCell>
+                        <TableCell className={order.isLong ? "text-green-500" : "text-red-500"}>
+                          {order.isLong ? "+" : "-"}{order.size}
+                        </TableCell>
+                        <TableCell>{order.margin}</TableCell>
+                        <TableCell>{order.limitPrice !== "0.00" ? order.limitPrice : "-"}</TableCell>
+                        <TableCell>{order.stopPrice !== "0.00" ? order.stopPrice : "-"}</TableCell>
+                        <TableCell className="text-red-500">-</TableCell>
+                        <TableCell className="text-green-500">-</TableCell>
+                        <TableCell>{order.timestamp}</TableCell>
+                      </TableRow>
+                    ))}
+                    
+                    {/* Trigger Orders */}
+                    {triggerOrders?.map((order) => (
+                      <TableRow key={`trigger-${order.positionId}`}>
+                        <TableCell>{order.market}</TableCell>
+                        <TableCell>Trigger</TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell className="text-red-500">
+                          {order.stopLoss ? `${order.stopLoss.price} (${order.stopLoss.size}%)` : '-'}
+                        </TableCell>
+                        <TableCell className="text-green-500">
+                          {order.takeProfit ? `${order.takeProfit.price} (${order.takeProfit.size}%)` : '-'}
+                        </TableCell>
+                        <TableCell>-</TableCell>
+                      </TableRow>
+                    ))}
+                  </>
+                )}
             </TableBody>
           </>
         );

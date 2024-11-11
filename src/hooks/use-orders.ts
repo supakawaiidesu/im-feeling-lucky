@@ -21,6 +21,21 @@ export interface Order {
   timestamp: string;
 }
 
+export interface TriggerOrder {
+  positionId: string;
+  market: string;
+  takeProfit: {
+    price: string;
+    size: string;
+    type: string;
+  } | null;
+  stopLoss: {
+    price: string;
+    size: string;
+    type: string;
+  } | null;
+}
+
 interface ContractPosition {
   owner: `0x${string}`;
   refer: `0x${string}`;
@@ -46,8 +61,14 @@ interface ContractOrder {
   timestamp: bigint;
 }
 
-interface ContractTrigger {
-  // Empty array in the example, but define fields if needed
+interface TriggerData {
+  isTP: boolean;
+  amountPercent: bigint;
+  createdAt: bigint;
+  price: bigint;
+  triggeredAmount: bigint;
+  triggeredAt: bigint;
+  status: number;
 }
 
 interface ContractPaidFees {
@@ -88,6 +109,7 @@ function getOrderType(positionType: bigint, stepType: bigint): string {
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [triggerOrders, setTriggerOrders] = useState<TriggerOrder[]>([]);
   const { prices } = usePrices();
   const { smartAccount } = useSmartAccount();
 
@@ -102,34 +124,77 @@ export function useOrders() {
     }
   });
 
+  const { data: positionsResult } = useReadContract({
+    address: LENS_CONTRACT_ADDRESS,
+    abi: lensAbi,
+    functionName: 'getUserAlivePositions',
+    args: smartAccount?.address ? [smartAccount.address as `0x${string}`] : undefined,
+    query: {
+      enabled: Boolean(smartAccount?.address),
+      refetchInterval: 5000
+    }
+  });
+
+  // Process trigger orders from positions
   useEffect(() => {
-    // Log initial contract result
-    console.log('Raw Contract Result:', {
-      contractResult,
-      timestamp: new Date().toISOString()
+    if (!positionsResult || !Array.isArray(positionsResult)) {
+      setTriggerOrders([]);
+      return;
+    }
+
+    const [posIds, positions, , triggers] = positionsResult;
+
+    if (!positions.length) {
+      setTriggerOrders([]);
+      return;
+    }
+
+    const formattedTriggerOrders = positions.map((position: ContractPosition, index: number) => {
+      const triggerData = triggers[index] as { triggers: TriggerData[] };
+      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] || 
+                    `Token${position.tokenId.toString()}/USD`;
+
+      // Process trigger orders (TP/SL)
+      let takeProfit = null;
+      let stopLoss = null;
+
+      if (triggerData && triggerData.triggers && triggerData.triggers.length > 0) {
+        triggerData.triggers.forEach((t: TriggerData) => {
+          const orderData = {
+            price: Number(formatUnits(t.price, SCALING_FACTOR)).toFixed(2),
+            size: Number(formatUnits(t.amountPercent, SCALING_FACTOR)).toFixed(2),
+            type: t.isTP ? "TakeProfit" : "StopLoss"
+          };
+
+          if (t.isTP) {
+            takeProfit = orderData;
+          } else {
+            stopLoss = orderData;
+          }
+        });
+      }
+
+      return {
+        positionId: posIds[index].toString(),
+        market,
+        takeProfit,
+        stopLoss
+      };
     });
 
+    setTriggerOrders(formattedTriggerOrders);
+  }, [positionsResult]);
+
+  // Process regular orders
+  useEffect(() => {
     if (!contractResult || !Array.isArray(contractResult)) {
-      console.log('No contract result or invalid format');
       setOrders([]);
       return;
     }
 
     const [posIds, positions, orders_, triggers, paidFees, accruedFees] = contractResult;
 
-    // Log destructured data
-    console.log('Destructured Contract Data:', {
-      positionIds: posIds,
-      positions,
-      orders: orders_,
-      triggers,
-      paidFees,
-      accruedFees,
-      timestamp: new Date().toISOString()
-    });
-
     if (!positions.length) {
-      console.log('No positions found');
       setOrders([]);
       return;
     }
@@ -150,17 +215,6 @@ export function useOrders() {
         fundingFee: Number(formatUnits(paidFee.paidFundingFee + accruedFee.fundingFee, SCALING_FACTOR))
       };
 
-      // Log individual order processing
-      console.log(`Processing Order ${index}:`, {
-        position,
-        order,
-        market,
-        priceKey,
-        currentPrice,
-        totalFees,
-        timestamp: new Date().toISOString()
-      });
-
       return {
         orderId: posIds[index].toString(),
         market,
@@ -175,17 +229,12 @@ export function useOrders() {
       };
     });
 
-    // Log final formatted orders
-    console.log('Final Formatted Orders:', {
-      formattedOrders,
-      timestamp: new Date().toISOString()
-    });
-
     setOrders(formattedOrders);
   }, [contractResult, prices]);
 
   return {
     orders,
+    triggerOrders,
     loading: isLoading,
     error: isError ? new Error('Failed to fetch orders') : null,
     refetch
