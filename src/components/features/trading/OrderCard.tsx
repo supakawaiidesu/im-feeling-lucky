@@ -219,23 +219,29 @@ export function OrderCard({
               </Button>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm">Amount</label>
-                <div
-                  className="text-sm cursor-pointer text-muted-foreground hover:text-primary"
-                  onClick={handleMaxClick}
-                >
-                  Balance: {balances?.formattedMusdBalance || "0.00"}
-                </div>
-              </div>
-              <Input
-                type="number"
-                placeholder="0.00"
-                value={amount}
-                onChange={handleAmountChange}
-              />
-              <div className="pt-2">
+            <div className="space-y-1">
+  <div className="relative">
+    <Input
+      type="number"
+      placeholder="0.00"
+      value={amount}
+      onChange={handleAmountChange}
+      label="Size"
+      className="pr-7"
+    />
+    <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
+      USD
+    </div>
+  </div>
+  <div className="flex items-center justify-between">
+  </div>
+  <Input
+    type="text"
+    value={`${calculatedMargin.toFixed(2)} USD`}
+    readOnly
+    label="Margin"
+  />
+  <div className="pt-2">
                 <Slider
                   value={sliderValue}
                   onValueChange={handleSliderChange}
@@ -253,10 +259,6 @@ export function OrderCard({
             </div>
 
             <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex justify-between">
-                <span>Margin</span>
-                <span>{calculatedMargin.toFixed(2)} USD</span>
-              </div>
               <div className="flex justify-between">
                 <span>Entry Price</span>
                 <span>${currentPrice?.toFixed(2) || "0.00"}</span>
