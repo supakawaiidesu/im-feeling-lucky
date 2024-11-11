@@ -34,6 +34,7 @@ export interface TriggerOrder {
     size: string;
     type: string;
   } | null;
+  timestamp: string;  // Add this field
 }
 
 interface ContractPosition {
@@ -94,12 +95,10 @@ const TOKEN_ID_TO_MARKET: { [key: string]: string } = {
 };
 
 const ORDER_TYPE_MAP: { [key: number]: string } = {
-  0: "Market",
-  1: "Limit",
-  2: "Stop",
-  3: "StopLimit",
-  4: "TakeProfit",
-  5: "TakeProfitLimit"
+  0: "Limit",
+  1: "Stop",
+  2: "StopLimit",
+  3: "TakeProfit",
 };
 
 function getOrderType(positionType: bigint, stepType: bigint): string {
@@ -153,11 +152,12 @@ export function useOrders() {
       const triggerData = triggers[index] as { triggers: TriggerData[] };
       const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] || 
                     `Token${position.tokenId.toString()}/USD`;
-
+    
       // Process trigger orders (TP/SL)
       let takeProfit = null;
       let stopLoss = null;
-
+      let latestTimestamp = 0;
+    
       if (triggerData && triggerData.triggers && triggerData.triggers.length > 0) {
         triggerData.triggers.forEach((t: TriggerData) => {
           const orderData = {
@@ -165,7 +165,10 @@ export function useOrders() {
             size: Number(formatUnits(t.amountPercent, SCALING_FACTOR)).toFixed(2),
             type: t.isTP ? "TakeProfit" : "StopLoss"
           };
-
+    
+          // Keep track of the latest timestamp
+          latestTimestamp = Math.max(latestTimestamp, Number(t.createdAt));
+    
           if (t.isTP) {
             takeProfit = orderData;
           } else {
@@ -173,12 +176,13 @@ export function useOrders() {
           }
         });
       }
-
+    
       return {
         positionId: posIds[index].toString(),
         market,
         takeProfit,
-        stopLoss
+        stopLoss,
+        timestamp: latestTimestamp ? new Date(latestTimestamp * 1000).toLocaleString() : '-'
       };
     });
 
