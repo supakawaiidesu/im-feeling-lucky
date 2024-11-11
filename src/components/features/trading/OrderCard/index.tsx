@@ -32,6 +32,9 @@ export function OrderCard({
     handleLimitPriceChange,
     handleSliderChange,
     toggleDirection,
+    toggleTPSL,
+    handleTakeProfitChange,
+    handleStopLossChange,
   } = useOrderForm({ leverage });
 
   const calculatedMargin = formState.amount ? parseFloat(formState.amount) / parseFloat(leverage) : 0;
@@ -52,6 +55,10 @@ export function OrderCard({
     if (!isConnected || !smartAccount?.address) return;
 
     const calculatedSize = formState.amount ? parseFloat(formState.amount) : 0;
+    const tpsl = formState.tpslEnabled ? {
+      takeProfit: formState.takeProfit,
+      stopLoss: formState.stopLoss
+    } : {};
 
     if (activeTab === "market" && tradeDetails.entryPrice) {
       placeMarketOrder(
@@ -60,7 +67,9 @@ export function OrderCard({
         tradeDetails.entryPrice,
         100, // 1% slippage
         calculatedMargin,
-        calculatedSize
+        calculatedSize,
+        tpsl.takeProfit,
+        tpsl.stopLoss
       );
     } else if (activeTab === "limit" && formState.limitPrice) {
       placeLimitOrder(
@@ -69,7 +78,9 @@ export function OrderCard({
         parseFloat(formState.limitPrice),
         100, // 1% slippage
         calculatedMargin,
-        calculatedSize
+        calculatedSize,
+        tpsl.takeProfit,
+        tpsl.stopLoss
       );
     }
   };
@@ -136,6 +147,9 @@ export function OrderCard({
               calculatedMargin={calculatedMargin}
               handleAmountChange={handleAmountChange}
               handleSliderChange={handleSliderChange}
+              toggleTPSL={toggleTPSL}
+              handleTakeProfitChange={handleTakeProfitChange}
+              handleStopLossChange={handleStopLossChange}
             />
           </TabsContent>
 
@@ -146,6 +160,9 @@ export function OrderCard({
               handleAmountChange={handleAmountChange}
               handleLimitPriceChange={handleLimitPriceChange}
               handleSliderChange={handleSliderChange}
+              toggleTPSL={toggleTPSL}
+              handleTakeProfitChange={handleTakeProfitChange}
+              handleStopLossChange={handleStopLossChange}
             />
           </TabsContent>
 

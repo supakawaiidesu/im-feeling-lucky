@@ -24,7 +24,9 @@ export function useMarketOrderActions() {
     slippagePercent: number,
     margin: number,
     size: number,
-    orderType: "market" | "limit"
+    orderType: "market" | "limit",
+    takeProfit?: string,
+    stopLoss?: string
   ) => {
     if (!kernelClient || !smartAccount?.address || !publicClient) {
       toast({
@@ -64,6 +66,14 @@ export function useMarketOrderActions() {
           size,
           userAddress: smartAccount.address,
           ...(orderType === "limit" && { limitPrice: price }),
+          ...(takeProfit && { 
+            takeProfit: parseFloat(takeProfit),
+            takeProfitClosePercent: 100 // 100% close
+          }),
+          ...(stopLoss && { 
+            stopLoss: parseFloat(stopLoss),
+            stopLossClosePercent: 100 // 100% close
+          }),
         }),
       });
 
@@ -122,9 +132,11 @@ export function useMarketOrderActions() {
     currentPrice: number,
     slippagePercent: number,
     margin: number,
-    size: number
+    size: number,
+    takeProfit?: string,
+    stopLoss?: string
   ) => {
-    return placeOrder(pair, isLong, currentPrice, slippagePercent, margin, size, "market");
+    return placeOrder(pair, isLong, currentPrice, slippagePercent, margin, size, "market", takeProfit, stopLoss);
   };
 
   const placeLimitOrder = (
@@ -133,9 +145,11 @@ export function useMarketOrderActions() {
     limitPrice: number,
     slippagePercent: number,
     margin: number,
-    size: number
+    size: number,
+    takeProfit?: string,
+    stopLoss?: string
   ) => {
-    return placeOrder(pair, isLong, limitPrice, slippagePercent, margin, size, "limit");
+    return placeOrder(pair, isLong, limitPrice, slippagePercent, margin, size, "limit", takeProfit, stopLoss);
   };
 
   return {

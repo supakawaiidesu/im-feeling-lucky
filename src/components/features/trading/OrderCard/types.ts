@@ -21,4 +21,7 @@ export interface OrderFormState {
   limitPrice: string;
   sliderValue: number[];
   isLong: boolean;
+  tpslEnabled: boolean;
+  takeProfit: string;
+  stopLoss: string;
 }

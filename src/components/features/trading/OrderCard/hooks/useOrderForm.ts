@@ -13,6 +13,9 @@ interface UseOrderFormReturn {
   handleLimitPriceChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSliderChange: (value: number[]) => void;
   toggleDirection: () => void;
+  toggleTPSL: () => void;
+  handleTakeProfitChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleStopLossChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormReturn {
@@ -22,6 +25,9 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
     limitPrice: "",
     sliderValue: [0],
     isLong: true,
+    tpslEnabled: false,
+    takeProfit: "",
+    stopLoss: "",
   });
 
   // Calculate max leveraged amount
@@ -74,6 +80,33 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
     }));
   };
 
+  // Toggle TP/SL
+  const toggleTPSL = () => {
+    setFormState(prev => ({
+      ...prev,
+      tpslEnabled: !prev.tpslEnabled,
+      // Reset values when disabled
+      takeProfit: !prev.tpslEnabled ? prev.takeProfit : "",
+      stopLoss: !prev.tpslEnabled ? prev.stopLoss : ""
+    }));
+  };
+
+  // Handle take profit input change
+  const handleTakeProfitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormState(prev => ({
+      ...prev,
+      takeProfit: e.target.value
+    }));
+  };
+
+  // Handle stop loss input change
+  const handleStopLossChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormState(prev => ({
+      ...prev,
+      stopLoss: e.target.value
+    }));
+  };
+
   return {
     formState,
     maxLeveragedAmount,
@@ -81,5 +114,8 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
     handleLimitPriceChange,
     handleSliderChange,
     toggleDirection,
+    toggleTPSL,
+    handleTakeProfitChange,
+    handleStopLossChange,
   };
 }
