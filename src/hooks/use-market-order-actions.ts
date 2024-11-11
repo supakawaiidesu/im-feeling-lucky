@@ -3,7 +3,7 @@ import { usePublicClient } from 'wagmi';
 import { useToast } from './use-toast';
 import { useSmartAccount } from './use-smart-account';
 
-interface MarketOrderResponse {
+interface OrderResponse {
   calldata: string;
   vaultAddress: string;
   insufficientBalance: boolean;
@@ -17,13 +17,14 @@ export function useMarketOrderActions() {
   const { toast } = useToast();
   const { smartAccount, kernelClient } = useSmartAccount();
 
-  const placeMarketOrder = async (
+  const placeOrder = async (
     pair: number,
     isLong: boolean,
-    currentPrice: number,
+    price: number,
     slippagePercent: number,
     margin: number,
-    size: number
+    size: number,
+    orderType: "market" | "limit"
   ) => {
     if (!kernelClient || !smartAccount?.address || !publicClient) {
       toast({
@@ -42,9 +43,11 @@ export function useMarketOrderActions() {
         description: "Preparing transaction...",
       });
 
-      // Calculate maxAcceptablePrice with 6 decimal precision
-      const slippageMultiplier = isLong ? 1.05 : 0.95;
-      const maxAcceptablePrice = Number((currentPrice * slippageMultiplier).toFixed(6));
+      // For market orders, calculate maxAcceptablePrice with slippage
+      // For limit orders, use the exact limit price
+      const maxAcceptablePrice = orderType === "market" 
+        ? Number((price * (isLong ? 1.05 : 0.95)).toFixed(6))
+        : Number(price.toFixed(6));
 
       const response = await fetch('https://unidexv4-api-production.up.railway.app/api/newposition', {
         method: 'POST',
@@ -54,20 +57,21 @@ export function useMarketOrderActions() {
         body: JSON.stringify({
           pair,
           isLong,
-          orderType: "market",
+          orderType,
           maxAcceptablePrice,
           slippagePercent,
           margin,
           size,
           userAddress: smartAccount.address,
+          ...(orderType === "limit" && { limitPrice: price }),
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to place market order');
+        throw new Error(`Failed to place ${orderType} order`);
       }
 
-      const data: MarketOrderResponse = await response.json();
+      const data: OrderResponse = await response.json();
 
       if (data.insufficientBalance) {
         toast({
@@ -97,14 +101,14 @@ export function useMarketOrderActions() {
 
       toast({
         title: "Success",
-        description: "Market order placed successfully",
+        description: `${orderType.charAt(0).toUpperCase() + orderType.slice(1)} order placed successfully`,
       });
 
     } catch (err) {
-      console.error('Error placing market order:', err);
+      console.error(`Error placing ${orderType} order:`, err);
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to place market order",
+        description: err instanceof Error ? err.message : `Failed to place ${orderType} order`,
         variant: "destructive",
       });
     } finally {
@@ -112,8 +116,31 @@ export function useMarketOrderActions() {
     }
   };
 
+  const placeMarketOrder = (
+    pair: number,
+    isLong: boolean,
+    currentPrice: number,
+    slippagePercent: number,
+    margin: number,
+    size: number
+  ) => {
+    return placeOrder(pair, isLong, currentPrice, slippagePercent, margin, size, "market");
+  };
+
+  const placeLimitOrder = (
+    pair: number,
+    isLong: boolean,
+    limitPrice: number,
+    slippagePercent: number,
+    margin: number,
+    size: number
+  ) => {
+    return placeOrder(pair, isLong, limitPrice, slippagePercent, margin, size, "limit");
+  };
+
   return {
     placeMarketOrder,
+    placeLimitOrder,
     placingOrders,
   };
 }

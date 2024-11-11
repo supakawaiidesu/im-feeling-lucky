@@ -150,10 +150,7 @@ export function useMarketData({
       setAllMarkets(markets);
 
       if (selectedPair) {
-        console.log('Selected pair:', selectedPair);
-        console.log('Available markets:', markets.map(m => m.pair));
         const market = markets.find(function(m) { return m.pair === selectedPair; });
-        console.log('Found market:', market);
         setMarketData(market || markets[0] || null);
       } else {
         setMarketData(markets[0] || null);
