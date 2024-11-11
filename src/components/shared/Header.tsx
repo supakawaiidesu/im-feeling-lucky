@@ -23,9 +23,12 @@ export function Header() {
           <Button variant="ghost">Trade</Button>
         </nav>
       </div>
-      <div className="flex items-center ml-auto space-x-4">
+      <div className="flex items-center ml-auto space-x-2">
         <DepositBox />
-        {mounted && (
+
+        <ConnectButton showBalance={false} />
+      </div>
+      {mounted && (
           <Button
             variant="ghost"
             size="icon"
@@ -68,8 +71,6 @@ export function Header() {
             )}
           </Button>
         )}
-        <ConnectButton showBalance={false} />
-      </div>
     </header>
   )
 }

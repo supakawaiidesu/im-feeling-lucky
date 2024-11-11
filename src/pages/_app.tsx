@@ -35,7 +35,9 @@ function MyApp({ Component, pageProps }: AppProps) {
             >
               <PriceProvider>
                 <ToastProvider>
-                  <Component {...pageProps} />
+                  <div className="pb-8"> {/* Added padding bottom to prevent footer overlap */}
+                    <Component {...pageProps} />
+                  </div>
                   <Footer />
                 </ToastProvider>
               </PriceProvider>
