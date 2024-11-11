@@ -26,8 +26,10 @@ export function OrderCard({
   const { isConnected } = useAccount();
   const { smartAccount, error } = useSmartAccount();
   const [amount, setAmount] = useState("");
+  const [limitPrice, setLimitPrice] = useState("");
   const [sliderValue, setSliderValue] = useState([0]);
   const [isLong, setIsLong] = useState(true);
+  const [activeTab, setActiveTab] = useState("market");
   const { placeMarketOrder, placingOrders } = useMarketOrderActions();
   const { prices } = usePrices();
   const { allMarkets } = useMarketData();
@@ -64,6 +66,11 @@ export function OrderCard({
     }
   };
 
+  // Handle limit price input change
+  const handleLimitPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLimitPrice(e.target.value);
+  };
+
   // Calculate various trade details
   const calculatedMargin = useMemo(() => {
     if (!amount || !leverage) return 0;
@@ -75,23 +82,26 @@ export function OrderCard({
     return parseFloat(amount);
   }, [amount]);
 
-  // Calculate notional size
+  // Calculate notional size based on order type
   const notionalSize = useMemo(() => {
-    if (!calculatedSize || !currentPrice) return 0;
-    return calculatedSize / currentPrice;
-  }, [calculatedSize, currentPrice]);
+    if (!calculatedSize) return 0;
+    const price = activeTab === "limit" && limitPrice ? parseFloat(limitPrice) : currentPrice;
+    return price ? calculatedSize / price : 0;
+  }, [calculatedSize, currentPrice, activeTab, limitPrice]);
 
+  // Calculate liquidation price based on order type
   const liquidationPrice = useMemo(() => {
-    if (!currentPrice || !leverage) return null;
+    const price = activeTab === "limit" && limitPrice ? parseFloat(limitPrice) : currentPrice;
+    if (!price || !leverage) return null;
 
     const priceMovementPercentage = 0.9 / parseFloat(leverage);
 
     if (isLong) {
-      return currentPrice * (1 - priceMovementPercentage);
+      return price * (1 - priceMovementPercentage);
     } else {
-      return currentPrice * (1 + priceMovementPercentage);
+      return price * (1 + priceMovementPercentage);
     }
-  }, [currentPrice, leverage, isLong]);
+  }, [currentPrice, leverage, isLong, activeTab, limitPrice]);
 
   // Calculate fees using market data
   const fees = useMemo(() => {
@@ -105,32 +115,24 @@ export function OrderCard({
 
     const size = parseFloat(amount);
 
-    // Trading fee calculation remains the same
     const tradingFeePercent = isLong
       ? market.longTradingFee
       : market.shortTradingFee;
     const tradingFee = size * tradingFeePercent;
 
-    // Get borrow rate (already in hourly form)
     const borrowRate = isLong
       ? market.borrowRateForLong
       : market.borrowRateForShort;
 
-    // Funding rate is already hourly
     const hourlyFundingRate = market.fundingRate;
 
-    // For longs: pay positive funding rate, receive negative
-    // For shorts: receive positive funding rate, pay negative
     const effectiveFundingRate = isLong
       ? -hourlyFundingRate
       : hourlyFundingRate;
 
-    // Combine borrow and funding rates for total hourly interest
     const totalHourlyRatePercent = borrowRate + effectiveFundingRate;
     const hourlyInterest = size * (totalHourlyRatePercent / 100);
 
-    // Return the hourlyInterestPercent with the same sign as hourlyInterest
-    // This ensures the percentage matches whether we're gaining or losing money
     return {
       tradingFee,
       hourlyInterest,
@@ -149,16 +151,35 @@ export function OrderCard({
   };
 
   const handlePlaceOrder = () => {
-    if (!isConnected || !smartAccount?.address || !currentPrice) return;
+    if (!isConnected || !smartAccount?.address) return;
 
-    placeMarketOrder(
-      parseInt(assetId, 10),
-      isLong,
-      currentPrice,
-      100, // 1% slippage
-      calculatedMargin,
-      calculatedSize
-    );
+    if (activeTab === "market" && currentPrice) {
+      placeMarketOrder(
+        parseInt(assetId, 10),
+        isLong,
+        currentPrice,
+        100, // 1% slippage
+        calculatedMargin,
+        calculatedSize
+      );
+    } else if (activeTab === "limit" && limitPrice) {
+      // TODO: Implement limit order placement
+      placeMarketOrder(
+        parseInt(assetId, 10),
+        isLong,
+        parseFloat(limitPrice),
+        100, // 1% slippage
+        calculatedMargin,
+        calculatedSize
+      );
+    }
+  };
+
+  const getEntryPrice = () => {
+    if (activeTab === "limit" && limitPrice) {
+      return parseFloat(limitPrice);
+    }
+    return currentPrice;
   };
 
   return (
@@ -172,29 +193,29 @@ export function OrderCard({
           <LeverageDialog leverage={leverage} onLeverageChange={onLeverageChange} />
         </div>
 
-        <Tabs defaultValue="market">
-          <TabsContent value="market" className="space-y-4">
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant={isLong ? "default" : "outline"}
-                className={`w-full ${
-                  isLong ? "bg-green-600 hover:bg-green-700" : ""
-                }`}
-                onClick={() => setIsLong(true)}
-              >
-                Long
-              </Button>
-              <Button
-                variant={!isLong ? "default" : "outline"}
-                className={`w-full ${
-                  !isLong ? "bg-red-600 hover:bg-red-700" : ""
-                }`}
-                onClick={() => setIsLong(false)}
-              >
-                Short
-              </Button>
-            </div>
-            <div className="flex justify-between text-sm text-muted-foreground">
+        <Tabs defaultValue="market" onValueChange={setActiveTab}>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <Button
+              variant={isLong ? "default" : "outline"}
+              className={`w-full ${
+                isLong ? "bg-green-600 hover:bg-green-700" : ""
+              }`}
+              onClick={() => setIsLong(true)}
+            >
+              Long
+            </Button>
+            <Button
+              variant={!isLong ? "default" : "outline"}
+              className={`w-full ${
+                !isLong ? "bg-red-600 hover:bg-red-700" : ""
+              }`}
+              onClick={() => setIsLong(false)}
+            >
+              Short
+            </Button>
+          </div>
+
+          <div className="flex justify-between text-sm text-muted-foreground">
             <TabsList className="flex gap-4 p-0 bg-transparent border-0">
               <TabsTrigger 
                 value="market" 
@@ -216,6 +237,8 @@ export function OrderCard({
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="market" className="space-y-4">
             <div className="space-y-1">
               <div className="relative">
                 <Input
@@ -223,14 +246,12 @@ export function OrderCard({
                   placeholder="0.00"
                   value={amount}
                   onChange={handleAmountChange}
+                  className="text-right pr-7"
                   label="Size"
-                  className="pr-7"
                 />
                 <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
                   USD
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
               </div>
               <Input
                 type="text"
@@ -254,66 +275,121 @@ export function OrderCard({
                 </div>
               </div>
             </div>
+          </TabsContent>
 
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex justify-between">
-                <span>Entry Price</span>
-                <span>${currentPrice?.toFixed(2) || "0.00"}</span>
+          <TabsContent value="limit" className="space-y-4">
+            <div className="space-y-1">
+              <div className="relative">
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  className="text-right pr-7"
+                  label="Size"
+                />
+                <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
+                  USD
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Notional Size</span>
-                <span>
-                  {notionalSize.toFixed(4)} {market?.pair?.split("/")[0]}
-                </span>
+              <div className="relative">
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={limitPrice}
+                  onChange={handleLimitPriceChange}
+                  className="text-right pr-7"
+                  label="Limit Price"
+                />
+                <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
+                  USD
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Liquidation Price</span>
-                <span className="text-red-500">
-                  ${liquidationPrice?.toFixed(2) || "0.00"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Trading Fee </span>
-                <span>
-                  ${fees.tradingFee.toFixed(2)} ({fees.tradingFeePercent}%)
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Hourly Interest</span>
-                <span
-                  className={
-                    fees.hourlyInterest >= 0 ? "text-red-400" : "text-green-400"
-                  }
-                >
-                  {fees.hourlyInterest >= 0 ? "-" : "+"}$
-                  {Math.abs(fees.hourlyInterest).toFixed(2)} (
-                  {Math.abs(fees.hourlyInterestPercent).toFixed(4)}%)
-                </span>
+              <Input
+                type="text"
+                value={`${calculatedMargin.toFixed(2)} USD`}
+                readOnly
+                label="Margin"
+              />
+              <div className="pt-2">
+                <Slider
+                  value={sliderValue}
+                  onValueChange={handleSliderChange}
+                  max={100}
+                  step={1}
+                  className="mb-2"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>25%</span>
+                  <span>50%</span>
+                  <span>75%</span>
+                  <span>100%</span>
+                </div>
               </div>
             </div>
-
-            <Button
-              variant="market"
-              className="w-full"
-              disabled={
-                !isConnected ||
-                !smartAccount?.address ||
-                placingOrders ||
-                !currentPrice
-              }
-              onClick={handlePlaceOrder}
-            >
-              {!isConnected
-                ? "Connect Wallet to Trade"
-                : !smartAccount?.address
-                ? "Smart Account Not Ready"
-                : !currentPrice
-                ? "Waiting for price..."
-                : placingOrders
-                ? "Placing Order..."
-                : `Place Market ${isLong ? "Long" : "Short"}`}
-            </Button>
           </TabsContent>
+
+          <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+            <div className="flex justify-between">
+              <span>Entry Price</span>
+              <span>${getEntryPrice()?.toFixed(2) || "0.00"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Notional Size</span>
+              <span>
+                {notionalSize.toFixed(4)} {market?.pair?.split("/")[0]}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Liquidation Price</span>
+              <span className="text-red-500">
+                ${liquidationPrice?.toFixed(2) || "0.00"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Trading Fee </span>
+              <span>
+                ${fees.tradingFee.toFixed(2)} ({fees.tradingFeePercent}%)
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Hourly Interest</span>
+              <span
+                className={
+                  fees.hourlyInterest >= 0 ? "text-red-400" : "text-green-400"
+                }
+              >
+                {fees.hourlyInterest >= 0 ? "-" : "+"}$
+                {Math.abs(fees.hourlyInterest).toFixed(2)} (
+                {Math.abs(fees.hourlyInterestPercent).toFixed(4)}%)
+              </span>
+            </div>
+          </div>
+
+          <Button
+            variant="market"
+            className="w-full mt-4"
+            disabled={
+              !isConnected ||
+              !smartAccount?.address ||
+              placingOrders ||
+              (activeTab === "market" && !currentPrice) ||
+              (activeTab === "limit" && !limitPrice)
+            }
+            onClick={handlePlaceOrder}
+          >
+            {!isConnected
+              ? "Connect Wallet to Trade"
+              : !smartAccount?.address
+              ? "Smart Account Not Ready"
+              : activeTab === "market" && !currentPrice
+              ? "Waiting for price..."
+              : activeTab === "limit" && !limitPrice
+              ? "Enter Limit Price"
+              : placingOrders
+              ? "Placing Order..."
+              : `Place ${activeTab === "market" ? "Market" : "Limit"} ${isLong ? "Long" : "Short"}`}
+          </Button>
         </Tabs>
       </CardContent>
     </Card>
