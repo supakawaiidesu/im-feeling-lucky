@@ -74,7 +74,7 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
         {/* Price Group */}
         <div className="flex items-center min-w-[100px] pr-2 border-r">
           <div className="flex items-center gap-2 px-4">
-            <div className="font-bold text-md">
+            <div className="font-bold text-md font-mono w-[75px] text-left">
               {currentPrice ? currentPrice.toLocaleString() : "Loading..."}
             </div>
             <div className="text-muted-foreground">{selectedPair}</div>
