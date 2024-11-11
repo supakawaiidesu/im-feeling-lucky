@@ -55,7 +55,7 @@ export default function DepositBox() {
         onClick={() => setIsOpen(true)}
         className="bg-[hsl(var(--component-background))]"
       >
-        Deposit/Withdraw
+        Deposit / Withdraw
       </Button>
     )
   }
