@@ -95,7 +95,7 @@ const TPSLInputSection = ({
             <div className="relative w-20">
               <Input
                 type="number"
-                value={Math.abs(calculatePercentage(Number(takeProfit)))}
+                value={Math.round(Math.abs(calculatePercentage(Number(takeProfit))))}
                 onChange={handleTPPercentChange}
                 className="pr-6 text-right"
                 placeholder="0"
@@ -125,7 +125,7 @@ const TPSLInputSection = ({
             <div className="relative w-20">
               <Input
                 type="number"
-                value={Math.abs(calculatePercentage(Number(stopLoss)))}
+                value={Math.round(Math.abs(calculatePercentage(Number(stopLoss))))}
                 onChange={handleSLPercentChange}
                 className="pr-6 text-right"
                 placeholder="0"

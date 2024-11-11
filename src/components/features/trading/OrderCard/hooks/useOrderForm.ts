@@ -14,8 +14,8 @@ interface UseOrderFormReturn {
   handleSliderChange: (value: number[]) => void;
   toggleDirection: () => void;
   toggleTPSL: () => void;
-  handleTakeProfitChange: (value: string) => void;  // Changed
-  handleStopLossChange: (value: string) => void;    // Changed
+  handleTakeProfitChange: (value: string, isPrice?: boolean) => void;
+  handleStopLossChange: (value: string, isPrice?: boolean) => void;
   setFormState: React.Dispatch<React.SetStateAction<OrderFormState>>;
 }
 
@@ -28,7 +28,9 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
     isLong: true,
     tpslEnabled: false,
     takeProfit: "",
+    takeProfitPercentage: "",
     stopLoss: "",
+    stopLossPercentage: "",
     entryPrice: 0
   });
 
@@ -89,23 +91,68 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
       tpslEnabled: !prev.tpslEnabled,
       // Reset values when disabled
       takeProfit: !prev.tpslEnabled ? prev.takeProfit : "",
-      stopLoss: !prev.tpslEnabled ? prev.stopLoss : ""
+      takeProfitPercentage: !prev.tpslEnabled ? prev.takeProfitPercentage : "",
+      stopLoss: !prev.tpslEnabled ? prev.stopLoss : "",
+      stopLossPercentage: !prev.tpslEnabled ? prev.stopLossPercentage : ""
     }));
   };
 
-  // Handle take profit input change
-  const handleTakeProfitChange = (value: string) => {
-    setFormState(prev => ({
-      ...prev,
-      takeProfit: value
-    }));
+  // Calculate price from percentage
+  const calculatePrice = (percentage: number, isProfit: boolean) => {
+    const entryPrice = parseFloat(formState?.entryPrice?.toString() ?? "0");
+    if (!entryPrice || isNaN(entryPrice)) return "";
+    
+    const multiplier = isProfit ? (1 + percentage / 100) : (1 - percentage / 100);
+    return (entryPrice * multiplier).toFixed(2);
   };
 
-  const handleStopLossChange = (value: string) => {
-    setFormState(prev => ({
-      ...prev,
-      stopLoss: value
-    }));
+  // Calculate percentage from price
+  const calculatePercentage = (price: string, isProfit: boolean) => {
+    const entryPrice = parseFloat(formState?.entryPrice?.toString() ?? "0");
+    const targetPrice = parseFloat(price);
+    
+    if (!entryPrice || !targetPrice || isNaN(entryPrice) || isNaN(targetPrice)) return "";
+    
+    const percentage = ((targetPrice - entryPrice) / entryPrice) * 100;
+    return isProfit ? percentage.toFixed(2) : (-percentage).toFixed(2);
+  };
+
+  // Handle take profit changes
+  const handleTakeProfitChange = (value: string, isPrice: boolean = true) => {
+    setFormState(prev => {
+      if (isPrice) {
+        return {
+          ...prev,
+          takeProfit: value,
+          takeProfitPercentage: calculatePercentage(value, true)
+        };
+      } else {
+        return {
+          ...prev,
+          takeProfitPercentage: value,
+          takeProfit: calculatePrice(parseFloat(value), true)
+        };
+      }
+    });
+  };
+
+  // Handle stop loss changes
+  const handleStopLossChange = (value: string, isPrice: boolean = true) => {
+    setFormState(prev => {
+      if (isPrice) {
+        return {
+          ...prev,
+          stopLoss: value,
+          stopLossPercentage: calculatePercentage(value, false)
+        };
+      } else {
+        return {
+          ...prev,
+          stopLossPercentage: value,
+          stopLoss: calculatePrice(parseFloat(value), false)
+        };
+      }
+    });
   };
 
   return {

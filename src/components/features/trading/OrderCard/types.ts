@@ -23,6 +23,8 @@ export interface OrderFormState {
   isLong: boolean;
   tpslEnabled: boolean;
   takeProfit: string;
+  takeProfitPercentage: string;
   stopLoss: string;
+  stopLossPercentage: string;
   entryPrice?: number; // Add this
 }
