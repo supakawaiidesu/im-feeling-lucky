@@ -67,6 +67,7 @@ export function MarketOrderForm({
           takeProfit={formState.takeProfit}
           stopLoss={formState.stopLoss}
           entryPrice={formState.entryPrice || 0}
+          isLong={formState.isLong}  // Add this line
           onTakeProfitChange={handleTakeProfitChange}
           onStopLossChange={handleStopLossChange}
           toggleTPSL={toggleTPSL}

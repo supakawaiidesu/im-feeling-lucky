@@ -82,6 +82,7 @@ export function LimitOrderForm({
   takeProfit={formState.takeProfit}
   stopLoss={formState.stopLoss}
   entryPrice={Number(formState.limitPrice) || 0}
+  isLong={formState.isLong}  // Add this line
   onTakeProfitChange={handleTakeProfitChange}
   onStopLossChange={handleStopLossChange}
   toggleTPSL={toggleTPSL}

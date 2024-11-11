@@ -6,6 +6,7 @@ interface TPSLInputProps {
   takeProfit: string | number;
   stopLoss: string | number;
   entryPrice: number;
+  isLong: boolean;
   onTakeProfitChange: (value: string) => void;
   onStopLossChange: (value: string) => void;
   toggleTPSL: () => void;
@@ -16,20 +17,26 @@ const TPSLInputSection = ({
   takeProfit,
   stopLoss,
   entryPrice,
+  isLong,
   onTakeProfitChange,
   onStopLossChange,
   toggleTPSL
 }: TPSLInputProps) => {
-  // Calculate percentage from price
+  // Calculate percentage from price based on position type
   const calculatePercentage = (price: number) => {
     if (!entryPrice || !price) return 0;
-    return Math.round(((price - entryPrice) / entryPrice) * 100);
+    const percentageChange = ((price - entryPrice) / entryPrice) * 100;
+    
+    // For short positions, invert the percentage
+    return isLong ? percentageChange : -percentageChange;
   };
 
-  // Calculate price from percentage
+  // Calculate price from percentage based on position type
   const calculatePrice = (percentage: number) => {
     if (!entryPrice) return 0;
-    return entryPrice * (1 + percentage / 100);
+    // For short positions, invert the percentage
+    const adjustedPercentage = isLong ? percentage : -percentage;
+    return entryPrice * (1 + adjustedPercentage / 100);
   };
 
   // Handle TP price input
@@ -40,7 +47,7 @@ const TPSLInputSection = ({
   // Handle TP percentage input
   const handleTPPercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const percent = parseFloat(e.target.value);
-    const newPrice = calculatePrice(percent).toFixed(2);
+    const newPrice = calculatePrice(isLong ? Math.abs(percent) : -Math.abs(percent)).toFixed(2);
     onTakeProfitChange(newPrice);
   };
 
@@ -52,7 +59,7 @@ const TPSLInputSection = ({
   // Handle SL percentage input
   const handleSLPercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const percent = parseFloat(e.target.value);
-    const newPrice = calculatePrice(percent).toFixed(2);
+    const newPrice = calculatePrice(isLong ? -Math.abs(percent) : Math.abs(percent)).toFixed(2);
     onStopLossChange(newPrice);
   };
 
@@ -88,7 +95,7 @@ const TPSLInputSection = ({
             <div className="relative w-20">
               <Input
                 type="number"
-                value={calculatePercentage(Number(takeProfit))}
+                value={Math.abs(calculatePercentage(Number(takeProfit)))}
                 onChange={handleTPPercentChange}
                 className="pr-6 text-right"
                 placeholder="0"
@@ -118,7 +125,7 @@ const TPSLInputSection = ({
             <div className="relative w-20">
               <Input
                 type="number"
-                value={calculatePercentage(Number(stopLoss))}
+                value={Math.abs(calculatePercentage(Number(stopLoss)))}
                 onChange={handleSLPercentChange}
                 className="pr-6 text-right"
                 placeholder="0"
