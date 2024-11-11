@@ -54,12 +54,14 @@ function truncateToTwoDecimals(value: string): string {
 }
 
 export function useBalances() {
-  const { smartAccount, isInitialized } = useSmartAccount()
+  const { smartAccount, isInitialized, isInitializing } = useSmartAccount()
   const { address: eoaAddress } = useAccount()
   const [localSmartAccount, setLocalSmartAccount] = useState<any>(null);
 
-  // Use either the hook's smart account or our local copy
+  // Consider account ready if we either have smartAccount or localSmartAccount
   const effectiveSmartAccount = smartAccount || localSmartAccount;
+  const isEffectivelyInitialized = isInitialized || !!effectiveSmartAccount?.address;
+
 
   // Memoize the contract read arguments to ensure stability
   const smartAccountArgs = useMemo(() => {
@@ -86,13 +88,22 @@ export function useBalances() {
     functionName: 'getUserBalances',
     args: smartAccountArgs,
     query: {
-      enabled: !!effectiveSmartAccount?.address && isInitialized && !!smartAccountArgs,
+      enabled: !!effectiveSmartAccount?.address, // Only check for address
       retry: 5,
       retryDelay: 1000,
       staleTime: 0,
       refetchInterval: 3000,
     }
   })
+  useEffect(() => {
+    console.log("Balance state changed:", {
+      smartAccountAddress: effectiveSmartAccount?.address,
+      hookIsInitialized: isInitialized,
+      effectivelyInitialized: isEffectivelyInitialized,
+      hasArgs: !!smartAccountArgs,
+      isInitializing
+    });
+  }, [effectiveSmartAccount?.address, isInitialized, isEffectivelyInitialized, smartAccountArgs, isInitializing]);
 
   const { 
     data: eoaUsdcBalance, 
@@ -154,7 +165,8 @@ export function useBalances() {
     console.log("Refetching balances with args:", { 
       smartAccountAddress: effectiveSmartAccount.address, 
       eoaAddress,
-      isInitialized 
+      isInitialized,
+      isEffectivelyInitialized 
     });
     
     try {

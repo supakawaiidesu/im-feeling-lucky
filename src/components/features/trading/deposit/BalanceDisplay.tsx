@@ -3,13 +3,25 @@ interface BalanceDisplayItemProps {
   address: string | undefined
   balance: string
   isLoading: boolean
+  isEffectivelyInitialized?: boolean
 }
 
-function BalanceDisplayItem({ title, address, balance, isLoading }: BalanceDisplayItemProps) {
+function BalanceDisplayItem({ 
+  title, 
+  address, 
+  balance, 
+  isLoading,
+  isEffectivelyInitialized = true
+}: BalanceDisplayItemProps) {
+  const showConnectionStatus = title === "1CT Wallet";
+  const displayAddress = showConnectionStatus 
+    ? (isEffectivelyInitialized ? address : 'Not connected')
+    : (address || 'Not connected');
+
   return (
     <div>
       <div className="font-medium mb-1.5">{title}</div>
-      <div className="truncate">{address || 'Not connected'}</div>
+      <div className="truncate">{displayAddress}</div>
       <div className="mt-1 font-medium">
         {isLoading ? 'Loading...' : `${balance} USDC`}
       </div>
@@ -24,6 +36,7 @@ interface BalanceDisplayProps {
   smartAccountBalance: string
   marginBalance: string
   isLoading: boolean
+  isEffectivelyInitialized: boolean
 }
 
 export function BalanceDisplay({
@@ -32,7 +45,8 @@ export function BalanceDisplay({
   eoaBalance,
   smartAccountBalance,
   marginBalance,
-  isLoading
+  isLoading,
+  isEffectivelyInitialized
 }: BalanceDisplayProps) {
   return (
     <div className="grid grid-cols-3 gap-4 p-4 text-sm rounded-lg bg-muted/50">
@@ -47,6 +61,7 @@ export function BalanceDisplay({
         address={smartAccountAddress}
         balance={smartAccountBalance}
         isLoading={isLoading}
+        isEffectivelyInitialized={isEffectivelyInitialized}
       />
       <BalanceDisplayItem
         title="Margin Balance"

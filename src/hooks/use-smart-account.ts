@@ -31,12 +31,52 @@ export function useSmartAccount() {
   const [isSigningSessionKey, setIsSigningSessionKey] = useState(false);
   const [sessionKeyAddress, setSessionKeyAddress] = useState<string | null>(null);
 
+  // Add this effect to sync isInitialized with account state
+  useEffect(() => {
+    if (smartAccount?.address && !isInitialized) {
+      console.log("Syncing initialization state with account presence");
+      setIsInitialized(true);
+    }
+  }, [smartAccount?.address, isInitialized]);
+
+  const triggerReload = useCallback(() => {
+    // Store a flag indicating we just completed setup
+    sessionStorage.setItem('sessionKeyJustCreated', 'true');
+    // Reload the page
+    window.location.reload();
+  }, []);
+
   const updateAccountState = useCallback((kernelAccount: any, client: any) => {
-    console.log("Updating account state with:", { address: kernelAccount.address });
-    setSmartAccount(kernelAccount);
-    setKernelClient(client);
-    setSessionKeyAddress(kernelAccount.address);
-    setIsInitialized(true);
+    console.log("Updating account state with:", { 
+      address: kernelAccount.address,
+      hasClient: !!client 
+    });
+    
+    // Use Promise.all to ensure all state updates happen together
+    Promise.all([
+      new Promise(resolve => {
+        setSmartAccount(kernelAccount);
+        resolve(null);
+      }),
+      new Promise(resolve => {
+        setKernelClient(client);
+        resolve(null);
+      }),
+      new Promise(resolve => {
+        setSessionKeyAddress(kernelAccount.address);
+        resolve(null);
+      }),
+      new Promise(resolve => {
+        setIsInitialized(true);
+        resolve(null);
+      }),
+      new Promise(resolve => {
+        setIsInitializing(false);
+        resolve(null);
+      })
+    ]).then(() => {
+      console.log("All state updates completed");
+    });
   }, []);
 
   const dispatchInitEvent = useCallback((kernelAccount: any) => {
@@ -51,10 +91,20 @@ export function useSmartAccount() {
 
   // Initialize from stored session
   const initializeFromStoredSession = useCallback(async () => {
-    if (!publicClient) return false;
+    if (!publicClient) {
+      setIsInitializing(false);
+      setIsInitialized(false);
+      return false;
+    }
 
     setIsInitializing(true);
     const storedSessionKey = localStorage.getItem('sessionKey');
+    
+    // Check if we just completed setup
+    const justCreated = sessionStorage.getItem('sessionKeyJustCreated');
+    if (justCreated) {
+      sessionStorage.removeItem('sessionKeyJustCreated');
+    }
     
     if (storedSessionKey) {
       try {
@@ -84,6 +134,13 @@ export function useSmartAccount() {
         updateAccountState(kernelAccount, client);
         await new Promise(resolve => setTimeout(resolve, 500));
         dispatchInitEvent(kernelAccount);
+
+        // Show success toast if we just created the session
+        if (justCreated) {
+          window.dispatchEvent(new CustomEvent('showSuccessToast', {
+            detail: { message: '1CT Account successfully created' }
+          }));
+        }
         
         return true;
       } catch (err) {
@@ -166,10 +223,11 @@ export function useSmartAccount() {
         }
       });
 
-      // Update state and dispatch event
+      // Update state
       updateAccountState(kernelAccount, client);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      dispatchInitEvent(kernelAccount);
+      
+      // Trigger reload after successful setup
+      triggerReload();
 
     } catch (err) {
       console.error('Session key setup error:', err);
@@ -178,7 +236,7 @@ export function useSmartAccount() {
     } finally {
       setIsSigningSessionKey(false);
     }
-  }, [walletClient, publicClient, updateAccountState, dispatchInitEvent]);
+  }, [walletClient, publicClient, updateAccountState, dispatchInitEvent, triggerReload]);
 
   // Initialize on mount
   useEffect(() => {
