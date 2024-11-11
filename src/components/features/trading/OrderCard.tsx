@@ -4,19 +4,13 @@ import { Button } from "../../ui/button";
 import { Card, CardContent } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Slider } from "../../ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { useMarketOrderActions } from "../../../hooks/use-market-order-actions";
 import { usePrices } from "../../../lib/websocket-price-context";
 import { useMarketData } from "../../../hooks/use-market-data";
 import { useSmartAccount } from "../../../hooks/use-smart-account";
 import { useBalances } from "../../../hooks/use-balances";
+import { LeverageDialog } from "./LeverageDialog";
 
 interface OrderCardProps {
   leverage: string;
@@ -168,20 +162,8 @@ export function OrderCard({
           <div className="mb-4 text-red-500">Error: {error.message}</div>
         )}
 
-        <div className="flex items-center justify-between mb-4">
-          <span className="font-semibold">Leverage</span>
-          <Select value={leverage} onValueChange={onLeverageChange}>
-            <SelectTrigger className="w-20">
-              <SelectValue>{leverage}x</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1x</SelectItem>
-              <SelectItem value="2">2x</SelectItem>
-              <SelectItem value="5">5x</SelectItem>
-              <SelectItem value="10">10x</SelectItem>
-              <SelectItem value="20">20x</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="mb-4">
+          <LeverageDialog leverage={leverage} onLeverageChange={onLeverageChange} />
         </div>
 
         <Tabs defaultValue="market">
@@ -220,28 +202,28 @@ export function OrderCard({
             </div>
 
             <div className="space-y-1">
-  <div className="relative">
-    <Input
-      type="number"
-      placeholder="0.00"
-      value={amount}
-      onChange={handleAmountChange}
-      label="Size"
-      className="pr-7"
-    />
-    <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
-      USD
-    </div>
-  </div>
-  <div className="flex items-center justify-between">
-  </div>
-  <Input
-    type="text"
-    value={`${calculatedMargin.toFixed(2)} USD`}
-    readOnly
-    label="Margin"
-  />
-  <div className="pt-2">
+              <div className="relative">
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  label="Size"
+                  className="pr-7"
+                />
+                <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
+                  USD
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+              </div>
+              <Input
+                type="text"
+                value={`${calculatedMargin.toFixed(2)} USD`}
+                readOnly
+                label="Margin"
+              />
+              <div className="pt-2">
                 <Slider
                   value={sliderValue}
                   onValueChange={handleSliderChange}
