@@ -3,6 +3,7 @@ import { useAccount } from "wagmi";
 import { Button } from "../../ui/button";
 import { Card, CardContent } from "../../ui/card";
 import { Input } from "../../ui/input";
+import { Slider } from "../../ui/slider";
 import {
   Select,
   SelectContent,
@@ -31,6 +32,7 @@ export function OrderCard({
   const { isConnected } = useAccount();
   const { smartAccount, error } = useSmartAccount();
   const [amount, setAmount] = useState("");
+  const [sliderValue, setSliderValue] = useState([0]);
   const [isLong, setIsLong] = useState(true);
   const { placeMarketOrder, placingOrders } = useMarketOrderActions();
   const { prices } = usePrices();
@@ -42,6 +44,31 @@ export function OrderCard({
   const pair = market?.pair;
   const basePair = pair?.split("/")[0].toLowerCase();
   const currentPrice = basePair ? prices[basePair]?.price : undefined;
+
+  // Calculate max leveraged amount
+  const maxLeveragedAmount = useMemo(() => {
+    const balance = parseFloat(balances?.formattedMusdBalance || "0");
+    return balance * parseFloat(leverage);
+  }, [balances?.formattedMusdBalance, leverage]);
+
+  // Handle slider change
+  const handleSliderChange = (value: number[]) => {
+    setSliderValue(value);
+    const newAmount = (maxLeveragedAmount * value[0] / 100).toFixed(2);
+    setAmount(newAmount);
+  };
+
+  // Handle amount input change
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newAmount = e.target.value;
+    setAmount(newAmount);
+    
+    // Update slider value based on amount
+    if (maxLeveragedAmount > 0) {
+      const percentage = (parseFloat(newAmount) / maxLeveragedAmount) * 100;
+      setSliderValue([Math.min(100, Math.max(0, percentage))]);
+    }
+  };
 
   // Calculate various trade details
   const calculatedMargin = useMemo(() => {
@@ -116,7 +143,8 @@ export function OrderCard({
   // Handle max button click
   const handleMaxClick = () => {
     if (balances?.formattedMusdBalance) {
-      setAmount(balances.formattedMusdBalance);
+      setAmount(maxLeveragedAmount.toFixed(2));
+      setSliderValue([100]);
     }
   };
 
@@ -205,8 +233,23 @@ export function OrderCard({
                 type="number"
                 placeholder="0.00"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={handleAmountChange}
               />
+              <div className="pt-2">
+                <Slider
+                  value={sliderValue}
+                  onValueChange={handleSliderChange}
+                  max={100}
+                  step={1}
+                  className="mb-2"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>25%</span>
+                  <span>50%</span>
+                  <span>75%</span>
+                  <span>100%</span>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2 text-sm text-muted-foreground">
