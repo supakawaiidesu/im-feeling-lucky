@@ -167,29 +167,6 @@ export function OrderCard({
         </div>
 
         <Tabs defaultValue="market">
-          <div className="flex justify-between mb-4 text-sm text-muted-foreground">
-            <TabsList className="flex gap-4 p-0 bg-transparent border-0">
-              <TabsTrigger 
-                value="market" 
-                className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
-              >
-                Market
-              </TabsTrigger>
-              <TabsTrigger 
-                value="limit" 
-                className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
-              >
-                Limit
-              </TabsTrigger>
-              <TabsTrigger 
-                value="stop" 
-                className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
-              >
-                Stop
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
           <TabsContent value="market" className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
               <Button
@@ -211,7 +188,28 @@ export function OrderCard({
                 Short
               </Button>
             </div>
-
+            <div className="flex justify-between text-sm text-muted-foreground">
+            <TabsList className="flex gap-4 p-0 bg-transparent border-0">
+              <TabsTrigger 
+                value="market" 
+                className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
+              >
+                Market
+              </TabsTrigger>
+              <TabsTrigger 
+                value="limit" 
+                className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
+              >
+                Limit
+              </TabsTrigger>
+              <TabsTrigger 
+                value="stop" 
+                className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
+              >
+                Stop
+              </TabsTrigger>
+            </TabsList>
+          </div>
             <div className="space-y-1">
               <div className="relative">
                 <Input
@@ -287,6 +285,7 @@ export function OrderCard({
             </div>
 
             <Button
+              variant="market"
               className="w-full"
               disabled={
                 !isConnected ||
