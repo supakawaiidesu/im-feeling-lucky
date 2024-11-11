@@ -10,8 +10,8 @@ interface MarketOrderFormProps {
   handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSliderChange: (value: number[]) => void;
   toggleTPSL: () => void;
-  handleTakeProfitChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleStopLossChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleTakeProfitChange: (value: string) => void;  // Updated
+  handleStopLossChange: (value: string) => void;    // Updated
 }
 
 export function MarketOrderForm({

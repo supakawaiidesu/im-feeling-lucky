@@ -6,8 +6,8 @@ interface TPSLInputProps {
   takeProfit: string | number;
   stopLoss: string | number;
   entryPrice: number;
-  onTakeProfitChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onStopLossChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onTakeProfitChange: (value: string) => void;
+  onStopLossChange: (value: string) => void;
   toggleTPSL: () => void;
 }
 
@@ -20,10 +20,40 @@ const TPSLInputSection = ({
   onStopLossChange,
   toggleTPSL
 }: TPSLInputProps) => {
-  // Calculate percentage gain/loss
+  // Calculate percentage from price
   const calculatePercentage = (price: number) => {
     if (!entryPrice || !price) return 0;
-    return ((price - entryPrice) / entryPrice) * 100;
+    return Math.round(((price - entryPrice) / entryPrice) * 100);
+  };
+
+  // Calculate price from percentage
+  const calculatePrice = (percentage: number) => {
+    if (!entryPrice) return 0;
+    return entryPrice * (1 + percentage / 100);
+  };
+
+  // Handle TP price input
+  const handleTPPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onTakeProfitChange(e.target.value);
+  };
+
+  // Handle TP percentage input
+  const handleTPPercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const percent = parseFloat(e.target.value);
+    const newPrice = calculatePrice(percent).toFixed(2);
+    onTakeProfitChange(newPrice);
+  };
+
+  // Handle SL price input
+  const handleSLPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onStopLossChange(e.target.value);
+  };
+
+  // Handle SL percentage input
+  const handleSLPercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const percent = parseFloat(e.target.value);
+    const newPrice = calculatePrice(percent).toFixed(2);
+    onStopLossChange(newPrice);
   };
 
   return (
@@ -47,7 +77,7 @@ const TPSLInputSection = ({
                 type="number"
                 placeholder="0.00"
                 value={takeProfit}
-                onChange={onTakeProfitChange}
+                onChange={handleTPPriceChange}
                 className="text-right pr-7"
                 label="TP"
               />
@@ -55,14 +85,18 @@ const TPSLInputSection = ({
                 USD
               </div>
             </div>
-            <div className="relative w-24">
+            <div className="relative w-20">
               <Input
-                type="text"
-                value={`${calculatePercentage(Number(takeProfit)).toFixed(2)}%`}
-                readOnly
-                className="pr-2 text-right"
+                type="number"
+                value={calculatePercentage(Number(takeProfit))}
+                onChange={handleTPPercentChange}
+                className="pr-6 text-right"
+                placeholder="0"
                 label=""
               />
+              <div className="absolute text-sm -translate-y-1/2 right-2 top-1/2 text-muted-foreground">
+                %
+              </div>
             </div>
           </div>
 
@@ -73,7 +107,7 @@ const TPSLInputSection = ({
                 type="number"
                 placeholder="0.00"
                 value={stopLoss}
-                onChange={onStopLossChange}
+                onChange={handleSLPriceChange}
                 className="text-right pr-7"
                 label="SL"
               />
@@ -81,14 +115,18 @@ const TPSLInputSection = ({
                 USD
               </div>
             </div>
-            <div className="relative w-24">
+            <div className="relative w-20">
               <Input
-                type="text"
-                value={`${calculatePercentage(Number(stopLoss)).toFixed(2)}%`}
-                readOnly
-                className="pr-2 text-right"
+                type="number"
+                value={calculatePercentage(Number(stopLoss))}
+                onChange={handleSLPercentChange}
+                className="pr-6 text-right"
+                placeholder="0"
                 label=""
               />
+              <div className="absolute text-sm -translate-y-1/2 right-2 top-1/2 text-muted-foreground">
+                %
+              </div>
             </div>
           </div>
         </div>

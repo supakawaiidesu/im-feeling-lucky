@@ -14,9 +14,9 @@ interface UseOrderFormReturn {
   handleSliderChange: (value: number[]) => void;
   toggleDirection: () => void;
   toggleTPSL: () => void;
-  handleTakeProfitChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleStopLossChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  setFormState: React.Dispatch<React.SetStateAction<OrderFormState>>; // Add this
+  handleTakeProfitChange: (value: string) => void;  // Changed
+  handleStopLossChange: (value: string) => void;    // Changed
+  setFormState: React.Dispatch<React.SetStateAction<OrderFormState>>;
 }
 
 export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormReturn {
@@ -94,18 +94,17 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
   };
 
   // Handle take profit input change
-  const handleTakeProfitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTakeProfitChange = (value: string) => {
     setFormState(prev => ({
       ...prev,
-      takeProfit: e.target.value
+      takeProfit: value
     }));
   };
 
-  // Handle stop loss input change
-  const handleStopLossChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleStopLossChange = (value: string) => {
     setFormState(prev => ({
       ...prev,
-      stopLoss: e.target.value
+      stopLoss: value
     }));
   };
 

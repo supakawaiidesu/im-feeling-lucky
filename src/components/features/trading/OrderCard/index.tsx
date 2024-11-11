@@ -169,28 +169,28 @@ export function OrderCard({
           </div>
 
           <TabsContent value="market">
-            <MarketOrderForm
-              formState={formState}
-              calculatedMargin={calculatedMargin}
-              handleAmountChange={handleAmountChange}
-              handleSliderChange={handleSliderChange}
-              toggleTPSL={toggleTPSL}
-              handleTakeProfitChange={handleTakeProfitChange}
-              handleStopLossChange={handleStopLossChange}
-            />
+          <MarketOrderForm
+  formState={formState}
+  calculatedMargin={calculatedMargin}
+  handleAmountChange={handleAmountChange}
+  handleSliderChange={handleSliderChange}
+  toggleTPSL={toggleTPSL}
+  handleTakeProfitChange={value => handleTakeProfitChange(value)}  // Updated
+  handleStopLossChange={value => handleStopLossChange(value)}      // Updated
+/>
           </TabsContent>
 
           <TabsContent value="limit">
-            <LimitOrderForm
-              formState={formState}
-              calculatedMargin={calculatedMargin}
-              handleAmountChange={handleAmountChange}
-              handleLimitPriceChange={handleLimitPriceChange}
-              handleSliderChange={handleSliderChange}
-              toggleTPSL={toggleTPSL}
-              handleTakeProfitChange={handleTakeProfitChange}
-              handleStopLossChange={handleStopLossChange}
-            />
+          <LimitOrderForm
+  formState={formState}
+  calculatedMargin={calculatedMargin}
+  handleAmountChange={handleAmountChange}
+  handleLimitPriceChange={handleLimitPriceChange}
+  handleSliderChange={handleSliderChange}
+  toggleTPSL={toggleTPSL}
+  handleTakeProfitChange={value => handleTakeProfitChange(value)}  // Updated
+  handleStopLossChange={value => handleStopLossChange(value)}      // Updated
+/>
           </TabsContent>
 
           <TradeDetails details={tradeDetails} pair={market?.pair} />
