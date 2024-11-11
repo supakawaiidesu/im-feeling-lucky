@@ -167,17 +167,28 @@ export function OrderCard({
         </div>
 
         <Tabs defaultValue="market">
-          <TabsList className="w-full mb-4">
-            <TabsTrigger value="market" className="flex-1">
-              Market
-            </TabsTrigger>
-            <TabsTrigger value="limit" className="flex-1">
-              Limit
-            </TabsTrigger>
-            <TabsTrigger value="stop" className="flex-1">
-              Stop
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex justify-between mb-4 text-sm text-muted-foreground">
+            <TabsList className="flex gap-4 p-0 bg-transparent border-0">
+              <TabsTrigger 
+                value="market" 
+                className="bg-transparent border-0 p-0 data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
+              >
+                Market
+              </TabsTrigger>
+              <TabsTrigger 
+                value="limit" 
+                className="bg-transparent border-0 p-0 data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
+              >
+                Limit
+              </TabsTrigger>
+              <TabsTrigger 
+                value="stop" 
+                className="bg-transparent border-0 p-0 data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
+              >
+                Stop
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="market" className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
