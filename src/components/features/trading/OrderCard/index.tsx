@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs";
 import { useMarketOrderActions } from "../../../../hooks/use-market-order-actions";
 import { useSmartAccount } from "../../../../hooks/use-smart-account";
 import { useMarketData } from "../../../../hooks/use-market-data";
-import { usePrices } from "../../../../lib/websocket-price-context"; // Add this import
+import { usePrices } from "../../../../lib/websocket-price-context";
 import { LeverageDialog } from "../LeverageDialog";
 import { MarketOrderForm } from "./components/MarketOrderForm";
 import { LimitOrderForm } from "./components/LimitOrderForm";
@@ -21,12 +21,12 @@ export function OrderCard({
   assetId,
 }: OrderCardProps) {
   const { isConnected } = useAccount();
-  const { smartAccount, error } = useSmartAccount();
+  const { smartAccount, setupSessionKey, error } = useSmartAccount();
   const [activeTab, setActiveTab] = useState("market");
   const { placeMarketOrder, placeLimitOrder, placingOrders } =
     useMarketOrderActions();
   const { allMarkets } = useMarketData();
-  const { prices } = usePrices(); // Add this hook
+  const { prices } = usePrices();
 
   const {
     formState,
@@ -38,7 +38,7 @@ export function OrderCard({
     toggleTPSL,
     handleTakeProfitChange,
     handleStopLossChange,
-    setFormState, // Make sure useOrderForm exports this
+    setFormState,
   } = useOrderForm({ leverage });
 
   const calculatedMargin = formState.amount
@@ -54,10 +54,8 @@ export function OrderCard({
     assetId,
   });
 
-  // Get the pair name from market data using assetId
   const market = allMarkets.find((m) => m.assetId === assetId);
   
-  // Update form state with current price
   useEffect(() => {
     const pair = market?.pair;
     const basePair = pair?.split("/")[0].toLowerCase();
@@ -89,7 +87,7 @@ export function OrderCard({
         parseInt(assetId, 10),
         formState.isLong,
         tradeDetails.entryPrice,
-        100, // 1% slippage
+        100,
         calculatedMargin,
         calculatedSize,
         tpsl.takeProfit,
@@ -100,12 +98,31 @@ export function OrderCard({
         parseInt(assetId, 10),
         formState.isLong,
         parseFloat(formState.limitPrice),
-        100, // 1% slippage
+        100,
         calculatedMargin,
         calculatedSize,
         tpsl.takeProfit,
         tpsl.stopLoss
       );
+    }
+  };
+
+  const getButtonText = () => {
+    if (!isConnected) return "Connect Wallet to Trade";
+    if (!smartAccount?.address) return "Establish Connection";
+    if (activeTab === "market" && !tradeDetails.entryPrice) return "Waiting for price...";
+    if (activeTab === "limit" && !formState.limitPrice) return "Enter Limit Price";
+    if (placingOrders) return "Placing Order...";
+    return `Place ${activeTab === "market" ? "Market" : "Limit"} ${
+      formState.isLong ? "Long" : "Short"
+    }`;
+  };
+
+  const handleButtonClick = () => {
+    if (!smartAccount?.address && isConnected) {
+      setupSessionKey();
+    } else {
+      handlePlaceOrder();
     }
   };
 
@@ -169,28 +186,28 @@ export function OrderCard({
           </div>
 
           <TabsContent value="market">
-          <MarketOrderForm
-  formState={formState}
-  calculatedMargin={calculatedMargin}
-  handleAmountChange={handleAmountChange}
-  handleSliderChange={handleSliderChange}
-  toggleTPSL={toggleTPSL}
-  handleTakeProfitChange={value => handleTakeProfitChange(value)}  // Updated
-  handleStopLossChange={value => handleStopLossChange(value)}      // Updated
-/>
+            <MarketOrderForm
+              formState={formState}
+              calculatedMargin={calculatedMargin}
+              handleAmountChange={handleAmountChange}
+              handleSliderChange={handleSliderChange}
+              toggleTPSL={toggleTPSL}
+              handleTakeProfitChange={value => handleTakeProfitChange(value)}
+              handleStopLossChange={value => handleStopLossChange(value)}
+            />
           </TabsContent>
 
           <TabsContent value="limit">
-          <LimitOrderForm
-  formState={formState}
-  calculatedMargin={calculatedMargin}
-  handleAmountChange={handleAmountChange}
-  handleLimitPriceChange={handleLimitPriceChange}
-  handleSliderChange={handleSliderChange}
-  toggleTPSL={toggleTPSL}
-  handleTakeProfitChange={value => handleTakeProfitChange(value)}  // Updated
-  handleStopLossChange={value => handleStopLossChange(value)}      // Updated
-/>
+            <LimitOrderForm
+              formState={formState}
+              calculatedMargin={calculatedMargin}
+              handleAmountChange={handleAmountChange}
+              handleLimitPriceChange={handleLimitPriceChange}
+              handleSliderChange={handleSliderChange}
+              toggleTPSL={toggleTPSL}
+              handleTakeProfitChange={value => handleTakeProfitChange(value)}
+              handleStopLossChange={value => handleStopLossChange(value)}
+            />
           </TabsContent>
 
           <TradeDetails details={tradeDetails} pair={market?.pair} />
@@ -200,26 +217,13 @@ export function OrderCard({
             className="w-full mt-4"
             disabled={
               !isConnected ||
-              !smartAccount?.address ||
               placingOrders ||
               (activeTab === "market" && !tradeDetails.entryPrice) ||
               (activeTab === "limit" && !formState.limitPrice)
             }
-            onClick={handlePlaceOrder}
+            onClick={handleButtonClick}
           >
-            {!isConnected
-              ? "Connect Wallet to Trade"
-              : !smartAccount?.address
-              ? "Smart Account Not Ready"
-              : activeTab === "market" && !tradeDetails.entryPrice
-              ? "Waiting for price..."
-              : activeTab === "limit" && !formState.limitPrice
-              ? "Enter Limit Price"
-              : placingOrders
-              ? "Placing Order..."
-              : `Place ${activeTab === "market" ? "Market" : "Limit"} ${
-                  formState.isLong ? "Long" : "Short"
-                }`}
+            {getButtonText()}
           </Button>
         </Tabs>
       </CardContent>
