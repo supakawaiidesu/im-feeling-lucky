@@ -12,6 +12,7 @@ import { config } from '../wagmi';
 import { arbitrum } from 'viem/chains';
 import { PriceProvider } from '../lib/websocket-price-context';
 import { ToastProvider } from '../components/ui/use-toast';
+import { Footer } from '../components/shared/Footer';
 
 const client = new QueryClient();
 
@@ -35,6 +36,7 @@ function MyApp({ Component, pageProps }: AppProps) {
               <PriceProvider>
                 <ToastProvider>
                   <Component {...pageProps} />
+                  <Footer />
                 </ToastProvider>
               </PriceProvider>
             </RainbowKitProvider>
