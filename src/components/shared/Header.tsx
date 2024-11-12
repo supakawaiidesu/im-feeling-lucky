@@ -26,7 +26,7 @@ export function Header() {
       <div className="flex items-center ml-auto space-x-2">
         <DepositBox />
 
-        <ConnectButton showBalance={false} />
+        <ConnectButton showBalance={false} chainStatus="none" accountStatus="address" />
       </div>
       {mounted && (
           <Button
