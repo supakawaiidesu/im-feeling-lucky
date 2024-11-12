@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useReadContracts } from 'wagmi';
 import { formatUnits } from 'viem';
 import { lensAbi } from '../lib/abi/lens';
+import { arbitrum } from 'viem/chains';
 
 export const TRADING_PAIRS: { [key: string]: string } = {
   '1': 'BTC/USD', '2': 'ETH/USD', '3': 'FTM/USD', '4': 'SOL/USD', '5': 'DOGE/USD',
@@ -72,7 +73,8 @@ export function useMarketData({
     address: LENS_CONTRACT_ADDRESS,
     abi: lensAbi,
     functionName: 'getGlobalInfo' as const,
-    args: [address, BigInt(assetId)] as const
+    args: [address, BigInt(assetId)] as const,    
+    chainId: arbitrum.id // Explicitly set chainId to Arbitrum
   }));
 
   // Use wagmi's useReadContracts for multicall

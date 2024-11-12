@@ -4,6 +4,7 @@ import { formatUnits } from 'viem';
 import { usePrices } from '../lib/websocket-price-context';
 import { useSmartAccount } from './use-smart-account';
 import { lensAbi } from '../lib/abi/lens';
+import { arbitrum } from 'viem/chains';
 
 const LENS_CONTRACT_ADDRESS = '0xeae57c7bce5caf160343a83440e98bc976ab7274' as `0x${string}`;
 const SCALING_FACTOR = 30; // For formatUnits
@@ -120,7 +121,8 @@ export function useOrders() {
     query: {
       enabled: Boolean(smartAccount?.address),
       refetchInterval: 5000
-    }
+    },
+    chainId: arbitrum.id // Explicitly set chainId to Arbitrum
   });
 
   const { data: positionsResult } = useReadContract({
@@ -131,7 +133,8 @@ export function useOrders() {
     query: {
       enabled: Boolean(smartAccount?.address),
       refetchInterval: 5000
-    }
+    },
+    chainId: arbitrum.id // Explicitly set chainId to Arbitrum
   });
 
   // Process trigger orders from positions
