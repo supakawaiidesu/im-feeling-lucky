@@ -80,7 +80,7 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
         </div>
 
         {/* Open Interest Group */}
-        <div className="flex items-center space-x-8 px-6 border-r min-w-[360px]">
+        <div className="flex items-center space-x-8 px-4 border-r min-w-[300px]">
           <div>
             <div className="text-muted-foreground">Long OI</div>
             <div>
@@ -98,7 +98,7 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
         </div>
 
         {/* Long/Short Ratio Group */}
-        <div className="flex items-center px-6 border-r min-w-[180px]">
+        <div className="flex items-center px-4 border-r min-w-[160px]">
           <div>
             <div className="text-muted-foreground">Long/Short Ratio</div>
             <div>
@@ -109,8 +109,8 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
         </div>
 
         {/* Borrow Rates Group */}
-        <div className="flex items-center px-6 min-w-[240px]">
-          <div className="flex gap-6">
+        <div className="flex items-center px-4 min-w-[220px]">
+          <div className="flex gap-4">
             <div>
               <div className="text-muted-foreground">Borrowing (L)</div>
               <div className="text-red-500">
@@ -127,7 +127,7 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
         </div>
 
         {/* Funding Rate Group */}
-        <div className="flex items-center px-6 border-l min-w-[180px]">
+        <div className="flex items-center px-4 border-l min-w-[160px]">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Funding Rate</span>
@@ -153,3 +153,5 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
     </div>
   );
 };
+
+export default PairHeader;
