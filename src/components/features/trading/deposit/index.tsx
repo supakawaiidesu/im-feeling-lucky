@@ -73,10 +73,6 @@ export default function DepositBox() {
   }, [smartAccount?.address, refetchBalances]);
 
   const isOnCorrectChain = () => {
-    console.log('Current chain:', chain?.id);
-    console.log('Selected network:', selectedNetwork);
-    console.log('Arbitrum ID:', arbitrum.id);
-    console.log('Optimism ID:', optimism.id);
     
     if (selectedNetwork === "arbitrum") {
       return chain?.id === arbitrum.id;

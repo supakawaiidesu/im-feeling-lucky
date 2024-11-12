@@ -3,6 +3,7 @@ import { useAccount } from "wagmi"
 import { Header } from "../components/shared/Header"
 import { PairSelector } from "../components/features/trading/PairSelector"
 import { OrderCard } from "../components/features/trading/OrderCard"
+import { WalletBox } from "../components/features/trading/walletBox"
 import { Chart } from "../components/features/trading/Chart"
 import { PositionsTable } from "../components/features/trading/PositionsTable"
 import { PairHeader } from "../components/features/trading/PairHeader"
@@ -35,6 +36,7 @@ export default function TradingInterface() {
               onLeverageChange={setLeverage} 
               assetId={assetId}
             />
+            <WalletBox />
           </div>
         </div>
 
