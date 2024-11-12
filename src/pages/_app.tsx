@@ -11,8 +11,8 @@ import { ThemeProvider } from 'next-themes';
 import { config } from '../wagmi';
 import { arbitrum } from 'viem/chains';
 import { PriceProvider } from '../lib/websocket-price-context';
-import { ToastProvider } from '../components/ui/use-toast';
 import { Footer } from '../components/shared/Footer';
+import { Toaster } from '../components/ui/toaster';
 
 const client = new QueryClient();
 
@@ -34,12 +34,11 @@ function MyApp({ Component, pageProps }: AppProps) {
               initialChain={arbitrum}
             >
               <PriceProvider>
-                <ToastProvider>
-                  <div className="pb-8"> {/* Added padding bottom to prevent footer overlap */}
-                    <Component {...pageProps} />
-                  </div>
-                  <Footer />
-                </ToastProvider>
+                <div className="pb-8"> {/* Added padding bottom to prevent footer overlap */}
+                  <Component {...pageProps} />
+                </div>
+                <Footer />
+                <Toaster />
               </PriceProvider>
             </RainbowKitProvider>
           </QueryClientProvider>
