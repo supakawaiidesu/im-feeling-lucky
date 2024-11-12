@@ -154,14 +154,11 @@ export default function DepositBox() {
       return;
     }
 
-    if (selectedNetwork === "optimism" && type === "deposit") {
-      // Use CrossChainDepositCall logic for Optimism
-      const crossChainDepositButton = document.querySelector(
-        '[data-testid="cross-chain-deposit-button"]'
-      );
-      if (crossChainDepositButton instanceof HTMLElement) {
-        crossChainDepositButton.click();
-      }
+    if (type === "withdraw") {
+      toast({
+        title: "Coming Soon",
+        description: "Withdrawal to EOA functionality coming soon",
+      });
       return;
     }
 
@@ -179,28 +176,15 @@ export default function DepositBox() {
       return;
     }
 
-    if (
-      type === "withdraw" &&
-      balances &&
-      parseFloat(smartAccountAmount) > parseFloat(balances.formattedUsdcBalance)
-    ) {
-      toast({
-        title: "Error",
-        description: "Insufficient USDC balance in 1CT Wallet",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       if (type === "deposit") {
+        if (selectedNetwork === "optimism") {
+          // Do nothing here as the CrossChainDepositCall component will handle it
+          return;
+        }
         await transferToSmartAccount(smartAccountAmount, eoaAddress);
-      } else {
-        toast({
-          title: "Coming Soon",
-          description: "Withdrawal to EOA functionality coming soon",
-        });
       }
+      
       setSmartAccountAmount("");
       refetchBalances();
     } catch (error: any) {
@@ -298,6 +282,11 @@ export default function DepositBox() {
     ? parseFloat(tradingAmount || "0") >
       parseFloat(balances.formattedUsdcAllowance)
     : false;
+
+  const handleCrossChainSuccess = () => {
+    setSmartAccountAmount("");
+    refetchBalances();
+  };
 
   return (
     <Card className="absolute z-50 p-6 space-y-6 top-14 right-4 w-[480px] bg-[hsl(var(--component-background))]">
@@ -412,32 +401,33 @@ export default function DepositBox() {
                 </div>
               </div>
 
-              <ActionButtons
-                type="smart-account"
-                onDeposit={() => handleSmartAccountOperation("deposit")}
-                onWithdraw={() => handleSmartAccountOperation("withdraw")}
-                isLoading={isTransferring}
-                depositDisabled={
-                  !smartAccountAmount ||
-                  !eoaAddress ||
-                  !balances ||
-                  parseFloat(smartAccountAmount) >
-                    parseFloat(balances.formattedEoaUsdcBalance)
-                }
-                withdrawDisabled={
-                  !smartAccountAmount ||
-                  !smartAccount ||
-                  !balances ||
-                  parseFloat(smartAccountAmount) >
-                    parseFloat(balances.formattedUsdcBalance)
-                }
-              />
-
-              {/* Hidden CrossChainDepositCall for triggering */}
-
-              <div className="hidden">
-                <CrossChainDepositCall />
-              </div>
+              {selectedNetwork === "optimism" ? (
+                <CrossChainDepositCall 
+                  amount={smartAccountAmount}
+                  onSuccess={handleCrossChainSuccess}
+                />
+              ) : (
+                <ActionButtons
+                  type="smart-account"
+                  onDeposit={() => handleSmartAccountOperation("deposit")}
+                  onWithdraw={() => handleSmartAccountOperation("withdraw")}
+                  isLoading={isTransferring}
+                  depositDisabled={
+                    !smartAccountAmount ||
+                    !eoaAddress ||
+                    !balances ||
+                    parseFloat(smartAccountAmount) >
+                      parseFloat(balances.formattedEoaUsdcBalance)
+                  }
+                  withdrawDisabled={
+                    !smartAccountAmount ||
+                    !smartAccount ||
+                    !balances ||
+                    parseFloat(smartAccountAmount) >
+                      parseFloat(balances.formattedUsdcBalance)
+                  }
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="trading" className="space-y-4">

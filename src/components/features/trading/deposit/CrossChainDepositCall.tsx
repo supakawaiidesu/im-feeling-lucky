@@ -2,6 +2,7 @@ import { createConfig, ChainId } from '@lifi/sdk'
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
+import { parseUnits } from 'viem'
 
 createConfig({
   integrator: 'unidex',
@@ -11,7 +12,12 @@ createConfig({
   },
 })
 
-export function CrossChainDepositCall() {
+interface CrossChainDepositCallProps {
+  amount?: string;
+  onSuccess?: () => void;
+}
+
+export function CrossChainDepositCall({ amount = "0", onSuccess }: CrossChainDepositCallProps) {
   const { toast } = useToast()
   const { address } = useAccount()
   const { data: walletClient } = useWalletClient()
@@ -28,7 +34,10 @@ export function CrossChainDepositCall() {
     }
 
     try {
-      const response = await fetch('https://li.quest/v1/quote?fromChain=10&toChain=42161&fromToken=0x0b2c639c533813f4aa9d7837caf62653d097ff85&toToken=0xaf88d065e77c8cc2239327c5edb3a432268e5831&fromAddress=0xaf88d065e77c8cc2239327c5edb3a432268e5831&toAddress=0xe43cCd354c0c17ee17888cc4d76142a37b4DB68D&fromAmount=1000000&integrator=unidex&allowBridges=across&skipSimulation=true')
+      // Convert amount from decimal format (e.g. "1.5") to USDC units (multiply by 10^6)
+      const amountInUsdcUnits = parseUnits(amount, 6).toString()
+
+      const response = await fetch(`https://li.quest/v1/quote?fromChain=10&toChain=42161&fromToken=0x0b2c639c533813f4aa9d7837caf62653d097ff85&toToken=0xaf88d065e77c8cc2239327c5edb3a432268e5831&fromAddress=0xaf88d065e77c8cc2239327c5edb3a432268e5831&toAddress=0xe43cCd354c0c17ee17888cc4d76142a37b4DB68D&fromAmount=${amountInUsdcUnits}&integrator=unidex&allowBridges=across&skipSimulation=true`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch quote')
@@ -55,6 +64,8 @@ export function CrossChainDepositCall() {
         description: 'Cross-chain deposit completed successfully',
       })
 
+      onSuccess?.()
+
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -71,7 +82,7 @@ export function CrossChainDepositCall() {
       className="w-full"
       data-testid="cross-chain-deposit-button"
     >
-      Test Cross-Chain Deposit
+      Deposit to 1CT Wallet
     </Button>
   )
 }
