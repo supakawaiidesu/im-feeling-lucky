@@ -5,7 +5,7 @@ import { useSmartAccount } from "@/hooks/use-smart-account";
 import { useToast } from "@/components/ui/use-toast";
 import { useBalances } from "@/hooks/use-balances";
 import { useTokenTransferActions } from "@/hooks/use-token-transfer-actions";
-import { useAccount } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -21,6 +21,7 @@ import { BalanceDisplay } from "./BalanceDisplay";
 import { ActionButtons } from "./ActionButtons";
 import { CrossChainDepositCall } from "./CrossChainDepositCall";
 import { Label } from "@/components/ui/label";
+import { arbitrum, optimism } from "wagmi/chains";
 
 const TRADING_CONTRACT = "0x5f19704F393F983d5932b4453C6C87E85D22095E";
 const USDC_TOKEN = "0xaf88d065e77c8cc2239327c5edb3a432268e5831";
@@ -55,7 +56,8 @@ export default function DepositBox() {
     isSigningSessionKey,
     isInitialized,
   } = useSmartAccount();
-  const { address: eoaAddress } = useAccount();
+  const { address: eoaAddress, chain } = useAccount();
+  const { switchChain } = useSwitchChain();
   const { toast } = useToast();
   const {
     balances,
@@ -69,6 +71,22 @@ export default function DepositBox() {
       refetchBalances();
     }
   }, [smartAccount?.address, refetchBalances]);
+
+  const isOnCorrectChain = () => {
+    if (selectedNetwork === "arbitrum") {
+      return chain?.id === arbitrum.id;
+    } else {
+      return chain?.id === optimism.id;
+    }
+  };
+
+  const handleSwitchNetwork = () => {
+    if (selectedNetwork === "arbitrum") {
+      switchChain?.({ chainId: arbitrum.id });
+    } else {
+      switchChain?.({ chainId: optimism.id });
+    }
+  };
 
   if (!isOpen) {
     return (
@@ -151,6 +169,11 @@ export default function DepositBox() {
         description: "Please connect your wallet first",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (!isOnCorrectChain()) {
+      handleSwitchNetwork();
       return;
     }
 
@@ -288,6 +311,20 @@ export default function DepositBox() {
     refetchBalances();
   };
 
+  const getActionButtonText = (type: "deposit" | "withdraw", mode: "smart-account" | "trading") => {
+    if (mode === "smart-account" && type === "deposit") {
+      if (!isOnCorrectChain()) {
+        return `Switch to ${selectedNetwork === "arbitrum" ? "Arbitrum" : "Optimism"}`;
+      }
+    }
+    if (mode === "trading") {
+      if (type === "deposit" && needsApproval) {
+        return "Approve & Deposit";
+      }
+    }
+    return type === "deposit" ? "Deposit" : "Withdraw";
+  };
+
   return (
     <Card className="absolute z-50 p-6 space-y-6 top-14 right-4 w-[480px] bg-[hsl(var(--component-background))]">
       <div className="flex items-center justify-between">
@@ -317,28 +354,28 @@ export default function DepositBox() {
         </div>
       ) : (
         <>
-  <BalanceDisplay
-    eoaAddress={eoaAddress}
-    smartAccountAddress={smartAccount?.address}
-    eoaBalance={
-      balances
-        ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2)
-        : "0.00"
-    }
-    smartAccountBalance={
-      balances
-        ? parseFloat(balances.formattedUsdcBalance).toFixed(2)
-        : "0.00"
-    }
-    marginBalance={
-      balances
-        ? parseFloat(balances.formattedMusdBalance).toFixed(2)
-        : "0.00"
-    }
-    isLoading={isLoadingBalances}
-    isEffectivelyInitialized={isInitialized || !!smartAccount?.address}
-    selectedNetwork={selectedNetwork}
-  />
+          <BalanceDisplay
+            eoaAddress={eoaAddress}
+            smartAccountAddress={smartAccount?.address}
+            eoaBalance={
+              balances
+                ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2)
+                : "0.00"
+            }
+            smartAccountBalance={
+              balances
+                ? parseFloat(balances.formattedUsdcBalance).toFixed(2)
+                : "0.00"
+            }
+            marginBalance={
+              balances
+                ? parseFloat(balances.formattedMusdBalance).toFixed(2)
+                : "0.00"
+            }
+            isLoading={isLoadingBalances}
+            isEffectivelyInitialized={isInitialized || !!smartAccount?.address}
+            selectedNetwork={selectedNetwork}
+          />
 
           <Tabs defaultValue="smart-account" className="w-full">
             <TabsList className="w-full">
@@ -427,6 +464,8 @@ export default function DepositBox() {
                     parseFloat(smartAccountAmount) >
                       parseFloat(balances.formattedUsdcBalance)
                   }
+                  depositText={getActionButtonText("deposit", "smart-account")}
+                  withdrawText={getActionButtonText("withdraw", "smart-account")}
                 />
               )}
             </TabsContent>
@@ -466,6 +505,8 @@ export default function DepositBox() {
                   !smartAccount ||
                   isLoadingBalances
                 }
+                depositText={getActionButtonText("deposit", "trading")}
+                withdrawText={getActionButtonText("withdraw", "trading")}
               />
             </TabsContent>
           </Tabs>
