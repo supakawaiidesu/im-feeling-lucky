@@ -317,17 +317,8 @@ export default function DepositBox() {
   };
 
   const getActionButtonText = (type: "deposit" | "withdraw", mode: "smart-account" | "trading") => {
-    console.log('Getting button text:', { type, mode, isOnCorrectChain: isOnCorrectChain() });
-    
-    if (mode === "smart-account" && type === "deposit") {
-      const onCorrectChain = isOnCorrectChain();
-      console.log('Chain check result:', onCorrectChain);
-      
-      if (!onCorrectChain) {
-        const switchText = `Switch to ${selectedNetwork === "arbitrum" ? "Arbitrum" : "Optimism"}`;
-        console.log('Showing switch text:', switchText);
-        return switchText;
-      }
+    if (mode === "smart-account" && type === "deposit" && !isOnCorrectChain()) {
+      return `Switch to ${selectedNetwork === "arbitrum" ? "Arbitrum" : "Optimism"}`;
     }
 
     if (mode === "trading" && type === "deposit" && needsApproval) {
@@ -344,12 +335,10 @@ export default function DepositBox() {
       onDeposit: () => handleSmartAccountOperation("deposit"),
       onWithdraw: () => handleSmartAccountOperation("withdraw"),
       isLoading: isTransferring,
-      depositDisabled: onCorrectChain ? (
-        !smartAccountAmount ||
+      depositDisabled: !smartAccountAmount ||
         !eoaAddress ||
         !balances ||
-        parseFloat(smartAccountAmount) > parseFloat(balances.formattedEoaUsdcBalance)
-      ) : false,
+        parseFloat(smartAccountAmount) > parseFloat(balances.formattedEoaUsdcBalance),
       withdrawDisabled: !smartAccountAmount ||
         !smartAccount ||
         !balances ||
@@ -359,15 +348,16 @@ export default function DepositBox() {
     };
 
     if (selectedNetwork === "optimism") {
-      return (
-        <>
+      if (onCorrectChain) {  // Changed from !onCorrectChain
+        return (
           <CrossChainDepositCall 
             amount={smartAccountAmount}
             onSuccess={handleCrossChainSuccess}
+            chain={chain?.id}
           />
-          <ActionButtons {...commonProps} />
-        </>
-      );
+        );
+      }
+      return <ActionButtons {...commonProps} />;
     }
 
     return <ActionButtons {...commonProps} />;
