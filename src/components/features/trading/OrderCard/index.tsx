@@ -21,7 +21,12 @@ export function OrderCard({
   assetId,
 }: OrderCardProps) {
   const { isConnected } = useAccount();
-  const { smartAccount, setupSessionKey, error } = useSmartAccount();
+  const { 
+    smartAccount, 
+    setupSessionKey, 
+    error, 
+    isNetworkSwitching 
+  } = useSmartAccount();
   const [activeTab, setActiveTab] = useState("market");
   const { placeMarketOrder, placeLimitOrder, placingOrders } =
     useMarketOrderActions();
@@ -109,6 +114,7 @@ export function OrderCard({
 
   const getButtonText = () => {
     if (!isConnected) return "Connect Wallet to Trade";
+    if (isNetworkSwitching) return "Switching to Arbitrum...";
     if (!smartAccount?.address) return "Establish Connection";
     if (activeTab === "market" && !tradeDetails.entryPrice) return "Waiting for price...";
     if (activeTab === "limit" && !formState.limitPrice) return "Enter Limit Price";
@@ -125,7 +131,6 @@ export function OrderCard({
       handlePlaceOrder();
     }
   };
-
   return (
     <Card className="w-[350px]">
       <CardContent className="p-4">
@@ -213,15 +218,16 @@ export function OrderCard({
           <TradeDetails details={tradeDetails} pair={market?.pair} />
 
           <Button
-            variant="market"
-            className="w-full mt-4"
-            disabled={
-              !isConnected ||
-              placingOrders ||
-              (activeTab === "market" && !tradeDetails.entryPrice) ||
-              (activeTab === "limit" && !formState.limitPrice)
-            }
-            onClick={handleButtonClick}
+          variant="market"
+          className="w-full mt-4"
+          disabled={
+            !isConnected ||
+            placingOrders ||
+            isNetworkSwitching ||
+            (activeTab === "market" && !tradeDetails.entryPrice) ||
+            (activeTab === "limit" && !formState.limitPrice)
+          }
+          onClick={handleButtonClick}
           >
             {getButtonText()}
           </Button>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useWalletClient, usePublicClient } from 'wagmi';
+import { useWalletClient, usePublicClient, useAccount } from 'wagmi';
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import { createKernelAccount, createKernelAccountClient, createZeroDevPaymasterClient } from "@zerodev/sdk";
@@ -15,6 +15,7 @@ import {
 } from "@zerodev/permissions";
 import { toSudoPolicy } from "@zerodev/permissions/policies";
 import { arbitrum } from 'viem/chains';
+import { ensureArbitrumNetwork } from './use-network-switch';
 
 const bundlerRpcUrl = process.env.NEXT_PUBLIC_BUNDLER_RPC_URL;
 const PAYMASTER_RPC = process.env.NEXT_PUBLIC_PAYMASTER_RPC;
@@ -28,6 +29,7 @@ const arbitrumPublicClient = createPublicClient({
 
 export function useSmartAccount() {
   const { data: walletClient } = useWalletClient();
+  const { chain } = useAccount();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [smartAccount, setSmartAccount] = useState<any>(null);
@@ -36,6 +38,7 @@ export function useSmartAccount() {
   const [error, setError] = useState<Error | null>(null);
   const [isSigningSessionKey, setIsSigningSessionKey] = useState(false);
   const [sessionKeyAddress, setSessionKeyAddress] = useState<string | null>(null);
+  const [isNetworkSwitching, setIsNetworkSwitching] = useState(false);
 
   // Use Arbitrum chain and client regardless of connected chain
   const getChainConfig = useCallback(() => {
@@ -94,12 +97,15 @@ export function useSmartAccount() {
     
     if (storedSessionKey) {
       try {
+        console.log('Found stored session, attempting to initialize...'); // Debug log
         const kernelAccount = await deserializePermissionAccount(
           publicClient,
           ENTRYPOINT_ADDRESS_V07,
           KERNEL_V3_1,
           storedSessionKey
         );
+
+        console.log('Kernel account deserialized:', kernelAccount.address); // Debug log
 
         const kernelPaymaster = createZeroDevPaymasterClient({
           chain: arbitrum,
@@ -117,7 +123,25 @@ export function useSmartAccount() {
           }
         });
 
-        updateAccountState(kernelAccount, client);
+        // Make sure we wait for state updates to complete
+        await Promise.all([
+          new Promise<void>(resolve => {
+            setSmartAccount(kernelAccount);
+            resolve();
+          }),
+          new Promise<void>(resolve => {
+            setKernelClient(client);
+            resolve();
+          }),
+          new Promise<void>(resolve => {
+            setSessionKeyAddress(kernelAccount.address);
+            resolve();
+          }),
+          new Promise<void>(resolve => {
+            setIsInitialized(true);
+            resolve();
+          })
+        ]);
         
         if (justCreated) {
           window.dispatchEvent(new CustomEvent('showSuccessToast', {
@@ -125,9 +149,10 @@ export function useSmartAccount() {
           }));
         }
         
+        console.log('Session initialization complete'); // Debug log
         return true;
       } catch (err) {
-        console.warn('Failed to initialize from stored session:', err);
+        console.error('Failed to initialize from stored session:', err);
         localStorage.removeItem('sessionKey');
         setIsInitialized(false);
         return false;
@@ -138,7 +163,24 @@ export function useSmartAccount() {
     setIsInitializing(false);
     setIsInitialized(false);
     return false;
-  }, [getChainConfig, updateAccountState]);
+  }, [getChainConfig]);
+
+  // Run initialization immediately when the component mounts
+  useEffect(() => {
+    const initialize = async () => {
+      if (!isInitialized && !isInitializing) {
+        await initializeFromStoredSession();
+      }
+    };
+    initialize();
+  }, [initializeFromStoredSession, isInitialized, isInitializing]);
+
+  // Make sure we catch when wallet changes
+  useEffect(() => {
+    if (walletClient && !isInitialized && !isInitializing) {
+      initializeFromStoredSession();
+    }
+  }, [walletClient, isInitialized, isInitializing, initializeFromStoredSession]);
 
   const setupSessionKey = useCallback(async () => {
     if (!walletClient || !bundlerRpcUrl) return;
@@ -147,7 +189,17 @@ export function useSmartAccount() {
     try {
       setIsSigningSessionKey(true);
       setError(null);
+      setIsNetworkSwitching(true);
 
+      // Ensure we're on Arbitrum network before proceeding
+      const networkSwitch = await ensureArbitrumNetwork(chain?.id, walletClient);
+      if (!networkSwitch.success) {
+        throw new Error(networkSwitch.error || 'Failed to switch network');
+      }
+
+      setIsNetworkSwitching(false);
+
+      // Rest of the existing setupSessionKey code
       const sessionPrivateKey = generatePrivateKey();
       const privKeyAccount = privateKeyToAccount(sessionPrivateKey);
       
@@ -208,9 +260,11 @@ export function useSmartAccount() {
       setIsInitialized(false);
     } finally {
       setIsSigningSessionKey(false);
+      setIsNetworkSwitching(false);
     }
-  }, [walletClient, getChainConfig, updateAccountState, triggerReload]);
+  }, [walletClient, getChainConfig, updateAccountState, triggerReload, chain?.id]);
 
+  // Keep the original single initialization effect
   useEffect(() => {
     initializeFromStoredSession();
   }, [initializeFromStoredSession]);
@@ -224,6 +278,7 @@ export function useSmartAccount() {
     isSigningSessionKey,
     sessionKeyAddress,
     isInitialized,
-    isInitializing
+    isInitializing,
+    isNetworkSwitching
   };
 }
