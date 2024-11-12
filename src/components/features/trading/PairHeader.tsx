@@ -6,13 +6,12 @@ interface PairHeaderProps {
   selectedPair?: string;
 }
 
-type FundingTimeframe = "1h" | "1d" | "1y";
+type TimeframeRate = "1h" | "1d" | "1y";
 
 export const PairHeader: React.FC<PairHeaderProps> = ({
   selectedPair = "ETH/USD",
 }) => {
-  const [fundingTimeframe, setFundingTimeframe] =
-    useState<FundingTimeframe>("1h");
+  const [rateTimeframe, setRateTimeframe] = useState<TimeframeRate>("1h");
   const { marketData, loading, error } = useMarketData({
     selectedPair,
   });
@@ -45,9 +44,8 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
     );
   }
 
-  const getFundingRate = () => {
-    const rate = marketData.fundingRate;
-    switch (fundingTimeframe) {
+  const getAnnualizedRate = (rate: number) => {
+    switch (rateTimeframe) {
       case "1d":
         return rate * 24;
       case "1y":
@@ -57,8 +55,8 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
     }
   };
 
-  const nextTimeframe = (): FundingTimeframe => {
-    switch (fundingTimeframe) {
+  const nextTimeframe = (): TimeframeRate => {
+    switch (rateTimeframe) {
       case "1h":
         return "1d";
       case "1d":
@@ -69,8 +67,8 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
   };
 
   return (
-    <div className=" p-2 mr-2 my-2 h-[55px] border rounded-lg shadow-sm bg-[hsl(var(--component-background))]">
-      <div className="flex items-center text-sm">
+    <div className="p-2 mr-2 my-2 h-auto border rounded-lg shadow-sm bg-[hsl(var(--component-background))]">
+      <div className="flex flex-wrap items-center text-sm">
         {/* Price Group */}
         <div className="flex items-center min-w-[100px] pr-2 border-r">
           <div className="flex items-center gap-2 px-4">
@@ -110,24 +108,44 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
           </div>
         </div>
 
+        {/* Borrow Rates Group */}
+        <div className="flex items-center px-6 min-w-[240px]">
+          <div className="flex gap-6">
+            <div>
+              <div className="text-muted-foreground">Borrowing (L)</div>
+              <div className="text-red-500">
+                {getAnnualizedRate(marketData.borrowRateForLong).toFixed(4)}%
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Borrowing (S)</div>
+              <div className="text-red-500">
+                {getAnnualizedRate(marketData.borrowRateForShort).toFixed(4)}%
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Funding Rate Group */}
-        <div className="flex items-center px-6 min-w-[180px]">
+        <div className="flex items-center px-6 border-l min-w-[180px]">
           <div>
-            <div className="text-muted-foreground">
-              Funding Rate
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Funding Rate</span>
               <button
-                onClick={() => setFundingTimeframe(nextTimeframe())}
-                className="ml-2 px-2 py-0.5 text-xs rounded bg-secondary hover:bg-secondary/80"
+                onClick={() => setRateTimeframe(nextTimeframe())}
+                className="px-2 py-0.5 text-xs rounded bg-secondary hover:bg-secondary/80"
               >
-                {fundingTimeframe}
+                {rateTimeframe}
               </button>
             </div>
             <div
               className={
-                getFundingRate() >= 0 ? "text-green-500" : "text-red-500"
+                getAnnualizedRate(marketData.fundingRate) >= 0
+                  ? "text-green-500"
+                  : "text-red-500"
               }
             >
-              {getFundingRate().toFixed(4)}%
+              {getAnnualizedRate(marketData.fundingRate).toFixed(4)}%
             </div>
           </div>
         </div>
