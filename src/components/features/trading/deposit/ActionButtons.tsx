@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 
 interface ActionButtonsProps {
   onDeposit: () => void
@@ -9,6 +9,8 @@ interface ActionButtonsProps {
   depositDisabled: boolean
   withdrawDisabled: boolean
   type: 'smart-account' | 'trading'
+  depositText?: string
+  withdrawText?: string
 }
 
 export function ActionButtons({
@@ -19,16 +21,20 @@ export function ActionButtons({
   needsApproval,
   depositDisabled,
   withdrawDisabled,
-  type
+  type,
+  depositText,
+  withdrawText
 }: ActionButtonsProps) {
   const getDepositText = () => {
     if (isLoading || isApproving) return 'Processing...'
+    if (depositText) return depositText
     if (needsApproval) return 'Approve USDC'
     return type === 'smart-account' ? 'Deposit to 1CT Wallet' : 'Deposit to Trading'
   }
 
   const getWithdrawText = () => {
     if (isLoading) return 'Processing...'
+    if (withdrawText) return withdrawText
     return 'Withdraw'
   }
 
