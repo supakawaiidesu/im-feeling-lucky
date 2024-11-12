@@ -25,20 +25,35 @@ function BalanceDisplayItem({
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
+  if (title === "UniDex V4 Balance") {
+    return (
+      <Card className="h-full bg-muted/30">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">{title}:</span>
+            <span className="font-medium">
+              {isLoading ? 'Loading...' : `${balance} USDC`}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="h-full bg-muted/30">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{title}:</span>
-          <span className="font-medium">
-            {isLoading ? 'Loading...' : `${balance} USDC`}
-          </span>
-        </div>
-        {title !== "UniDex V4 Balance" && (
-          <div className="mt-1 font-mono text-xs text-muted-foreground">
-            {truncateAddress(displayAddress)}
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{title}:</span>
+            <span className="font-mono text-xs text-muted-foreground">
+              {truncateAddress(displayAddress)}
+            </span>
           </div>
-        )}
+          <div className="font-medium">
+            {isLoading ? 'Loading...' : `${balance} USDC`}
+          </div>
+        </div>
       </CardContent>
     </Card>
   )
