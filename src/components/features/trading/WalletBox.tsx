@@ -36,6 +36,19 @@ export function WalletBox() {
     return isNaN(numValue) ? '0.00' : numValue.toFixed(2);
   };
 
+  // Calculate total balance across all accounts
+  const calculateTotalBalance = () => {
+    if (balancesLoading) return 'Loading...';
+    
+    const musdBalance = parseFloat(balances?.formattedMusdBalance || '0');
+    const usdcBalance = parseFloat(balances?.formattedUsdcBalance || '0');
+    const eoaBalance = parseFloat(balances?.formattedEoaUsdcBalance || '0');
+    const unrealizedPnl = totalUnrealizedPnl || 0;
+    
+    const total = musdBalance + usdcBalance + eoaBalance + unrealizedPnl;
+    return `$${total.toFixed(2)}`;
+  };
+
   // Show connect wallet message if no wallet is connected
   if (!eoaAddress) {
     return (
@@ -52,7 +65,16 @@ export function WalletBox() {
   return (
     <Card className="w-[350px] mt-4">
       <CardContent className="p-4">
-        <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+        <div className="flex justify-between mb-2">
+          <span className="text-sm font-semibold text-muted-foreground">Account Equity</span>
+          <span className="text-base">
+            {calculateTotalBalance()}
+          </span>
+        </div>
+        
+        <div className="h-px my-4 bg-border" />
+
+        <div className="space-y-2 text-sm text-muted-foreground">
           <div className="flex justify-between">
             <span>Unrealized PnL</span>
             <span className={
