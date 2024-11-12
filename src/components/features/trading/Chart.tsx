@@ -115,6 +115,7 @@ export function Chart() {
   return (
     <div
       id="tv_chart_container"
+      className="mr-2"
       style={{
         flex: "1 1 auto",
         minHeight: "600px",

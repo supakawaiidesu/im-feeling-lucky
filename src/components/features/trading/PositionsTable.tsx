@@ -285,7 +285,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
   };
 
   return (
-    <div className="mb-4 border rounded-lg bg-[hsl(var(--component-background))]">
+    <div className="mb-4 mr-2 border rounded-lg bg-[hsl(var(--component-background))]">
       <div className="flex items-center p-2 border-b">
         <Button
           variant={activeTab === "positions" ? "default" : "ghost"}
