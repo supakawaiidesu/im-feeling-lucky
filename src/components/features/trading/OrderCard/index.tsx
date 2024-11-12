@@ -119,6 +119,17 @@ export function OrderCard({
     if (activeTab === "market" && !tradeDetails.entryPrice) return "Waiting for price...";
     if (activeTab === "limit" && !formState.limitPrice) return "Enter Limit Price";
     if (placingOrders) return "Placing Order...";
+    
+    // Add liquidity check
+    const orderSize = parseFloat(formState.amount) || 0;
+    const availableLiquidity = formState.isLong ? 
+      market?.availableLiquidity?.long : 
+      market?.availableLiquidity?.short;
+      
+    if (availableLiquidity !== undefined && orderSize > availableLiquidity) {
+      return "Not Enough Liquidity";
+    }
+    
     return `Place ${activeTab === "market" ? "Market" : "Limit"} ${
       formState.isLong ? "Long" : "Short"
     }`;
@@ -218,19 +229,27 @@ export function OrderCard({
           <TradeDetails details={tradeDetails} pair={market?.pair} />
 
           <Button
-          variant="market"
-          className="w-full mt-4"
-          disabled={
-            !isConnected ||
-            placingOrders ||
-            isNetworkSwitching ||
-            (activeTab === "market" && !tradeDetails.entryPrice) ||
-            (activeTab === "limit" && !formState.limitPrice)
-          }
-          onClick={handleButtonClick}
-          >
-            {getButtonText()}
-          </Button>
+  variant="market"
+  className="w-full mt-4"
+  disabled={
+    !isConnected ||
+    placingOrders ||
+    isNetworkSwitching ||
+    (activeTab === "market" && !tradeDetails.entryPrice) ||
+    (activeTab === "limit" && !formState.limitPrice) ||
+    // Add liquidity check
+    (() => {
+      const orderSize = parseFloat(formState.amount) || 0;
+      const availableLiquidity = formState.isLong ? 
+        market?.availableLiquidity?.long : 
+        market?.availableLiquidity?.short;
+      return availableLiquidity !== undefined && orderSize > availableLiquidity;
+    })()
+  }
+  onClick={handleButtonClick}
+>
+  {getButtonText()}
+</Button>
         </Tabs>
       </CardContent>
     </Card>
