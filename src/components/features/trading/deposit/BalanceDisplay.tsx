@@ -26,7 +26,7 @@ function BalanceDisplayItem({
   };
 
   return (
-    <Card className="bg-muted/30">
+    <Card className="h-full bg-muted/30">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{title}:</span>
@@ -34,7 +34,7 @@ function BalanceDisplayItem({
             {isLoading ? 'Loading...' : `${balance} USDC`}
           </span>
         </div>
-        {title !== "Margin Balance" && (
+        {title !== "UniDex V4 Balance" && (
           <div className="mt-1 font-mono text-xs text-muted-foreground">
             {truncateAddress(displayAddress)}
           </div>
@@ -65,21 +65,23 @@ export function BalanceDisplay({
 }: BalanceDisplayProps) {
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <BalanceDisplayItem
+          title="Web Wallet"
+          address={eoaAddress}
+          balance={eoaBalance}
+          isLoading={isLoading}
+        />
+        <BalanceDisplayItem
+          title="1CT Wallet"
+          address={smartAccountAddress}
+          balance={smartAccountBalance}
+          isLoading={isLoading}
+          isEffectivelyInitialized={isEffectivelyInitialized}
+        />
+      </div>
       <BalanceDisplayItem
-        title="Web Wallet"
-        address={eoaAddress}
-        balance={eoaBalance}
-        isLoading={isLoading}
-      />
-      <BalanceDisplayItem
-        title="1CT Wallet"
-        address={smartAccountAddress}
-        balance={smartAccountBalance}
-        isLoading={isLoading}
-        isEffectivelyInitialized={isEffectivelyInitialized}
-      />
-      <BalanceDisplayItem
-        title="Margin Balance"
+        title="UniDex V4 Balance"
         address=""
         balance={marginBalance}
         isLoading={isLoading}

@@ -468,18 +468,6 @@ export default function DepositBox() {
               />
             </TabsContent>
           </Tabs>
-
-          <div className="space-y-1 text-xs text-muted-foreground">
-            <p>How to use UniDex's 1CT and Margin Wallet</p>
-            <ol className="pl-2 list-decimal list-inside">
-              <li>
-                Transfer USDC between Web and 1CT Wallet using the 1CT tab
-              </li>
-              <li>
-                Use the Margin Balance tab manage your margin contract balance
-              </li>
-            </ol>
-          </div>
         </>
       )}
     </Card>
