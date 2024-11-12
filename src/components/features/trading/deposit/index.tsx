@@ -36,7 +36,7 @@ export default function DepositBox() {
   const [isLoading, setIsLoading] = useState(false)
   const [isApproving, setIsApproving] = useState(false)
   
-  const { smartAccount, kernelClient, setupSessionKey, isSigningSessionKey, isInitialized } = useSmartAccount()  // Add isInitialized
+  const { smartAccount, kernelClient, setupSessionKey, isSigningSessionKey, isInitialized } = useSmartAccount()
   const { address: eoaAddress } = useAccount()
   const { toast } = useToast()
   const { balances, isLoading: isLoadingBalances, refetchBalances } = useBalances()
@@ -249,106 +249,111 @@ export default function DepositBox() {
         <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>×</Button>
       </div>
 
-      <BalanceDisplay
-  eoaAddress={eoaAddress}
-  smartAccountAddress={smartAccount?.address}
-  eoaBalance={balances ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2) : '0.00'}
-  smartAccountBalance={balances ? parseFloat(balances.formattedUsdcBalance).toFixed(2) : '0.00'}
-  marginBalance={balances ? parseFloat(balances.formattedMusdBalance).toFixed(2) : '0.00'}
-  isLoading={isLoadingBalances}
-  isEffectivelyInitialized={isInitialized || !!smartAccount?.address}  // Add this prop
-/>
+      {!smartAccount && eoaAddress ? (
+        <div className="space-y-4">
+          <Alert>
+            <AlertDescription className="space-y-4">
+              <p className="text-sm">To get started with trading, you'll need to setup your 1CT wallet first.</p>
+              <Button
+                size="sm"
+                onClick={handleSetupSmartAccount}
+                disabled={isSigningSessionKey}
+              >
+                {isSigningSessionKey ? 'Setting up...' : 'Setup 1CT Wallet'}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      ) : (
+        <>
+          <BalanceDisplay
+            eoaAddress={eoaAddress}
+            smartAccountAddress={smartAccount?.address}
+            eoaBalance={balances ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2) : '0.00'}
+            smartAccountBalance={balances ? parseFloat(balances.formattedUsdcBalance).toFixed(2) : '0.00'}
+            marginBalance={balances ? parseFloat(balances.formattedMusdBalance).toFixed(2) : '0.00'}
+            isLoading={isLoadingBalances}
+            isEffectivelyInitialized={isInitialized || !!smartAccount?.address}
+          />
 
-      {!smartAccount && eoaAddress && (
-        <Alert>
-          <AlertDescription>
-            <Button
-              size="sm"
-              onClick={handleSetupSmartAccount}
-              disabled={isSigningSessionKey}
-            >
-              {isSigningSessionKey ? 'Setting up...' : 'Setup 1CT Wallet'}
-            </Button>
-          </AlertDescription>
-        </Alert>
+          <Tabs defaultValue="smart-account" className="w-full">
+            <TabsList className="w-full">
+              <TabsTrigger value="smart-account" className="flex-1">1CT Wallet</TabsTrigger>
+              <TabsTrigger value="trading" className="flex-1">Margin Balance</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="smart-account" className="space-y-4">
+              <AmountInput
+                amount={smartAccountAmount}
+                onAmountChange={setSmartAccountAmount}
+                onMaxClick={() => handleMaxClick('smart-account')}
+                disabled={!smartAccount || isLoadingBalances}
+                isLoading={isLoadingBalances}
+              />
+
+              <ActionButtons
+                type="smart-account"
+                onDeposit={() => handleSmartAccountOperation('deposit')}
+                onWithdraw={() => handleSmartAccountOperation('withdraw')}
+                isLoading={isTransferring}
+                depositDisabled={
+                  !smartAccountAmount || 
+                  !eoaAddress || 
+                  !balances ||
+                  parseFloat(smartAccountAmount) > parseFloat(balances.formattedEoaUsdcBalance)
+                }
+                withdrawDisabled={
+                  !smartAccountAmount || 
+                  !smartAccount ||
+                  !balances ||
+                  parseFloat(smartAccountAmount) > parseFloat(balances.formattedUsdcBalance)
+                }
+              />
+            </TabsContent>
+
+            <TabsContent value="trading" className="space-y-4">
+              <AmountInput
+                amount={tradingAmount}
+                onAmountChange={setTradingAmount}
+                onMaxClick={() => handleMaxClick('trading')}
+                disabled={!smartAccount || isLoadingBalances}
+                isLoading={isLoadingBalances}
+              />
+
+              <ActionButtons
+                type="trading"
+                onDeposit={needsApproval ? handleApproveAndDeposit : () => handleTradingOperation('deposit')}
+                onWithdraw={() => handleTradingOperation('withdraw')}
+                isLoading={isLoading}
+                isApproving={isApproving}
+                needsApproval={needsApproval}
+                depositDisabled={
+                  !tradingAmount || 
+                  !balances || 
+                  parseFloat(tradingAmount) > parseFloat(balances.formattedUsdcBalance) || 
+                  !smartAccount ||
+                  isLoadingBalances
+                }
+                withdrawDisabled={
+                  !tradingAmount || 
+                  !balances || 
+                  parseFloat(tradingAmount) > parseFloat(balances.formattedMusdBalance) || 
+                  !smartAccount ||
+                  isLoadingBalances
+                }
+              />
+            </TabsContent>
+          </Tabs>
+
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <p>How to use UniDex's 1CT and Margin Wallet</p>
+            <ol className="pl-2 list-decimal list-inside">
+              <li>Transfer USDC between Web and 1CT Wallet using the 1CT tab</li>
+              <li>Use the Margin Balance tab manage your margin contract balance</li>
+            </ol>
+          </div>
+        </>
       )}
-
-      <Tabs defaultValue="smart-account" className="w-full">
-        <TabsList className="w-full">
-          <TabsTrigger value="smart-account" className="flex-1">1CT Wallet</TabsTrigger>
-          <TabsTrigger value="trading" className="flex-1">Margin Balance</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="smart-account" className="space-y-4">
-          <AmountInput
-            amount={smartAccountAmount}
-            onAmountChange={setSmartAccountAmount}
-            onMaxClick={() => handleMaxClick('smart-account')}
-            disabled={!smartAccount || isLoadingBalances}
-            isLoading={isLoadingBalances}
-          />
-
-          <ActionButtons
-            type="smart-account"
-            onDeposit={() => handleSmartAccountOperation('deposit')}
-            onWithdraw={() => handleSmartAccountOperation('withdraw')}
-            isLoading={isTransferring}
-            depositDisabled={
-              !smartAccountAmount || 
-              !eoaAddress || 
-              !balances ||
-              parseFloat(smartAccountAmount) > parseFloat(balances.formattedEoaUsdcBalance)
-            }
-            withdrawDisabled={
-              !smartAccountAmount || 
-              !smartAccount ||
-              !balances ||
-              parseFloat(smartAccountAmount) > parseFloat(balances.formattedUsdcBalance)
-            }
-          />
-        </TabsContent>
-
-        <TabsContent value="trading" className="space-y-4">
-          <AmountInput
-            amount={tradingAmount}
-            onAmountChange={setTradingAmount}
-            onMaxClick={() => handleMaxClick('trading')}
-            disabled={!smartAccount || isLoadingBalances}
-            isLoading={isLoadingBalances}
-          />
-
-          <ActionButtons
-            type="trading"
-            onDeposit={needsApproval ? handleApproveAndDeposit : () => handleTradingOperation('deposit')}
-            onWithdraw={() => handleTradingOperation('withdraw')}
-            isLoading={isLoading}
-            isApproving={isApproving}
-            needsApproval={needsApproval}
-            depositDisabled={
-              !tradingAmount || 
-              !balances || 
-              parseFloat(tradingAmount) > parseFloat(balances.formattedUsdcBalance) || 
-              !smartAccount ||
-              isLoadingBalances
-            }
-            withdrawDisabled={
-              !tradingAmount || 
-              !balances || 
-              parseFloat(tradingAmount) > parseFloat(balances.formattedMusdBalance) || 
-              !smartAccount ||
-              isLoadingBalances
-            }
-          />
-        </TabsContent>
-      </Tabs>
-
-      <div className="space-y-1 text-xs text-muted-foreground">
-        <p>How to use UniDex's 1CT and Margin Wallet</p>
-        <ol className="pl-2 list-decimal list-inside">
-          <li>Transfer USDC between Web and 1CT Wallet using the 1CT tab</li>
-          <li>Use the Margin Balance tab manage your margin contract balance</li>
-        </ol>
-      </div>
     </Card>
   )
 }
