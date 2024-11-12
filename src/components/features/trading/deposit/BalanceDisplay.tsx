@@ -1,3 +1,5 @@
+import { Card, CardContent } from "@/components/ui/card"
+
 interface BalanceDisplayItemProps {
   title: string
   address: string | undefined
@@ -18,14 +20,27 @@ function BalanceDisplayItem({
     ? (isEffectivelyInitialized ? address : 'Not connected')
     : (address || 'Not connected');
 
+  const truncateAddress = (addr: string | undefined) => {
+    if (!addr || addr === 'Not connected') return addr;
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
   return (
-    <div>
-      <div className="font-medium mb-1.5">{title}</div>
-      <div className="truncate">{displayAddress}</div>
-      <div className="mt-1 font-medium">
-        {isLoading ? 'Loading...' : `${balance} USDC`}
-      </div>
-    </div>
+    <Card className="bg-muted/30">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">{title}:</span>
+          <span className="font-medium">
+            {isLoading ? 'Loading...' : `${balance} USDC`}
+          </span>
+        </div>
+        {title !== "Margin Balance" && (
+          <div className="mt-1 font-mono text-xs text-muted-foreground">
+            {truncateAddress(displayAddress)}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -49,7 +64,7 @@ export function BalanceDisplay({
   isEffectivelyInitialized
 }: BalanceDisplayProps) {
   return (
-    <div className="grid grid-cols-3 gap-4 p-4 text-sm rounded-lg bg-muted/50">
+    <div className="space-y-4">
       <BalanceDisplayItem
         title="Web Wallet"
         address={eoaAddress}
@@ -65,7 +80,7 @@ export function BalanceDisplay({
       />
       <BalanceDisplayItem
         title="Margin Balance"
-        address="Deposited Balance"
+        address=""
         balance={marginBalance}
         isLoading={isLoading}
       />
