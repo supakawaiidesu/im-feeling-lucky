@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAccount, usePublicClient, useWalletClient, useSwitchChain } from 'wagmi'
 import { parseUnits } from 'viem'
 import { optimism } from "wagmi/chains"
+import { useSmartAccount } from "@/hooks/use-smart-account"
 
 createConfig({
   integrator: 'unidex',
@@ -25,6 +26,7 @@ export function CrossChainDepositCall({ amount = "0", onSuccess, chain }: CrossC
   const { data: walletClient } = useWalletClient()
   const publicClient = usePublicClient()
   const { switchChain } = useSwitchChain()
+  const { smartAccount } = useSmartAccount()
 
   const isOnOptimism = chain === optimism.id
 
@@ -36,14 +38,15 @@ export function CrossChainDepositCall({ amount = "0", onSuccess, chain }: CrossC
   const handleDeposit = async () => {
     console.log('Starting deposit process...')
     console.log('Amount:', amount)
-    console.log('Address:', address)
+    console.log('EOA Address:', address)
+    console.log('Smart Account Address:', smartAccount?.address)
     console.log('Wallet Client:', !!walletClient)
     console.log('Public Client:', !!publicClient)
 
-    if (!address || !walletClient || !publicClient) {
+    if (!address || !walletClient || !publicClient || !smartAccount?.address) {
       toast({
         title: 'Error',
-        description: 'Please connect your wallet first',
+        description: 'Please connect your wallet and ensure 1CT wallet is setup',
         variant: 'destructive',
       })
       return
@@ -55,7 +58,7 @@ export function CrossChainDepositCall({ amount = "0", onSuccess, chain }: CrossC
       console.log('Amount in USDC units:', amountInUsdcUnits)
 
       console.log('Fetching quote...')
-      const quoteUrl = `https://li.quest/v1/quote?fromChain=10&toChain=42161&fromToken=0x0b2c639c533813f4aa9d7837caf62653d097ff85&toToken=0xaf88d065e77c8cc2239327c5edb3a432268e5831&fromAddress=${address}&toAddress=${address}&fromAmount=${amountInUsdcUnits}&integrator=unidex&allowBridges=across&skipSimulation=true`
+      const quoteUrl = `https://li.quest/v1/quote?fromChain=10&toChain=42161&fromToken=0x0b2c639c533813f4aa9d7837caf62653d097ff85&toToken=0xaf88d065e77c8cc2239327c5edb3a432268e5831&fromAddress=${address}&toAddress=${smartAccount.address}&fromAmount=${amountInUsdcUnits}&integrator=unidex&allowBridges=across&skipSimulation=true`
       console.log('Quote URL:', quoteUrl)
 
       const response = await fetch(quoteUrl)
