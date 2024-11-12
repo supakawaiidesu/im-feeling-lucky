@@ -73,6 +73,11 @@ export default function DepositBox() {
   }, [smartAccount?.address, refetchBalances]);
 
   const isOnCorrectChain = () => {
+    console.log('Current chain:', chain?.id);
+    console.log('Selected network:', selectedNetwork);
+    console.log('Arbitrum ID:', arbitrum.id);
+    console.log('Optimism ID:', optimism.id);
+    
     if (selectedNetwork === "arbitrum") {
       return chain?.id === arbitrum.id;
     } else {
@@ -312,17 +317,60 @@ export default function DepositBox() {
   };
 
   const getActionButtonText = (type: "deposit" | "withdraw", mode: "smart-account" | "trading") => {
+    console.log('Getting button text:', { type, mode, isOnCorrectChain: isOnCorrectChain() });
+    
     if (mode === "smart-account" && type === "deposit") {
-      if (!isOnCorrectChain()) {
-        return `Switch to ${selectedNetwork === "arbitrum" ? "Arbitrum" : "Optimism"}`;
+      const onCorrectChain = isOnCorrectChain();
+      console.log('Chain check result:', onCorrectChain);
+      
+      if (!onCorrectChain) {
+        const switchText = `Switch to ${selectedNetwork === "arbitrum" ? "Arbitrum" : "Optimism"}`;
+        console.log('Showing switch text:', switchText);
+        return switchText;
       }
     }
-    if (mode === "trading") {
-      if (type === "deposit" && needsApproval) {
-        return "Approve & Deposit";
-      }
+
+    if (mode === "trading" && type === "deposit" && needsApproval) {
+      return "Approve & Deposit";
     }
+
     return type === "deposit" ? "Deposit" : "Withdraw";
+  };
+
+  const getSmartAccountButtons = () => {
+    const onCorrectChain = isOnCorrectChain();
+    const commonProps = {
+      type: "smart-account" as const,
+      onDeposit: () => handleSmartAccountOperation("deposit"),
+      onWithdraw: () => handleSmartAccountOperation("withdraw"),
+      isLoading: isTransferring,
+      depositDisabled: onCorrectChain ? (
+        !smartAccountAmount ||
+        !eoaAddress ||
+        !balances ||
+        parseFloat(smartAccountAmount) > parseFloat(balances.formattedEoaUsdcBalance)
+      ) : false,
+      withdrawDisabled: !smartAccountAmount ||
+        !smartAccount ||
+        !balances ||
+        parseFloat(smartAccountAmount) > parseFloat(balances.formattedUsdcBalance),
+      depositText: getActionButtonText("deposit", "smart-account"),
+      withdrawText: getActionButtonText("withdraw", "smart-account")
+    };
+
+    if (selectedNetwork === "optimism") {
+      return (
+        <>
+          <CrossChainDepositCall 
+            amount={smartAccountAmount}
+            onSuccess={handleCrossChainSuccess}
+          />
+          <ActionButtons {...commonProps} />
+        </>
+      );
+    }
+
+    return <ActionButtons {...commonProps} />;
   };
 
   return (
@@ -439,35 +487,7 @@ export default function DepositBox() {
                 </div>
               </div>
 
-              {selectedNetwork === "optimism" ? (
-                <CrossChainDepositCall 
-                  amount={smartAccountAmount}
-                  onSuccess={handleCrossChainSuccess}
-                />
-              ) : (
-                <ActionButtons
-                  type="smart-account"
-                  onDeposit={() => handleSmartAccountOperation("deposit")}
-                  onWithdraw={() => handleSmartAccountOperation("withdraw")}
-                  isLoading={isTransferring}
-                  depositDisabled={
-                    !smartAccountAmount ||
-                    !eoaAddress ||
-                    !balances ||
-                    parseFloat(smartAccountAmount) >
-                      parseFloat(balances.formattedEoaUsdcBalance)
-                  }
-                  withdrawDisabled={
-                    !smartAccountAmount ||
-                    !smartAccount ||
-                    !balances ||
-                    parseFloat(smartAccountAmount) >
-                      parseFloat(balances.formattedUsdcBalance)
-                  }
-                  depositText={getActionButtonText("deposit", "smart-account")}
-                  withdrawText={getActionButtonText("withdraw", "smart-account")}
-                />
-              )}
+              {getSmartAccountButtons()}
             </TabsContent>
 
             <TabsContent value="trading" className="space-y-4">
