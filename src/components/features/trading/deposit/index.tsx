@@ -61,7 +61,7 @@ export default function DepositBox() {
     balances,
     isLoading: isLoadingBalances,
     refetchBalances,
-  } = useBalances();
+  } = useBalances(selectedNetwork);
   const { transferToSmartAccount, isTransferring } = useTokenTransferActions();
 
   useEffect(() => {
@@ -317,27 +317,28 @@ export default function DepositBox() {
         </div>
       ) : (
         <>
-          <BalanceDisplay
-            eoaAddress={eoaAddress}
-            smartAccountAddress={smartAccount?.address}
-            eoaBalance={
-              balances
-                ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2)
-                : "0.00"
-            }
-            smartAccountBalance={
-              balances
-                ? parseFloat(balances.formattedUsdcBalance).toFixed(2)
-                : "0.00"
-            }
-            marginBalance={
-              balances
-                ? parseFloat(balances.formattedMusdBalance).toFixed(2)
-                : "0.00"
-            }
-            isLoading={isLoadingBalances}
-            isEffectivelyInitialized={isInitialized || !!smartAccount?.address}
-          />
+  <BalanceDisplay
+    eoaAddress={eoaAddress}
+    smartAccountAddress={smartAccount?.address}
+    eoaBalance={
+      balances
+        ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2)
+        : "0.00"
+    }
+    smartAccountBalance={
+      balances
+        ? parseFloat(balances.formattedUsdcBalance).toFixed(2)
+        : "0.00"
+    }
+    marginBalance={
+      balances
+        ? parseFloat(balances.formattedMusdBalance).toFixed(2)
+        : "0.00"
+    }
+    isLoading={isLoadingBalances}
+    isEffectivelyInitialized={isInitialized || !!smartAccount?.address}
+    selectedNetwork={selectedNetwork}
+  />
 
           <Tabs defaultValue="smart-account" className="w-full">
             <TabsList className="w-full">

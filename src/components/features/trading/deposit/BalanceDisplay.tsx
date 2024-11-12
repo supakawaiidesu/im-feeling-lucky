@@ -6,6 +6,7 @@ interface BalanceDisplayItemProps {
   balance: string
   isLoading: boolean
   isEffectivelyInitialized?: boolean
+  network?: 'arbitrum' | 'optimism'
 }
 
 function BalanceDisplayItem({ 
@@ -13,7 +14,8 @@ function BalanceDisplayItem({
   address, 
   balance, 
   isLoading,
-  isEffectivelyInitialized = true
+  isEffectivelyInitialized = true,
+  network
 }: BalanceDisplayItemProps) {
   const showConnectionStatus = title === "1CT Wallet";
   const displayAddress = showConnectionStatus 
@@ -24,6 +26,15 @@ function BalanceDisplayItem({
     if (!addr || addr === 'Not connected') return addr;
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
+
+  const networkDot = network && title === "Web Wallet" && (
+    <div
+      className="inline-block w-2 h-2 mr-1 rounded-full"
+      style={{
+        backgroundColor: network === 'arbitrum' ? '#28A0F0' : '#FF0420'
+      }}
+    />
+  );
 
   if (title === "UniDex V4 Balance") {
     return (
@@ -45,7 +56,9 @@ function BalanceDisplayItem({
       <CardContent className="p-4">
         <div className="flex flex-col space-y-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{title}:</span>
+            <span className="text-xs text-muted-foreground">
+              {networkDot}{title}:
+            </span>
             <span className="font-mono text-xs text-muted-foreground">
               {truncateAddress(displayAddress)}
             </span>
@@ -67,6 +80,7 @@ interface BalanceDisplayProps {
   marginBalance: string
   isLoading: boolean
   isEffectivelyInitialized: boolean
+  selectedNetwork: 'arbitrum' | 'optimism'
 }
 
 export function BalanceDisplay({
@@ -76,7 +90,8 @@ export function BalanceDisplay({
   smartAccountBalance,
   marginBalance,
   isLoading,
-  isEffectivelyInitialized
+  isEffectivelyInitialized,
+  selectedNetwork
 }: BalanceDisplayProps) {
   return (
     <div className="space-y-4">
