@@ -118,7 +118,7 @@ export function PositionsContent({
                 <TableCell>
                   <div>{position.size}</div>
                   <div className="text-sm text-muted-foreground">
-                    ${(parseFloat(position.size) * parseFloat(position.entryPrice)).toFixed(2)}
+                    {(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)} {basePair.toUpperCase()}
                   </div>
                 </TableCell>
                 <TableCell>
