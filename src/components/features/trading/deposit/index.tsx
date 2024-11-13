@@ -88,18 +88,6 @@ export default function DepositBox() {
     }
   };
 
-  if (!isOpen) {
-    return (
-      <Button
-        variant="outline"
-        onClick={() => setIsOpen(true)}
-        className="bg-[hsl(var(--component-background))]"
-      >
-        Deposit / Withdraw
-      </Button>
-    );
-  }
-
   const handleSetupSmartAccount = async () => {
     try {
       await setupSessionKey();
@@ -369,164 +357,178 @@ export default function DepositBox() {
   };
 
   return (
-    <Card className="absolute z-50 p-6 space-y-6 top-14 right-4 w-[480px] bg-[hsl(var(--component-background))]">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Balance Management</h3>
-        <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-          ×
-        </Button>
-      </div>
+    <div className="relative">
+      <Button
+        variant="outline"
+        onClick={() => setIsOpen(!isOpen)}
+        className="bg-[hsl(var(--component-background))]"
+      >
+        Deposit / Withdraw
+      </Button>
 
-      {!smartAccount && eoaAddress ? (
-        <div className="space-y-4">
-          <Alert>
-            <AlertDescription className="space-y-4">
-              <p className="text-sm">
-                To get started with trading, you'll need to setup your 1CT
-                wallet first.
-              </p>
-              <Button
-                size="sm"
-                onClick={handleSetupSmartAccount}
-                disabled={isSigningSessionKey}
-              >
-                {isSigningSessionKey ? "Setting up..." : "Setup 1CT Wallet"}
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </div>
-      ) : (
-        <>
-          <BalanceDisplay
-            eoaAddress={eoaAddress}
-            smartAccountAddress={smartAccount?.address}
-            eoaBalance={
-              balances
-                ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2)
-                : "0.00"
-            }
-            smartAccountBalance={
-              balances
-                ? parseFloat(balances.formattedUsdcBalance).toFixed(2)
-                : "0.00"
-            }
-            marginBalance={
-              balances
-                ? parseFloat(balances.formattedMusdBalance).toFixed(2)
-                : "0.00"
-            }
-            isLoading={isLoadingBalances}
-            isEffectivelyInitialized={isInitialized || !!smartAccount?.address}
-            selectedNetwork={selectedNetwork}
-          />
+      {isOpen && (
+        <Card className="absolute z-50 p-6 space-y-6 top-14 right-4 w-[480px] bg-[hsl(var(--component-background))]">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Balance Management</h3>
+            <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
+              ×
+            </Button>
+          </div>
 
-          <Tabs defaultValue="smart-account" className="w-full">
-            <TabsList className="w-full">
-              <TabsTrigger value="smart-account" className="flex-1">
-                1CT Wallet
-              </TabsTrigger>
-              <TabsTrigger value="trading" className="flex-1">
-                Margin Balance
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="smart-account" className="space-y-4">
-              <div className="space-y-2">
-                <Label>Amount (USDC)</Label>
-                <div className="flex gap-2">
-                  <Select
-                    value={selectedNetwork}
-                    onValueChange={(value: "arbitrum" | "optimism") =>
-                      setSelectedNetwork(value)
-                    }
+          {!smartAccount && eoaAddress ? (
+            <div className="space-y-4">
+              <Alert>
+                <AlertDescription className="space-y-4">
+                  <p className="text-sm">
+                    To get started with trading, you'll need to setup your 1CT
+                    wallet first.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={handleSetupSmartAccount}
+                    disabled={isSigningSessionKey}
                   >
-                    <SelectTrigger className="w-[180px] mt-2">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-4 h-4 rounded-full"
-                          style={{
-                            backgroundColor:
-                              selectedNetwork === "arbitrum"
-                                ? "#28A0F0"
-                                : "#FF0420",
-                          }}
-                        />
-                        <SelectValue />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="arbitrum">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded-full bg-[#28A0F0]" />
-                          <span>Arbitrum</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="optimism">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded-full bg-[#FF0420]" />
-                          <span>Optimism</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="flex-1">
-                    <AmountInput
-                      amount={smartAccountAmount}
-                      onAmountChange={setSmartAccountAmount}
-                      onMaxClick={() => handleMaxClick("smart-account")}
-                      disabled={!smartAccount || isLoadingBalances}
-                      isLoading={isLoadingBalances}
-                      label="" // Empty label since we have it above
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {getSmartAccountButtons()}
-            </TabsContent>
-
-            <TabsContent value="trading" className="space-y-4">
-              <AmountInput
-                amount={tradingAmount}
-                onAmountChange={setTradingAmount}
-                onMaxClick={() => handleMaxClick("trading")}
-                disabled={!smartAccount || isLoadingBalances}
+                    {isSigningSessionKey ? "Setting up..." : "Setup 1CT Wallet"}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            </div>
+          ) : (
+            <>
+              <BalanceDisplay
+                eoaAddress={eoaAddress}
+                smartAccountAddress={smartAccount?.address}
+                eoaBalance={
+                  balances
+                    ? parseFloat(balances.formattedEoaUsdcBalance).toFixed(2)
+                    : "0.00"
+                }
+                smartAccountBalance={
+                  balances
+                    ? parseFloat(balances.formattedUsdcBalance).toFixed(2)
+                    : "0.00"
+                }
+                marginBalance={
+                  balances
+                    ? parseFloat(balances.formattedMusdBalance).toFixed(2)
+                    : "0.00"
+                }
                 isLoading={isLoadingBalances}
+                isEffectivelyInitialized={
+                  isInitialized || !!smartAccount?.address
+                }
+                selectedNetwork={selectedNetwork}
               />
-              <ActionButtons
-                type="trading"
-                onDeposit={
-                  needsApproval
-                    ? handleApproveAndDeposit
-                    : () => handleTradingOperation("deposit")
-                }
-                onWithdraw={() => handleTradingOperation("withdraw")}
-                isLoading={isLoading}
-                isApproving={isApproving}
-                needsApproval={needsApproval}
-                depositDisabled={
-                  !tradingAmount ||
-                  !balances ||
-                  parseFloat(tradingAmount) >
-                    parseFloat(balances.formattedUsdcBalance) ||
-                  !smartAccount ||
-                  isLoadingBalances
-                }
-                withdrawDisabled={
-                  !tradingAmount ||
-                  !balances ||
-                  parseFloat(tradingAmount) >
-                    parseFloat(balances.formattedMusdBalance) ||
-                  !smartAccount ||
-                  isLoadingBalances
-                }
-                depositText={getActionButtonText("deposit", "trading")}
-                withdrawText={getActionButtonText("withdraw", "trading")}
-              />
-            </TabsContent>
-          </Tabs>
-        </>
+
+              <Tabs defaultValue="smart-account" className="w-full">
+                <TabsList className="w-full">
+                  <TabsTrigger value="smart-account" className="flex-1">
+                    1CT Wallet
+                  </TabsTrigger>
+                  <TabsTrigger value="trading" className="flex-1">
+                    Margin Balance
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="smart-account" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Amount (USDC)</Label>
+                    <div className="flex gap-2">
+                      <Select
+                        value={selectedNetwork}
+                        onValueChange={(value: "arbitrum" | "optimism") =>
+                          setSelectedNetwork(value)
+                        }
+                      >
+                        <SelectTrigger className="w-[180px] mt-2">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{
+                                backgroundColor:
+                                  selectedNetwork === "arbitrum"
+                                    ? "#28A0F0"
+                                    : "#FF0420",
+                              }}
+                            />
+                            <SelectValue />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="arbitrum">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded-full bg-[#28A0F0]" />
+                              <span>Arbitrum</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="optimism">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded-full bg-[#FF0420]" />
+                              <span>Optimism</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex-1">
+                        <AmountInput
+                          amount={smartAccountAmount}
+                          onAmountChange={setSmartAccountAmount}
+                          onMaxClick={() => handleMaxClick("smart-account")}
+                          disabled={!smartAccount || isLoadingBalances}
+                          isLoading={isLoadingBalances}
+                          label="" // Empty label since we have it above
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {getSmartAccountButtons()}
+                </TabsContent>
+
+                <TabsContent value="trading" className="space-y-4">
+                  <AmountInput
+                    amount={tradingAmount}
+                    onAmountChange={setTradingAmount}
+                    onMaxClick={() => handleMaxClick("trading")}
+                    disabled={!smartAccount || isLoadingBalances}
+                    isLoading={isLoadingBalances}
+                  />
+                  <ActionButtons
+                    type="trading"
+                    onDeposit={
+                      needsApproval
+                        ? handleApproveAndDeposit
+                        : () => handleTradingOperation("deposit")
+                    }
+                    onWithdraw={() => handleTradingOperation("withdraw")}
+                    isLoading={isLoading}
+                    isApproving={isApproving}
+                    needsApproval={needsApproval}
+                    depositDisabled={
+                      !tradingAmount ||
+                      !balances ||
+                      parseFloat(tradingAmount) >
+                        parseFloat(balances.formattedUsdcBalance) ||
+                      !smartAccount ||
+                      isLoadingBalances
+                    }
+                    withdrawDisabled={
+                      !tradingAmount ||
+                      !balances ||
+                      parseFloat(tradingAmount) >
+                        parseFloat(balances.formattedMusdBalance) ||
+                      !smartAccount ||
+                      isLoadingBalances
+                    }
+                    depositText={getActionButtonText("deposit", "trading")}
+                    withdrawText={getActionButtonText("withdraw", "trading")}
+                  />
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
+        </Card>
       )}
-    </Card>
+    </div>
   );
 }
