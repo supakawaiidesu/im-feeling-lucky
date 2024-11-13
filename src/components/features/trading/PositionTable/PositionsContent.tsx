@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
+import { usePrices } from "../../../../lib/websocket-price-context";
 
 interface PositionsContentProps {
   positions: Position[];
@@ -29,6 +30,8 @@ export function PositionsContent({
   handleMouseEnter,
   setHoveredPosition,
 }: PositionsContentProps) {
+  const { prices } = usePrices();
+
   const calculateFinalPnl = (position: Position) => {
     const pnlWithoutFees = parseFloat(position.pnl.replace(/[^0-9.-]/g, ""));
     const totalFees =
@@ -45,6 +48,17 @@ export function PositionsContent({
       : `-$${Math.abs(numValue).toFixed(2)}`;
   };
 
+  const calculatePnLPercentage = (pnl: number, margin: string) => {
+    const marginValue = parseFloat(margin.replace(/[^0-9.-]/g, ""));
+    return ((pnl / marginValue) * 100).toFixed(2);
+  };
+
+  const calculateLeverage = (size: string, margin: string) => {
+    const sizeValue = parseFloat(size.replace(/[^0-9.-]/g, ""));
+    const marginValue = parseFloat(margin.replace(/[^0-9.-]/g, ""));
+    return (sizeValue / marginValue).toFixed(1);
+  };
+
   return (
     <>
       <TableHeader>
@@ -52,8 +66,8 @@ export function PositionsContent({
           <TableHead>Market</TableHead>
           <TableHead>Size</TableHead>
           <TableHead>Margin</TableHead>
-          <TableHead>Entry Price</TableHead>
-          <TableHead>Liq. Price</TableHead>
+          <TableHead>Open Price</TableHead>
+          <TableHead>Price</TableHead>
           <TableHead>uPnL</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
@@ -80,29 +94,44 @@ export function PositionsContent({
         ) : (
           positions.map((position) => {
             const finalPnl = calculateFinalPnl(position);
+            const pnlValue = parseFloat(finalPnl);
+            const leverage = calculateLeverage(position.size, position.margin);
+            const pnlPercentage = calculatePnLPercentage(pnlValue, position.margin);
+            const basePair = position.market.split("/")[0].toLowerCase();
+            const currentPrice = prices[basePair]?.price;
+
             return (
               <TableRow key={position.positionId}>
-                <TableCell>{position.market}</TableCell>
-                <TableCell
-                  className={position.isLong ? "text-green-500" : "text-red-500"}
-                >
-                  {position.isLong ? "+" : "-"}
-                  {position.size}
+                <TableCell>
+                  <div>{position.market}</div>
+                  <div className={position.isLong ? "text-green-500" : "text-red-500"}>
+                    {leverage}x {position.isLong ? "Long" : "Short"}
+                  </div>
                 </TableCell>
-                <TableCell>{position.margin}</TableCell>
-                <TableCell>{position.entryPrice}</TableCell>
-                <TableCell className="text-red-500">
-                  {position.liquidationPrice}
+                <TableCell>
+                  <div>{position.size}</div>
+                  <div className="text-sm text-muted-foreground">
+                    ${(parseFloat(position.size) * parseFloat(position.entryPrice)).toFixed(2)}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div>{position.margin}</div>
+                </TableCell>
+                <TableCell>
+                  <div>{position.entryPrice}</div>
+                </TableCell>
+                <TableCell>
+                  <div>{currentPrice?.toFixed(2) || "Loading..."}</div>
+                  <div className="text-red-500">{position.liquidationPrice}</div>
                 </TableCell>
                 <TableCell
                   ref={setRef(position.positionId)}
-                  className={
-                    parseFloat(finalPnl) >= 0 ? "text-green-500" : "text-red-500"
-                  }
+                  className={pnlValue >= 0 ? "text-green-500" : "text-red-500"}
                   onMouseEnter={() => handleMouseEnter(position.positionId)}
                   onMouseLeave={() => setHoveredPosition(null)}
                 >
-                  {formatPnL(finalPnl)}
+                  <div>{formatPnL(finalPnl)}</div>
+                  <div>{pnlPercentage}%</div>
                 </TableCell>
                 <TableCell>
                   <Button
