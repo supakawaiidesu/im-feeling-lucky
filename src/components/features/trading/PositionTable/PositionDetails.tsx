@@ -86,14 +86,17 @@ export function PositionDetails({
 
         <div className="flex items-center justify-between">
           <span className="text-zinc-400">Position Size</span>
-          <div className="flex flex-col items-end">
-            <div className="flex items-center gap-1">
-              <span>{position.size.replace(/[^0-9.-]/g, "")}</span>
-              <span className="text-zinc-400">USDC</span>
-            </div>
-            <span className="text-xs text-zinc-500">
-              {(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)} {basePair.toUpperCase()}
-            </span>
+          <div className="flex items-center gap-1">
+            <span>{position.size.replace(/[^0-9.-]/g, "")}</span>
+            <span className="text-zinc-400">USDC</span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-zinc-400">Notional Size</span>
+          <div className="flex items-center gap-1">
+            <span>{(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)}</span>
+            <span className="text-zinc-400">{basePair.toUpperCase()}</span>
           </div>
         </div>
 
