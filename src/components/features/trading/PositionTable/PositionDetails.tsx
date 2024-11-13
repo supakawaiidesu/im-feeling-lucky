@@ -18,6 +18,7 @@ interface PositionDetailsProps {
   onClosePosition: (position: Position) => void;
   isClosing: boolean;
   onOpenSLTP?: () => void;
+  onOpenCollateral?: () => void;
 }
 
 export function PositionDetails({
@@ -27,6 +28,7 @@ export function PositionDetails({
   onClosePosition,
   isClosing,
   onOpenSLTP,
+  onOpenCollateral,
 }: PositionDetailsProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { prices } = usePrices();
@@ -60,6 +62,14 @@ export function PositionDetails({
     onClose();
     if (onOpenSLTP) {
       onOpenSLTP();
+    }
+  };
+
+  const handleCollateralClick = () => {
+    setIsDropdownOpen(false);
+    onClose();
+    if (onOpenCollateral) {
+      onOpenCollateral();
     }
   };
 
@@ -205,7 +215,10 @@ export function PositionDetails({
             <DropdownMenuItem className="focus:bg-zinc-700 focus:text-white">
               Edit Position Size
             </DropdownMenuItem>
-            <DropdownMenuItem className="focus:bg-zinc-700 focus:text-white">
+            <DropdownMenuItem 
+              className="focus:bg-zinc-700 focus:text-white"
+              onClick={handleCollateralClick}
+            >
               Edit Collateral
             </DropdownMenuItem>
           </DropdownMenuContent>

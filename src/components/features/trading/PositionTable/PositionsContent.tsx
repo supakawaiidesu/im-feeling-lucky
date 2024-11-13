@@ -12,6 +12,7 @@ import { usePrices } from "../../../../lib/websocket-price-context";
 import { useState } from "react";
 import { PositionDialog } from "./PositionDialog";
 import { PositionSLTPDialog } from "./PositionSLTPDialog";
+import { PositionCollateralDialog } from "./PositionCollateralDialog";
 
 interface PositionsContentProps {
   positions: Position[];
@@ -41,6 +42,8 @@ export function PositionsContent({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSLTPDialogOpen, setIsSLTPDialogOpen] = useState(false);
   const [selectedSLTPPosition, setSelectedSLTPPosition] = useState<Position | null>(null);
+  const [isCollateralDialogOpen, setIsCollateralDialogOpen] = useState(false);
+  const [selectedCollateralPosition, setSelectedCollateralPosition] = useState<Position | null>(null);
 
   const calculateFinalPnl = (position: Position) => {
     const pnlWithoutFees = parseFloat(position.pnl.replace(/[^0-9.-]/g, ""));
@@ -84,6 +87,13 @@ export function PositionsContent({
     if (selectedPosition) {
       setSelectedSLTPPosition(selectedPosition);
       setIsSLTPDialogOpen(true);
+    }
+  };
+
+  const handleOpenCollateral = () => {
+    if (selectedPosition) {
+      setSelectedCollateralPosition(selectedPosition);
+      setIsCollateralDialogOpen(true);
     }
   };
 
@@ -215,6 +225,7 @@ export function PositionsContent({
         onClosePosition={handleClosePosition}
         isClosing={selectedPosition ? closingPositions[Number(selectedPosition.positionId)] : false}
         onOpenSLTP={handleOpenSLTP}
+        onOpenCollateral={handleOpenCollateral}
       />
 
       {selectedSLTPPosition && (
@@ -242,6 +253,15 @@ export function PositionsContent({
           }}
         />
       )}
+
+      <PositionCollateralDialog
+        position={selectedCollateralPosition}
+        isOpen={isCollateralDialogOpen}
+        onClose={() => {
+          setIsCollateralDialogOpen(false);
+          setSelectedCollateralPosition(null);
+        }}
+      />
     </>
   );
 }

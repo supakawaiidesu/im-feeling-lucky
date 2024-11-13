@@ -14,6 +14,7 @@ interface PositionDialogProps {
   onClosePosition: (position: Position) => void;
   isClosing: boolean;
   onOpenSLTP?: () => void;
+  onOpenCollateral?: () => void;
 }
 
 export function PositionDialog({
@@ -24,6 +25,7 @@ export function PositionDialog({
   onClosePosition,
   isClosing,
   onOpenSLTP,
+  onOpenCollateral,
 }: PositionDialogProps) {
   if (!position) return null;
 
@@ -40,6 +42,7 @@ export function PositionDialog({
           onClosePosition={onClosePosition}
           isClosing={isClosing}
           onOpenSLTP={onOpenSLTP}
+          onOpenCollateral={onOpenCollateral}
         />
       </DialogContent>
     </Dialog>
