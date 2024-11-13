@@ -1,147 +1,162 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { useState } from "react"
-import { usePositionActions } from "@/hooks/use-position-actions"
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { usePositionActions } from "@/hooks/use-position-actions";
+import { useState } from "react";
 
 interface Position {
-  id: number
-  symbol: string
-  isLong: boolean
-  entryPrice: number
-  markPrice: number
-  pnl: string
-  pnlPercentage: number
-  size: string
-  margin: string
-  liquidationPrice: string
+  id: number;
+  symbol: string;
+  isLong: boolean;
+  entryPrice: number;
+  markPrice: number;
+  pnl: string;
+  pnlPercentage: number;
+  size: string;
+  margin: string;
+  liquidationPrice: string;
   fees: {
-    positionFee: string
-    borrowFee: string
-    fundingFee: string
-  }
+    positionFee: string;
+    borrowFee: string;
+    fundingFee: string;
+  };
 }
 
 interface PositionSLTPDialogProps {
-  position: Position
-  isOpen: boolean
-  onClose: () => void
+  position: Position;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDialogProps) {
-  const [tpPrice, setTpPrice] = useState("")
-  const [tpGain, setTpGain] = useState("")
-  const [slPrice, setSlPrice] = useState("")
-  const [slLoss, setSlLoss] = useState("")
-  const { addTPSL, settingTPSL } = usePositionActions()
+  const [tpPrice, setTpPrice] = useState("");
+  const [tpGain, setTpGain] = useState("");
+  const [slPrice, setSlPrice] = useState("");
+  const [slLoss, setSlLoss] = useState("");
+  const { addTPSL, settingTPSL } = usePositionActions();
 
   const getNumericValue = (value: string) => {
-    return parseFloat(value.replace(/[^0-9.-]/g, ""))
-  }
+    return parseFloat(value.replace(/[^0-9.-]/g, ""));
+  };
+
+  const isStopLossBelowLiquidation = (): boolean => {
+    if (!slPrice) return false;
+    const slNumeric = parseFloat(slPrice);
+    const liquidationNumeric = getNumericValue(position.liquidationPrice);
+    return position.isLong ? 
+      slNumeric <= liquidationNumeric : 
+      slNumeric >= liquidationNumeric;
+  };
 
   const calculatePnL = (targetPrice: string) => {
-    if (!targetPrice) return 0
-    const price = parseFloat(targetPrice)
-    const size = getNumericValue(position.size)
-    const priceDiff = position.isLong ? price - position.entryPrice : position.entryPrice - price
-    return priceDiff * size
-  }
+    if (!targetPrice) return 0;
+    const price = parseFloat(targetPrice);
+    const size = getNumericValue(position.size);
+    const priceDiff = position.isLong ? price - position.entryPrice : position.entryPrice - price;
+    return priceDiff * size;
+  };
 
   const calculateGainPercentage = (targetPrice: string) => {
-    if (!targetPrice) return 0
-    const pnl = calculatePnL(targetPrice)
-    const margin = getNumericValue(position.margin)
-    return (pnl / margin) * 100
-  }
+    if (!targetPrice) return 0;
+    const pnl = calculatePnL(targetPrice);
+    const margin = getNumericValue(position.margin);
+    return (pnl / margin) * 100;
+  };
 
-  // Update price when gain percentage changes
   const handleGainChange = (gainStr: string, isTP: boolean) => {
     if (!gainStr) {
-      isTP ? setTpPrice("") : setSlPrice("")
-      isTP ? setTpGain("") : setSlLoss("")
-      return
+      isTP ? setTpPrice("") : setSlPrice("");
+      isTP ? setTpGain("") : setSlLoss("");
+      return;
     }
-
-    const gainPercentage = parseFloat(gainStr)
-    const margin = getNumericValue(position.margin)
-    const size = getNumericValue(position.size)
-    const leverage = size / margin
+  
+    const gainPercentage = parseFloat(gainStr);
+    const margin = getNumericValue(position.margin);
+    const size = getNumericValue(position.size);
+    const leverage = size / margin;
     
-    // Calculate required price movement percentage
-    // If we want 100% gain on margin with 100x leverage, we need 1% price movement
-    const requiredPriceMovementPercent = gainPercentage / leverage
+    const requiredPriceMovementPercent = gainPercentage / leverage;
     
-    // Calculate the actual price based on the required movement
-    const newPrice = position.isLong ?
-      position.entryPrice * (1 + requiredPriceMovementPercent / 100) :
-      position.entryPrice * (1 - requiredPriceMovementPercent / 100)
-
     if (isTP) {
-      setTpPrice(newPrice.toFixed(2))
-      setTpGain(gainStr)
+      // For take profit, keep the same logic
+      const newPrice = position.isLong ?
+        position.entryPrice * (1 + requiredPriceMovementPercent / 100) :
+        position.entryPrice * (1 - requiredPriceMovementPercent / 100);
+      setTpPrice(newPrice.toFixed(2));
+      setTpGain(gainStr);
     } else {
-      setSlPrice(newPrice.toFixed(2))
-      setSlLoss(gainStr)
+      // For stop loss, move price in opposite direction
+      const newPrice = position.isLong ?
+        position.entryPrice * (1 - requiredPriceMovementPercent / 100) :
+        position.entryPrice * (1 + requiredPriceMovementPercent / 100);
+      setSlPrice(newPrice.toFixed(2));
+      setSlLoss(gainStr);
     }
-  }
-
-  // Update gain percentage when price changes
+  };
   const handlePriceChange = (priceStr: string, isTP: boolean) => {
     if (!priceStr) {
-      isTP ? setTpPrice("") : setSlPrice("")
-      isTP ? setTpGain("") : setSlLoss("")
-      return
+      isTP ? setTpPrice("") : setSlPrice("");
+      isTP ? setTpGain("") : setSlLoss("");
+      return;
     }
-
-    const price = parseFloat(priceStr)
-    const size = getNumericValue(position.size)
-    const margin = getNumericValue(position.margin)
-    
-    // Calculate PnL based on price difference and size
-    const priceDiff = position.isLong ? 
-      price - position.entryPrice : 
-      position.entryPrice - price
-    const pnl = priceDiff * size
-    
-    // Calculate gain/loss percentage relative to margin
-    const gainPercentage = (pnl / margin) * 100
+  
+    const price = parseFloat(priceStr);
+    const size = getNumericValue(position.size);
+    const margin = getNumericValue(position.margin);
+    const leverage = size / margin;
     
     if (isTP) {
-      setTpPrice(priceStr)
-      setTpGain(gainPercentage.toFixed(2))
+      // Calculate percentage price difference from entry
+      const percentageDiff = ((price - position.entryPrice) / position.entryPrice) * 100;
+      // Multiply by leverage to get actual gain percentage on margin
+      const gainPercentage = position.isLong ? 
+        percentageDiff * leverage : 
+        -percentageDiff * leverage;
+      
+      setTpPrice(priceStr);
+      setTpGain(gainPercentage.toFixed(2));
     } else {
-      setSlPrice(priceStr)
-      setSlLoss(gainPercentage.toFixed(2))
+      // Calculate percentage price difference from entry
+      const percentageDiff = ((price - position.entryPrice) / position.entryPrice) * 100;
+      // Multiply by leverage to get actual loss percentage on margin
+      const lossPercentage = position.isLong ? 
+        -percentageDiff * leverage : 
+        percentageDiff * leverage;
+      
+      setSlPrice(priceStr);
+      setSlLoss(Math.abs(lossPercentage).toFixed(2));
     }
-  }
+  };
 
-  // Rest of the component remains the same...
   const handleSubmit = async () => {
-    const tp = tpPrice ? parseFloat(tpPrice) : null
-    const sl = slPrice ? parseFloat(slPrice) : null
+    const tp = tpPrice ? parseFloat(tpPrice) : null;
+    const sl = slPrice && !isStopLossBelowLiquidation() ? parseFloat(slPrice) : null;
 
     if (!tp && !sl) {
-      return
+      return;
     }
 
     await addTPSL(
       position.id,
       tp,
       sl,
-      100, // Close 100% of position at TP
-      100  // Close 100% of position at SL
-    )
+      100,
+      100
+    );
 
-    onClose()
-  }
+    onClose();
+  };
 
   const getTPText = () => {
-    if (!tpPrice) return null
-    const margin = getNumericValue(position.margin)
-    const gainPercentage = parseFloat(tpGain)
-    const pnl = (gainPercentage / 100) * margin
+    if (!tpPrice) return null;
+    const margin = getNumericValue(position.margin);
+    const gainPercentage = parseFloat(tpGain);
+    const pnl = (gainPercentage / 100) * margin;
 
     return (
       <div className="mb-4 text-sm text-gray-400">
@@ -151,14 +166,23 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
           ${Math.abs(pnl).toFixed(2)}
         </span>.
       </div>
-    )
-  }
+    );
+  };
 
   const getSLText = () => {
-    if (!slPrice) return null
-    const margin = getNumericValue(position.margin)
-    const lossPercentage = parseFloat(slLoss)
-    const pnl = (lossPercentage / 100) * margin
+    if (!slPrice) return null;
+    
+    if (isStopLossBelowLiquidation()) {
+      return (
+        <div className="mb-4 text-sm text-red-500">
+          Stop loss price can't be {position.isLong ? "lower" : "higher"} than liquidation price
+        </div>
+      );
+    }
+
+    const margin = getNumericValue(position.margin);
+    const lossPercentage = parseFloat(slLoss);
+    const pnl = (lossPercentage / 100) * margin;
 
     return (
       <div className="mb-4 text-sm text-gray-400">
@@ -168,8 +192,15 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
           ${Math.abs(pnl).toFixed(2)}
         </span>.
       </div>
-    )
-  }
+    );
+  };
+
+  const isSubmitDisabled = (): boolean => {
+    if (settingTPSL[position.id]) return true;
+    if (!tpPrice && !slPrice) return true;
+    if (slPrice && isStopLossBelowLiquidation()) return true;
+    return false;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -292,7 +323,7 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
                 className="w-full text-white" 
                 style={{ backgroundColor: "#7142cf" }}
                 onClick={handleSubmit}
-                disabled={settingTPSL[position.id] || (!tpPrice && !slPrice)}
+                disabled={isSubmitDisabled()}
               >
                 {settingTPSL[position.id] ? "Placing Order..." : "Place Take Profit & Stop Loss"}
               </Button>
@@ -301,5 +332,5 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
         </Card>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
