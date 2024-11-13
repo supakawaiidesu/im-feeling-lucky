@@ -84,19 +84,29 @@ const toBigInt = (value: number): bigint => {
 };
 
 function calculateLiquidationPrice(
-  position: ContractPosition,
-  entryPrice: number
+  position: ContractPosition, 
+  entryPrice: number,
+  accruedFees: { borrowFee: bigint; fundingFee: bigint }
 ): string {
   const margin = Number(formatUnits(position.collateral, SCALING_FACTOR));
   const size = Number(formatUnits(position.size, SCALING_FACTOR));
-  const liquidationThreshold = 0.9;
+  const leverage = size / margin;
+  
+  // Convert fees to numbers
+  const totalFees = Number(formatUnits(accruedFees.borrowFee + accruedFees.fundingFee, SCALING_FACTOR));
+  
+  // We want: (priceDiff * size / entryPrice) - fees = -0.9 * margin
+  // Rearranging for priceDiff:
+  // priceDiff * size / entryPrice = (-0.9 * margin) + fees
+  // priceDiff = ((-0.9 * margin) + fees) * entryPrice / size
+  
+  const targetPnL = (-0.9 * margin) + totalFees;
+  const requiredPriceDiff = (targetPnL * entryPrice) / size;
 
   if (position.isLong) {
-    const liqPrice = entryPrice * (1 - (margin / (size * liquidationThreshold)));
-    return liqPrice.toFixed(2);
+    return (entryPrice + requiredPriceDiff).toFixed(2);
   } else {
-    const liqPrice = entryPrice * (1 + (margin / (size * liquidationThreshold)));
-    return liqPrice.toFixed(2);
+    return (entryPrice - requiredPriceDiff).toFixed(2);
   }
 }
 
@@ -177,7 +187,7 @@ export function usePositions() {
       const priceKey = TOKEN_ID_TO_PRICE_KEY[position.tokenId.toString()];
       const currentPrice = priceKey && prices[priceKey]?.price;
       const entryPrice = Number(formatUnits(position.averagePrice, SCALING_FACTOR));
-
+    
       const { pnl, fees } = currentPrice ?
         calculatePnL(
           position,
@@ -186,7 +196,7 @@ export function usePositions() {
           accruedFeesData[index]
         ) :
         { pnl: 'Loading...', fees: { positionFee: '0', borrowFee: '0', fundingFee: '0' } };
-
+    
       return {
         positionId: posIds[index].toString(),
         market,
@@ -196,7 +206,11 @@ export function usePositions() {
         pnl,
         isLong: position.isLong,
         margin: Number(formatUnits(position.collateral, SCALING_FACTOR)).toFixed(2),
-        liquidationPrice: currentPrice ? calculateLiquidationPrice(position, entryPrice) : 'Loading...',
+        liquidationPrice: currentPrice ? calculateLiquidationPrice(
+          position, 
+          entryPrice,
+          accruedFeesData[index]
+        ) : 'Loading...',
         fees
       };
     });
