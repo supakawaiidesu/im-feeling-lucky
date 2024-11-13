@@ -63,11 +63,11 @@ export function PositionsContent({
     <>
       <TableHeader>
         <TableRow>
-          <TableHead>Market</TableHead>
+          <TableHead>Pair</TableHead>
           <TableHead>Size</TableHead>
           <TableHead>Margin</TableHead>
-          <TableHead>Open Price</TableHead>
-          <TableHead>Price</TableHead>
+          <TableHead>Entry Price</TableHead>
+          <TableHead>Market/Liq. Price</TableHead>
           <TableHead>uPnL</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
