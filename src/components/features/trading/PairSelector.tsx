@@ -8,6 +8,7 @@ import {
 import { useMarketData } from "../../../hooks/use-market-data";
 import { usePrices } from "../../../lib/websocket-price-context";
 import { cn } from "../../../lib/utils";
+import { TokenPairDisplay, PrefetchTokenImages } from "../../../hooks/use-token-icon";
 
 interface PairSelectorProps {
   selectedPair: string;
@@ -60,9 +61,14 @@ export function PairSelector({
 
   return (
     <div className="flex items-center mx-0.25 my-2">
+      {/* Prefetch all token images */}
+      <PrefetchTokenImages pairs={allMarkets.map(market => market.pair)} />
+      
       <Select value={selectedPair} onValueChange={onPairChange}>
         <SelectTrigger className="w-[350px] h-[55px] bg-[hsl(var(--component-background))] border rounded-lg shadow-sm">
-          <SelectValue>{selectedPair}</SelectValue>
+          <SelectValue>
+            <TokenPairDisplay pair={selectedPair} />
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="w-[800px] bg-[hsl(var(--component-background))]">
           {allMarkets.map((market) => (
@@ -73,7 +79,7 @@ export function PairSelector({
             >
               <div className="flex items-center text-sm">
                 <div className="flex items-center min-w-[150px]">
-                  <span>{market.pair}</span>
+                  <TokenPairDisplay pair={market.pair} />
                   <span className="ml-2">{formatPrice(market.pair)}</span>
                 </div>
                 <div className="text-muted-foreground">
