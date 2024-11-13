@@ -11,6 +11,7 @@ import { LeverageDialog } from "../LeverageDialog";
 import { MarketOrderForm } from "./components/MarketOrderForm";
 import { LimitOrderForm } from "./components/LimitOrderForm";
 import { TradeDetails } from "./components/TradeDetails";
+import { WalletBox } from "../walletBox"; // Add this import
 import { useOrderForm } from "./hooks/useOrderForm";
 import { useTradeCalculations } from "./hooks/useTradeCalculations";
 import { OrderCardProps } from "./types";
@@ -248,8 +249,14 @@ export function OrderCard({
   }
   onClick={handleButtonClick}
 >
-  {getButtonText()}
-</Button>
+{getButtonText()}
+          </Button>
+
+          {/* Add divider and WalletBox */}
+          <div className="h-px my-4 bg-border" />
+          <div className="mt-4">
+            <WalletBox />
+          </div>
         </Tabs>
       </CardContent>
     </Card>

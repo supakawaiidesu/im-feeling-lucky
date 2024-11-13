@@ -1,4 +1,3 @@
-import { Card, CardContent } from "../../ui/card"
 import { usePositions } from "../../../hooks/use-positions"
 import { useBalances } from "../../../hooks/use-balances"
 import { useAccount } from "wagmi"
@@ -52,61 +51,55 @@ export function WalletBox() {
   // Show connect wallet message if no wallet is connected
   if (!eoaAddress) {
     return (
-      <Card className="w-[350px] mt-4">
-        <CardContent className="p-4">
-          <div className="text-sm text-center text-muted-foreground">
-            Connect wallet to view balances
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-sm text-center text-muted-foreground">
+        Connect wallet to view balances
+      </div>
     );
   }
 
   return (
-    <Card className="w-[350px] mt-4">
-      <CardContent className="p-4">
-        <div className="flex justify-between mb-2">
-          <span className="text-sm font-semibold text-muted-foreground">Account Equity</span>
-          <span className="text-base">
-            {calculateTotalBalance()}
+    <div>
+      <div className="flex justify-between mb-2">
+        <span className="text-sm font-semibold text-muted-foreground">Account Equity</span>
+        <span className="text-base">
+          {calculateTotalBalance()}
+        </span>
+      </div>
+      
+      <div className="h-px my-4 bg-border" />
+
+      <div className="space-y-2 text-sm text-muted-foreground">
+        <div className="flex justify-between">
+          <span>Unrealized PnL</span>
+          <span className={
+            (totalUnrealizedPnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+          }>
+            {positionsLoading ? 'Loading...' : formatPnL(totalUnrealizedPnl)}
           </span>
         </div>
         
-        <div className="h-px my-4 bg-border" />
-
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <div className="flex justify-between">
-            <span>Unrealized PnL</span>
-            <span className={
-              (totalUnrealizedPnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'
-            }>
-              {positionsLoading ? 'Loading...' : formatPnL(totalUnrealizedPnl)}
-            </span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>UniDex V4 Balance</span>
-            <span>
-              {balancesLoading ? 'Loading...' : `${formatBalance(balances?.formattedMusdBalance)} USDC`}
-            </span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>Web Wallet Balance</span>
-            <span>
-              {balancesLoading ? 'Loading...' : `${formatBalance(balances?.formattedUsdcBalance)} USDC`}
-            </span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>1CT Wallet Balance</span>
-            <span>
-              {balancesLoading ? 'Loading...' : `${formatBalance(balances?.formattedEoaUsdcBalance)} USDC`}
-            </span>
-          </div>
+        <div className="flex justify-between">
+          <span>UniDex V4 Balance</span>
+          <span>
+            {balancesLoading ? 'Loading...' : `${formatBalance(balances?.formattedMusdBalance)} USDC`}
+          </span>
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="flex justify-between">
+          <span>Web Wallet Balance</span>
+          <span>
+            {balancesLoading ? 'Loading...' : `${formatBalance(balances?.formattedUsdcBalance)} USDC`}
+          </span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>1CT Wallet Balance</span>
+          <span>
+            {balancesLoading ? 'Loading...' : `${formatBalance(balances?.formattedEoaUsdcBalance)} USDC`}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
 

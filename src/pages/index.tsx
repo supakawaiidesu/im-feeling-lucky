@@ -7,7 +7,6 @@ import { Chart } from "../components/features/trading/Chart"
 import { PositionsTable } from "../components/features/trading/PositionsTable"
 import { PairHeader } from "../components/features/trading/PairHeader"
 import { useMarketData } from "../hooks/use-market-data"
-import { WalletBox } from "../components/features/trading/WalletBox"
 
 export default function TradingInterface() {
   const [selectedPair, setSelectedPair] = useState("ETH/USD")
@@ -36,7 +35,6 @@ export default function TradingInterface() {
               onLeverageChange={setLeverage} 
               assetId={assetId}
             />
-            <WalletBox />
           </div>
         </div>
 
