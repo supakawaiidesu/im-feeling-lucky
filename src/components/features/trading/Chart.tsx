@@ -58,16 +58,16 @@ export function Chart() {
           theme: "dark",
           overrides: {
             "paneProperties.background": "#17161d",
-            'scalesProperties.bgColor': "#17161d",
-            'paneProperties.backgroundType': 'solid',
-            'paneProperties.legendProperties.showBackground': false,
+            "scalesProperties.bgColor": "#17161d",
+            "paneProperties.backgroundType": "solid",
+            "paneProperties.legendProperties.showBackground": false,
           },
           load_last_chart: false,
           saved_data: null,
           auto_save_delay: 0,
           max_bars: 300,
           range: "1D",
-          custom_css_url: '../custom.css',
+          custom_css_url: "../custom.css",
           allow_symbol_change: false,
           favorites: {
             intervals: [

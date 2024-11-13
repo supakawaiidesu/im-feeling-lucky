@@ -47,7 +47,7 @@ export function useMarketOrderActions() {
 
       // For market orders, calculate maxAcceptablePrice with slippage
       // For limit orders, use the exact limit price
-      const maxAcceptablePrice = orderType === "market" 
+      const maxAcceptablePrice = orderType === "market"
         ? Number((price * (isLong ? 1.05 : 0.95)).toFixed(6))
         : Number(price.toFixed(6));
 
@@ -66,11 +66,11 @@ export function useMarketOrderActions() {
           size,
           userAddress: smartAccount.address,
           ...(orderType === "limit" && { limitPrice: price }),
-          ...(takeProfit && { 
+          ...(takeProfit && {
             takeProfit: parseFloat(takeProfit),
             takeProfitClosePercent: 100 // 100% close
           }),
-          ...(stopLoss && { 
+          ...(stopLoss && {
             stopLoss: parseFloat(stopLoss),
             stopLossClosePercent: 100 // 100% close
           }),

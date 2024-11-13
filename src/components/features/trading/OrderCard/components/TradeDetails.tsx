@@ -1,5 +1,5 @@
-import React from 'react';
-import { TradeDetails as TradeDetailsType } from '../types';
+import React from "react";
+import { TradeDetails as TradeDetailsType } from "../types";
 
 interface TradeDetailsProps {
   details: TradeDetailsType;
@@ -7,12 +7,7 @@ interface TradeDetailsProps {
 }
 
 export function TradeDetails({ details, pair }: TradeDetailsProps) {
-  const {
-    entryPrice,
-    notionalSize,
-    liquidationPrice,
-    fees
-  } = details;
+  const { entryPrice, notionalSize, liquidationPrice, fees } = details;
 
   return (
     <div className="mt-4 space-y-2 text-sm text-muted-foreground">

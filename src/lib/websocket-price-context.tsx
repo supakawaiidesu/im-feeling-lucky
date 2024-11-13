@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 
 interface PriceData {
   [key: string]: {
@@ -17,21 +24,23 @@ const THROTTLE_INTERVAL = 500;
 export const usePrices = () => {
   const context = useContext(PriceContext);
   if (context === undefined) {
-    throw new Error('usePrices must be used within a PriceProvider');
+    throw new Error("usePrices must be used within a PriceProvider");
   }
   return context;
 };
 
-export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [prices, setPrices] = useState<PriceData>({});
   const priceBuffer = useRef<PriceData>({});
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const flushPriceUpdates = useCallback(() => {
     if (Object.keys(priceBuffer.current).length > 0) {
-      setPrices(prevPrices => ({
+      setPrices((prevPrices) => ({
         ...prevPrices,
-        ...priceBuffer.current
+        ...priceBuffer.current,
       }));
       priceBuffer.current = {};
     }
@@ -45,19 +54,19 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [flushPriceUpdates]);
 
   useEffect(() => {
-    const ws = new WebSocket('wss://pricefeed-production.up.railway.app/');
+    const ws = new WebSocket("wss://pricefeed-production.up.railway.app/");
 
     ws.onopen = () => {
-      console.log('WebSocket connected');
+      console.log("WebSocket connected");
     };
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      
+
       // Update the buffer instead of state directly
       priceBuffer.current = {
         ...priceBuffer.current,
-        ...data
+        ...data,
       };
 
       // Schedule a throttled update
@@ -65,11 +74,11 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error("WebSocket error:", error);
     };
 
     ws.onclose = () => {
-      console.log('WebSocket disconnected');
+      console.log("WebSocket disconnected");
     };
 
     return () => {
@@ -81,8 +90,6 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [scheduleUpdate]);
 
   return (
-    <PriceContext.Provider value={{ prices }}>
-      {children}
-    </PriceContext.Provider>
+    <PriceContext.Provider value={{ prices }}>{children}</PriceContext.Provider>
   );
 };

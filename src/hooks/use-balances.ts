@@ -78,11 +78,11 @@ export function useBalances(selectedNetwork: 'arbitrum' | 'optimism' = 'arbitrum
     return [eoaAddress] as const;
   }, [eoaAddress]);
 
-  const { 
-    data: smartAccountData, 
-    isError: isSmartAccountError, 
+  const {
+    data: smartAccountData,
+    isError: isSmartAccountError,
     isLoading: isSmartAccountLoading,
-    refetch: refetchSmartAccount 
+    refetch: refetchSmartAccount
   } = useContractRead({
     address: BALANCES_CONTRACT,
     abi: BALANCES_ABI,
@@ -99,11 +99,11 @@ export function useBalances(selectedNetwork: 'arbitrum' | 'optimism' = 'arbitrum
   })
 
   // Arbitrum USDC Balance
-  const { 
-    data: eoaUsdcBalance, 
-    isError: isEoaError, 
+  const {
+    data: eoaUsdcBalance,
+    isError: isEoaError,
     isLoading: isEoaArbitrumLoading,
-    refetch: refetchEoaArbitrum 
+    refetch: refetchEoaArbitrum
   } = useContractRead({
     address: USDC_TOKEN,
     abi: ERC20_ABI,
@@ -119,11 +119,11 @@ export function useBalances(selectedNetwork: 'arbitrum' | 'optimism' = 'arbitrum
   })
 
   // Optimism USDC Balance
-  const { 
-    data: eoaOptimismUsdcBalance, 
-    isError: isEoaOptimismError, 
+  const {
+    data: eoaOptimismUsdcBalance,
+    isError: isEoaOptimismError,
     isLoading: isEoaOptimismLoading,
-    refetch: refetchEoaOptimism 
+    refetch: refetchEoaOptimism
   } = useContractRead({
     address: USDC_TOKEN_OPTIMISM,
     abi: ERC20_ABI,
@@ -158,7 +158,7 @@ export function useBalances(selectedNetwork: 'arbitrum' | 'optimism' = 'arbitrum
     if (!effectiveSmartAccount?.address) {
       return;
     }
-    
+
     try {
       await Promise.all([
         smartAccountArgs ? refetchSmartAccount() : Promise.resolve(null),
@@ -189,7 +189,7 @@ export function useBalances(selectedNetwork: 'arbitrum' | 'optimism' = 'arbitrum
   const [ethBalance, usdcBalance, usdcAllowance, musdBalance] = smartAccountData
 
   const currentEoaBalance = selectedNetwork === 'arbitrum' ? eoaUsdcBalance : eoaOptimismUsdcBalance;
-  
+
   const formattedBalances: Balances = {
     ethBalance,
     usdcBalance,
@@ -207,9 +207,9 @@ export function useBalances(selectedNetwork: 'arbitrum' | 'optimism' = 'arbitrum
 
   return {
     balances: formattedBalances,
-    isError: isSmartAccountError || 
+    isError: isSmartAccountError ||
       (selectedNetwork === 'arbitrum' ? isEoaError : isEoaOptimismError),
-    isLoading: isSmartAccountLoading || 
+    isLoading: isSmartAccountLoading ||
       (selectedNetwork === 'arbitrum' ? isEoaArbitrumLoading : isEoaOptimismLoading),
     refetchBalances
   }

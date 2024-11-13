@@ -153,14 +153,14 @@ export function useOrders() {
 
     const formattedTriggerOrders = positions.map((position: ContractPosition, index: number) => {
       const triggerData = triggers[index] as { triggers: TriggerData[] };
-      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] || 
-                    `Token${position.tokenId.toString()}/USD`;
-    
+      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] ||
+        `Token${position.tokenId.toString()}/USD`;
+
       // Process trigger orders (TP/SL)
       let takeProfit = null;
       let stopLoss = null;
       let latestTimestamp = 0;
-    
+
       if (triggerData && triggerData.triggers && triggerData.triggers.length > 0) {
         triggerData.triggers.forEach((t: TriggerData) => {
           const orderData = {
@@ -168,10 +168,10 @@ export function useOrders() {
             size: Number(formatUnits(t.amountPercent, SCALING_FACTOR)).toFixed(2),
             type: t.isTP ? "TakeProfit" : "StopLoss"
           };
-    
+
           // Keep track of the latest timestamp
           latestTimestamp = Math.max(latestTimestamp, Number(t.createdAt));
-    
+
           if (t.isTP) {
             takeProfit = orderData;
           } else {
@@ -179,7 +179,7 @@ export function useOrders() {
           }
         });
       }
-    
+
       return {
         positionId: posIds[index].toString(),
         market,
@@ -208,8 +208,8 @@ export function useOrders() {
 
     const formattedOrders = positions.map((position: ContractPosition, index: number) => {
       const order = orders_[index] as ContractOrder;
-      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] || 
-                    `Token${position.tokenId.toString()}/USD`;
+      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] ||
+        `Token${position.tokenId.toString()}/USD`;
       const priceKey = TOKEN_ID_TO_PRICE_KEY[position.tokenId.toString()];
       const currentPrice = priceKey && prices[priceKey]?.price;
 

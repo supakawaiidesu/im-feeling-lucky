@@ -99,8 +99,8 @@ export function useTradeCalculations({
     };
   }, [amount, market, currentPrice, isLong]);
 
-  const entryPrice = activeTab === "limit" && limitPrice 
-    ? parseFloat(limitPrice) 
+  const entryPrice = activeTab === "limit" && limitPrice
+    ? parseFloat(limitPrice)
     : currentPrice;
 
   return {

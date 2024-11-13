@@ -53,7 +53,7 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
   // Handle amount input change
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAmount = e.target.value;
-    
+
     // Update slider value based on amount
     let newSliderValue = [0];
     if (maxLeveragedAmount > 0) {
@@ -101,7 +101,7 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
   const calculatePrice = (percentage: number, isProfit: boolean) => {
     const entryPrice = parseFloat(formState?.entryPrice?.toString() ?? "0");
     if (!entryPrice || isNaN(entryPrice)) return "";
-    
+
     const multiplier = isProfit ? (1 + percentage / 100) : (1 - percentage / 100);
     return (entryPrice * multiplier).toFixed(2);
   };
@@ -110,9 +110,9 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
   const calculatePercentage = (price: string, isProfit: boolean) => {
     const entryPrice = parseFloat(formState?.entryPrice?.toString() ?? "0");
     const targetPrice = parseFloat(price);
-    
+
     if (!entryPrice || !targetPrice || isNaN(entryPrice) || isNaN(targetPrice)) return "";
-    
+
     const percentage = ((targetPrice - entryPrice) / entryPrice) * 100;
     return isProfit ? percentage.toFixed(2) : (-percentage).toFixed(2);
   };

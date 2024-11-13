@@ -48,8 +48,7 @@ function MyApp({ Component, pageProps }: AppProps) {
               }}
               theme={{
                 lightMode: lightTheme(),
-                darkMode: darkTheme({overlayBlur: "small"}),
-                
+                darkMode: darkTheme({ overlayBlur: "small" }),
               }}
               initialChain={arbitrum}
             >

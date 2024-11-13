@@ -73,7 +73,6 @@ export default function DepositBox() {
   }, [smartAccount?.address, refetchBalances]);
 
   const isOnCorrectChain = () => {
-    
     if (selectedNetwork === "arbitrum") {
       return chain?.id === arbitrum.id;
     } else {
@@ -208,7 +207,7 @@ export default function DepositBox() {
         }
         await transferToSmartAccount(smartAccountAmount, eoaAddress);
       }
-      
+
       setSmartAccountAmount("");
       refetchBalances();
     } catch (error: any) {
@@ -312,9 +311,14 @@ export default function DepositBox() {
     refetchBalances();
   };
 
-  const getActionButtonText = (type: "deposit" | "withdraw", mode: "smart-account" | "trading") => {
+  const getActionButtonText = (
+    type: "deposit" | "withdraw",
+    mode: "smart-account" | "trading"
+  ) => {
     if (mode === "smart-account" && type === "deposit" && !isOnCorrectChain()) {
-      return `Switch to ${selectedNetwork === "arbitrum" ? "Arbitrum" : "Optimism"}`;
+      return `Switch to ${
+        selectedNetwork === "arbitrum" ? "Arbitrum" : "Optimism"
+      }`;
     }
 
     if (mode === "trading" && type === "deposit" && needsApproval) {
@@ -331,22 +335,27 @@ export default function DepositBox() {
       onDeposit: () => handleSmartAccountOperation("deposit"),
       onWithdraw: () => handleSmartAccountOperation("withdraw"),
       isLoading: isTransferring,
-      depositDisabled: !smartAccountAmount ||
+      depositDisabled:
+        !smartAccountAmount ||
         !eoaAddress ||
         !balances ||
-        parseFloat(smartAccountAmount) > parseFloat(balances.formattedEoaUsdcBalance),
-      withdrawDisabled: !smartAccountAmount ||
+        parseFloat(smartAccountAmount) >
+          parseFloat(balances.formattedEoaUsdcBalance),
+      withdrawDisabled:
+        !smartAccountAmount ||
         !smartAccount ||
         !balances ||
-        parseFloat(smartAccountAmount) > parseFloat(balances.formattedUsdcBalance),
+        parseFloat(smartAccountAmount) >
+          parseFloat(balances.formattedUsdcBalance),
       depositText: getActionButtonText("deposit", "smart-account"),
-      withdrawText: getActionButtonText("withdraw", "smart-account")
+      withdrawText: getActionButtonText("withdraw", "smart-account"),
     };
 
     if (selectedNetwork === "optimism") {
-      if (onCorrectChain) {  // Changed from !onCorrectChain
+      if (onCorrectChain) {
+        // Changed from !onCorrectChain
         return (
-          <CrossChainDepositCall 
+          <CrossChainDepositCall
             amount={smartAccountAmount}
             onSuccess={handleCrossChainSuccess}
             chain={chain?.id}

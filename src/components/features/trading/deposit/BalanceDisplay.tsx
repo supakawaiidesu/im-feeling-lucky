@@ -1,29 +1,31 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card";
 
 interface BalanceDisplayItemProps {
-  title: string
-  address: string | undefined
-  balance: string
-  isLoading: boolean
-  isEffectivelyInitialized?: boolean
-  network?: 'arbitrum' | 'optimism'
+  title: string;
+  address: string | undefined;
+  balance: string;
+  isLoading: boolean;
+  isEffectivelyInitialized?: boolean;
+  network?: "arbitrum" | "optimism";
 }
 
-function BalanceDisplayItem({ 
-  title, 
-  address, 
-  balance, 
+function BalanceDisplayItem({
+  title,
+  address,
+  balance,
   isLoading,
   isEffectivelyInitialized = true,
-  network
+  network,
 }: BalanceDisplayItemProps) {
   const showConnectionStatus = title === "1CT Wallet";
-  const displayAddress = showConnectionStatus 
-    ? (isEffectivelyInitialized ? address : 'Not connected')
-    : (address || 'Not connected');
+  const displayAddress = showConnectionStatus
+    ? isEffectivelyInitialized
+      ? address
+      : "Not connected"
+    : address || "Not connected";
 
   const truncateAddress = (addr: string | undefined) => {
-    if (!addr || addr === 'Not connected') return addr;
+    if (!addr || addr === "Not connected") return addr;
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
@@ -31,7 +33,7 @@ function BalanceDisplayItem({
     <div
       className="inline-block w-2 h-2 mr-1 rounded-full"
       style={{
-        backgroundColor: network === 'arbitrum' ? '#28A0F0' : '#FF0420'
+        backgroundColor: network === "arbitrum" ? "#28A0F0" : "#FF0420",
       }}
     />
   );
@@ -43,7 +45,7 @@ function BalanceDisplayItem({
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{title}:</span>
             <span className="font-medium">
-              {isLoading ? 'Loading...' : `${balance} USDC`}
+              {isLoading ? "Loading..." : `${balance} USDC`}
             </span>
           </div>
         </CardContent>
@@ -57,30 +59,31 @@ function BalanceDisplayItem({
         <div className="flex flex-col space-y-2">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
-              {networkDot}{title}:
+              {networkDot}
+              {title}:
             </span>
             <span className="font-mono text-xs text-muted-foreground">
               {truncateAddress(displayAddress)}
             </span>
           </div>
           <div className="font-medium">
-            {isLoading ? 'Loading...' : `${balance} USDC`}
+            {isLoading ? "Loading..." : `${balance} USDC`}
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 interface BalanceDisplayProps {
-  eoaAddress: string | undefined
-  smartAccountAddress: string | undefined
-  eoaBalance: string
-  smartAccountBalance: string
-  marginBalance: string
-  isLoading: boolean
-  isEffectivelyInitialized: boolean
-  selectedNetwork: 'arbitrum' | 'optimism'
+  eoaAddress: string | undefined;
+  smartAccountAddress: string | undefined;
+  eoaBalance: string;
+  smartAccountBalance: string;
+  marginBalance: string;
+  isLoading: boolean;
+  isEffectivelyInitialized: boolean;
+  selectedNetwork: "arbitrum" | "optimism";
 }
 
 export function BalanceDisplay({
@@ -91,7 +94,7 @@ export function BalanceDisplay({
   marginBalance,
   isLoading,
   isEffectivelyInitialized,
-  selectedNetwork
+  selectedNetwork,
 }: BalanceDisplayProps) {
   return (
     <div className="space-y-4">
@@ -117,5 +120,5 @@ export function BalanceDisplay({
         isLoading={isLoading}
       />
     </div>
-  )
+  );
 }

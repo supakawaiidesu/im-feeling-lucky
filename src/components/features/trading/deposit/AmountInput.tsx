@@ -1,14 +1,14 @@
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface AmountInputProps {
-  amount: string
-  onAmountChange: (value: string) => void
-  onMaxClick: () => void
-  disabled?: boolean
-  isLoading?: boolean
-  label?: string
+  amount: string;
+  onAmountChange: (value: string) => void;
+  onMaxClick: () => void;
+  disabled?: boolean;
+  isLoading?: boolean;
+  label?: string;
 }
 
 export function AmountInput({
@@ -17,7 +17,7 @@ export function AmountInput({
   onMaxClick,
   disabled = false,
   isLoading = false,
-  label = "Amount (USDC)"
+  label = "Amount (USDC)",
 }: AmountInputProps) {
   return (
     <div className="space-y-2">
@@ -41,5 +41,5 @@ export function AmountInput({
         </Button>
       </div>
     </div>
-  )
+  );
 }

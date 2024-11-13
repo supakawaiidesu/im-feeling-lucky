@@ -1,8 +1,8 @@
-import React from 'react';
-import { Input } from '../../../../ui/input';
-import { Slider } from '../../../../ui/slider';
-import { OrderFormState } from '../types';
-import TPSLInputSection from './TPSLInputSection';
+import React from "react";
+import { Input } from "../../../../ui/input";
+import { Slider } from "../../../../ui/slider";
+import { OrderFormState } from "../types";
+import TPSLInputSection from "./TPSLInputSection";
 
 interface MarketOrderFormProps {
   formState: OrderFormState;
@@ -10,8 +10,8 @@ interface MarketOrderFormProps {
   handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSliderChange: (value: number[]) => void;
   toggleTPSL: () => void;
-  handleTakeProfitChange: (value: string) => void;  // Updated
-  handleStopLossChange: (value: string) => void;    // Updated
+  handleTakeProfitChange: (value: string) => void; // Updated
+  handleStopLossChange: (value: string) => void; // Updated
 }
 
 export function MarketOrderForm({
@@ -67,7 +67,7 @@ export function MarketOrderForm({
           takeProfit={formState.takeProfit}
           stopLoss={formState.stopLoss}
           entryPrice={formState.entryPrice || 0}
-          isLong={formState.isLong}  // Add this line
+          isLong={formState.isLong} // Add this line
           onTakeProfitChange={handleTakeProfitChange}
           onStopLossChange={handleStopLossChange}
           toggleTPSL={toggleTPSL}

@@ -1,10 +1,10 @@
-import { usePositions } from "../../../hooks/use-positions"
-import { useBalances } from "../../../hooks/use-balances"
-import { useAccount } from "wagmi"
+import { usePositions } from "../../../hooks/use-positions";
+import { useBalances } from "../../../hooks/use-balances";
+import { useAccount } from "wagmi";
 
 export function WalletBox() {
   const { positions, loading: positionsLoading } = usePositions();
-  const { balances, isLoading: balancesLoading } = useBalances('arbitrum');
+  const { balances, isLoading: balancesLoading } = useBalances("arbitrum");
   const { address: eoaAddress } = useAccount();
 
   // Calculate total unrealized PnL including fees
@@ -14,7 +14,7 @@ export function WalletBox() {
     }
 
     const pnlWithoutFees = parseFloat(position.pnl.replace(/[^0-9.-]/g, ""));
-    const totalFees = 
+    const totalFees =
       parseFloat(position.fees.positionFee || "0") +
       parseFloat(position.fees.borrowFee || "0") +
       parseFloat(position.fees.fundingFee || "0");
@@ -23,27 +23,27 @@ export function WalletBox() {
   }, 0);
 
   const formatPnL = (value: number | undefined) => {
-    if (value === undefined) return '$0.00';
-    return value >= 0 ? 
-      `+$${value.toFixed(2)}` : 
-      `-$${Math.abs(value).toFixed(2)}`;
+    if (value === undefined) return "$0.00";
+    return value >= 0
+      ? `+$${value.toFixed(2)}`
+      : `-$${Math.abs(value).toFixed(2)}`;
   };
 
   const formatBalance = (value: string | undefined) => {
-    if (!value) return '0.00';
+    if (!value) return "0.00";
     const numValue = parseFloat(value);
-    return isNaN(numValue) ? '0.00' : numValue.toFixed(2);
+    return isNaN(numValue) ? "0.00" : numValue.toFixed(2);
   };
 
   // Calculate total balance across all accounts
   const calculateTotalBalance = () => {
-    if (balancesLoading) return 'Loading...';
-    
-    const musdBalance = parseFloat(balances?.formattedMusdBalance || '0');
-    const usdcBalance = parseFloat(balances?.formattedUsdcBalance || '0');
-    const eoaBalance = parseFloat(balances?.formattedEoaUsdcBalance || '0');
+    if (balancesLoading) return "Loading...";
+
+    const musdBalance = parseFloat(balances?.formattedMusdBalance || "0");
+    const usdcBalance = parseFloat(balances?.formattedUsdcBalance || "0");
+    const eoaBalance = parseFloat(balances?.formattedEoaUsdcBalance || "0");
     const unrealizedPnl = totalUnrealizedPnl || 0;
-    
+
     const total = musdBalance + usdcBalance + eoaBalance + unrealizedPnl;
     return `$${total.toFixed(2)}`;
   };
@@ -60,42 +60,50 @@ export function WalletBox() {
   return (
     <div>
       <div className="flex justify-between mb-2">
-        <span className="text-sm font-semibold text-muted-foreground">Account Equity</span>
-        <span className="text-base">
-          {calculateTotalBalance()}
+        <span className="text-sm font-semibold text-muted-foreground">
+          Account Equity
         </span>
+        <span className="text-base">{calculateTotalBalance()}</span>
       </div>
-      
+
       <div className="h-px my-4 bg-border" />
 
       <div className="space-y-2 text-sm text-muted-foreground">
         <div className="flex justify-between">
           <span>Unrealized PnL</span>
-          <span className={
-            (totalUnrealizedPnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'
-          }>
-            {positionsLoading ? 'Loading...' : formatPnL(totalUnrealizedPnl)}
+          <span
+            className={
+              (totalUnrealizedPnl || 0) >= 0 ? "text-green-400" : "text-red-400"
+            }
+          >
+            {positionsLoading ? "Loading..." : formatPnL(totalUnrealizedPnl)}
           </span>
         </div>
-        
+
         <div className="flex justify-between">
           <span>UniDex V4 Balance</span>
           <span>
-            {balancesLoading ? 'Loading...' : `${formatBalance(balances?.formattedMusdBalance)} USDC`}
+            {balancesLoading
+              ? "Loading..."
+              : `${formatBalance(balances?.formattedMusdBalance)} USDC`}
           </span>
         </div>
 
         <div className="flex justify-between">
           <span>Web Wallet Balance</span>
           <span>
-            {balancesLoading ? 'Loading...' : `${formatBalance(balances?.formattedUsdcBalance)} USDC`}
+            {balancesLoading
+              ? "Loading..."
+              : `${formatBalance(balances?.formattedUsdcBalance)} USDC`}
           </span>
         </div>
 
         <div className="flex justify-between">
           <span>1CT Wallet Balance</span>
           <span>
-            {balancesLoading ? 'Loading...' : `${formatBalance(balances?.formattedEoaUsdcBalance)} USDC`}
+            {balancesLoading
+              ? "Loading..."
+              : `${formatBalance(balances?.formattedEoaUsdcBalance)} USDC`}
           </span>
         </div>
       </div>

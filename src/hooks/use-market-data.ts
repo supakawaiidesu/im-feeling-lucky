@@ -16,7 +16,7 @@ export const TRADING_PAIRS: { [key: string]: string } = {
   '41': 'RLB/USD', '42': 'ALICE/USD', '43': 'APE/USD', '44': 'APT/USD', '45': 'AVAIL/USD',
   '46': 'DEGEN/USD', '47': 'RDNT/USD', '48': 'SUI/USD', '49': 'PEPE/USD', '50': 'EIGEN/USD',
   '51': 'XAU/USD', '52': 'XAG/USD', '53': 'GMCI30/USD', '54': 'GMCL2/USD', '55': 'GMMEME/USD',
-  '56': 'QQQ/USD', '57': 'SPY/USD' 
+  '56': 'QQQ/USD', '57': 'SPY/USD'
 };
 
 export interface Market {
@@ -58,7 +58,7 @@ interface UseMarketDataResult {
 
 const LENS_CONTRACT_ADDRESS = '0xeae57c7bce5caf160343a83440e98bc976ab7274' as `0x${string}`;
 
-export function useMarketData({ 
+export function useMarketData({
   pollInterval = 10000,
   selectedPair,
   address = '0x0000000000000000000000000000000000000000'
@@ -73,7 +73,7 @@ export function useMarketData({
     address: LENS_CONTRACT_ADDRESS,
     abi: lensAbi,
     functionName: 'getGlobalInfo' as const,
-    args: [address, BigInt(assetId)] as const,    
+    args: [address, BigInt(assetId)] as const,
     chainId: arbitrum.id // Explicitly set chainId to Arbitrum
   }));
 
@@ -107,7 +107,7 @@ export function useMarketData({
           bigint,  // longTradingFee
           bigint   // shortTradingFee
         ];
-        
+
         // Calculate values using the same scaling as before
         const longOI = Number(formatUnits(data[3], 30));
         const shortOI = Number(formatUnits(data[4], 30));
@@ -152,7 +152,7 @@ export function useMarketData({
       setAllMarkets(markets);
 
       if (selectedPair) {
-        const market = markets.find(function(m) { return m.pair === selectedPair; });
+        const market = markets.find(function (m) { return m.pair === selectedPair; });
         setMarketData(market || markets[0] || null);
       } else {
         setMarketData(markets[0] || null);
@@ -167,7 +167,7 @@ export function useMarketData({
   };
 
   // Effect to process data when contract data changes
-  useEffect(function() {
+  useEffect(function () {
     processMarketData();
   }, [contractData, selectedPair]);
 
@@ -176,7 +176,7 @@ export function useMarketData({
     allMarkets,
     loading,
     error,
-    refetch: async function() {
+    refetch: async function () {
       await refetch();
       processMarketData();
     }

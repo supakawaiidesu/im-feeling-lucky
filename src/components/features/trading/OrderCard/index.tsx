@@ -22,12 +22,8 @@ export function OrderCard({
   assetId,
 }: OrderCardProps) {
   const { isConnected } = useAccount();
-  const { 
-    smartAccount, 
-    setupSessionKey, 
-    error, 
-    isNetworkSwitching 
-  } = useSmartAccount();
+  const { smartAccount, setupSessionKey, error, isNetworkSwitching } =
+    useSmartAccount();
   const [activeTab, setActiveTab] = useState("market");
   const { placeMarketOrder, placeLimitOrder, placingOrders } =
     useMarketOrderActions();
@@ -61,7 +57,7 @@ export function OrderCard({
   });
 
   const market = allMarkets.find((m) => m.assetId === assetId);
-  
+
   useEffect(() => {
     const pair = market?.pair;
     const basePair = pair?.split("/")[0].toLowerCase();
@@ -70,12 +66,22 @@ export function OrderCard({
     if (currentPrice) {
       setFormState((prev: any) => ({
         ...prev,
-        entryPrice: activeTab === "market" ? currentPrice : 
-                   activeTab === "limit" && formState.limitPrice ? 
-                   Number(formState.limitPrice) : currentPrice
+        entryPrice:
+          activeTab === "market"
+            ? currentPrice
+            : activeTab === "limit" && formState.limitPrice
+            ? Number(formState.limitPrice)
+            : currentPrice,
       }));
     }
-  }, [prices, assetId, allMarkets, activeTab, formState.limitPrice, setFormState]);
+  }, [
+    prices,
+    assetId,
+    allMarkets,
+    activeTab,
+    formState.limitPrice,
+    setFormState,
+  ]);
 
   const handlePlaceOrder = () => {
     if (!isConnected || !smartAccount?.address) return;
@@ -117,20 +123,22 @@ export function OrderCard({
     if (!isConnected) return "Connect Wallet to Trade";
     if (isNetworkSwitching) return "Switching to Arbitrum...";
     if (!smartAccount?.address) return "Establish Connection";
-    if (activeTab === "market" && !tradeDetails.entryPrice) return "Waiting for price...";
-    if (activeTab === "limit" && !formState.limitPrice) return "Enter Limit Price";
+    if (activeTab === "market" && !tradeDetails.entryPrice)
+      return "Waiting for price...";
+    if (activeTab === "limit" && !formState.limitPrice)
+      return "Enter Limit Price";
     if (placingOrders) return "Placing Order...";
-    
+
     // Add liquidity check
     const orderSize = parseFloat(formState.amount) || 0;
-    const availableLiquidity = formState.isLong ? 
-      market?.availableLiquidity?.long : 
-      market?.availableLiquidity?.short;
-      
+    const availableLiquidity = formState.isLong
+      ? market?.availableLiquidity?.long
+      : market?.availableLiquidity?.short;
+
     if (availableLiquidity !== undefined && orderSize > availableLiquidity) {
       return "Not Enough Liquidity";
     }
-    
+
     return `Place ${activeTab === "market" ? "Market" : "Limit"} ${
       formState.isLong ? "Long" : "Short"
     }`;
@@ -209,8 +217,8 @@ export function OrderCard({
               handleAmountChange={handleAmountChange}
               handleSliderChange={handleSliderChange}
               toggleTPSL={toggleTPSL}
-              handleTakeProfitChange={value => handleTakeProfitChange(value)}
-              handleStopLossChange={value => handleStopLossChange(value)}
+              handleTakeProfitChange={(value) => handleTakeProfitChange(value)}
+              handleStopLossChange={(value) => handleStopLossChange(value)}
             />
           </TabsContent>
 
@@ -222,34 +230,37 @@ export function OrderCard({
               handleLimitPriceChange={handleLimitPriceChange}
               handleSliderChange={handleSliderChange}
               toggleTPSL={toggleTPSL}
-              handleTakeProfitChange={value => handleTakeProfitChange(value)}
-              handleStopLossChange={value => handleStopLossChange(value)}
+              handleTakeProfitChange={(value) => handleTakeProfitChange(value)}
+              handleStopLossChange={(value) => handleStopLossChange(value)}
             />
           </TabsContent>
 
           <TradeDetails details={tradeDetails} pair={market?.pair} />
 
           <Button
-  variant="market"
-  className="w-full mt-4"
-  disabled={
-    !isConnected ||
-    placingOrders ||
-    isNetworkSwitching ||
-    (activeTab === "market" && !tradeDetails.entryPrice) ||
-    (activeTab === "limit" && !formState.limitPrice) ||
-    // Add liquidity check
-    (() => {
-      const orderSize = parseFloat(formState.amount) || 0;
-      const availableLiquidity = formState.isLong ? 
-        market?.availableLiquidity?.long : 
-        market?.availableLiquidity?.short;
-      return availableLiquidity !== undefined && orderSize > availableLiquidity;
-    })()
-  }
-  onClick={handleButtonClick}
->
-{getButtonText()}
+            variant="market"
+            className="w-full mt-4"
+            disabled={
+              !isConnected ||
+              placingOrders ||
+              isNetworkSwitching ||
+              (activeTab === "market" && !tradeDetails.entryPrice) ||
+              (activeTab === "limit" && !formState.limitPrice) ||
+              // Add liquidity check
+              (() => {
+                const orderSize = parseFloat(formState.amount) || 0;
+                const availableLiquidity = formState.isLong
+                  ? market?.availableLiquidity?.long
+                  : market?.availableLiquidity?.short;
+                return (
+                  availableLiquidity !== undefined &&
+                  orderSize > availableLiquidity
+                );
+              })()
+            }
+            onClick={handleButtonClick}
+          >
+            {getButtonText()}
           </Button>
 
           {/* Add divider and WalletBox */}

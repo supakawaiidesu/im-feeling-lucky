@@ -18,12 +18,12 @@ export const useTokenImagePath = (pair: string) => {
       }
 
       const fileName = pair.replace("/", "-");
-      const extensions = ['svg', 'webp', 'png'] as const;
-      
+      const extensions = ["svg", "webp", "png"] as const;
+
       for (const ext of extensions) {
         const path = `/static/images/tokens/${fileName}.${ext}`;
         try {
-          const response = await fetch(path, { method: 'HEAD' });
+          const response = await fetch(path, { method: "HEAD" });
           if (response.ok) {
             imagePathCache[pair] = path;
             setImagePath(path);
@@ -33,7 +33,7 @@ export const useTokenImagePath = (pair: string) => {
           continue;
         }
       }
-      
+
       setImagePath(null);
     };
 
@@ -82,15 +82,15 @@ export const TokenPairDisplay = ({ pair }: { pair: string }) => {
 // PrefetchTokenImages component to handle pre-fetching
 export const PrefetchTokenImages = ({ pairs }: { pairs: string[] }) => {
   useEffect(() => {
-    pairs.forEach(pair => {
+    pairs.forEach((pair) => {
       if (!imagePathCache[pair]) {
         const fileName = pair.replace("/", "-");
-        const extensions = ['svg', 'webp', 'png'] as const;
-        
-        extensions.forEach(ext => {
+        const extensions = ["svg", "webp", "png"] as const;
+
+        extensions.forEach((ext) => {
           const path = `/static/images/tokens/${fileName}.${ext}`;
-          fetch(path, { method: 'HEAD' })
-            .then(response => {
+          fetch(path, { method: "HEAD" })
+            .then((response) => {
               if (response.ok && !imagePathCache[pair]) {
                 imagePathCache[pair] = path;
               }

@@ -14,7 +14,10 @@ interface LeverageDialogProps {
   onLeverageChange: (value: string) => void;
 }
 
-export function LeverageDialog({ leverage, onLeverageChange }: LeverageDialogProps) {
+export function LeverageDialog({
+  leverage,
+  onLeverageChange,
+}: LeverageDialogProps) {
   const [sliderValue, setSliderValue] = React.useState([parseFloat(leverage)]);
 
   const handleSliderChange = (value: number[]) => {

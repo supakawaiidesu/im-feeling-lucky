@@ -8,7 +8,7 @@ import { walletClientToSmartAccountSigner } from 'permissionless';
 import { http, Chain, createPublicClient } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { toECDSASigner } from "@zerodev/permissions/signers";
-import { 
+import {
   deserializePermissionAccount,
   serializePermissionAccount,
   toPermissionValidator
@@ -86,15 +86,15 @@ export function useSmartAccount() {
 
   const initializeFromStoredSession = useCallback(async () => {
     const { publicClient } = getChainConfig();
-    
+
     setIsInitializing(true);
     const storedSessionKey = localStorage.getItem('sessionKey');
-    
+
     const justCreated = sessionStorage.getItem('sessionKeyJustCreated');
     if (justCreated) {
       sessionStorage.removeItem('sessionKeyJustCreated');
     }
-    
+
     if (storedSessionKey) {
       try {
         console.log('Found stored session, attempting to initialize...'); // Debug log
@@ -142,13 +142,13 @@ export function useSmartAccount() {
             resolve();
           })
         ]);
-        
+
         if (justCreated) {
           window.dispatchEvent(new CustomEvent('showSuccessToast', {
             detail: { message: '1CT Account successfully created' }
           }));
         }
-        
+
         console.log('Session initialization complete'); // Debug log
         return true;
       } catch (err) {
@@ -202,7 +202,7 @@ export function useSmartAccount() {
       // Rest of the existing setupSessionKey code
       const sessionPrivateKey = generatePrivateKey();
       const privKeyAccount = privateKeyToAccount(sessionPrivateKey);
-      
+
       const sessionKeySigner = await toECDSASigner({
         signer: privKeyAccount,
       });

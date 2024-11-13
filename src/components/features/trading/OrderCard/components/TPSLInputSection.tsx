@@ -1,5 +1,5 @@
-import React from 'react';
-import { Input } from '@/components/ui/input';
+import React from "react";
+import { Input } from "@/components/ui/input";
 
 interface TPSLInputProps {
   enabled: boolean;
@@ -20,13 +20,13 @@ const TPSLInputSection = ({
   isLong,
   onTakeProfitChange,
   onStopLossChange,
-  toggleTPSL
+  toggleTPSL,
 }: TPSLInputProps) => {
   // Calculate percentage from price based on position type
   const calculatePercentage = (price: number) => {
     if (!entryPrice || !price) return 0;
     const percentageChange = ((price - entryPrice) / entryPrice) * 100;
-    
+
     // For short positions, invert the percentage
     return isLong ? percentageChange : -percentageChange;
   };
@@ -47,7 +47,9 @@ const TPSLInputSection = ({
   // Handle TP percentage input
   const handleTPPercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const percent = parseFloat(e.target.value);
-    const newPrice = calculatePrice(isLong ? Math.abs(percent) : -Math.abs(percent)).toFixed(2);
+    const newPrice = calculatePrice(
+      isLong ? Math.abs(percent) : -Math.abs(percent)
+    ).toFixed(2);
     onTakeProfitChange(newPrice);
   };
 
@@ -59,7 +61,9 @@ const TPSLInputSection = ({
   // Handle SL percentage input
   const handleSLPercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const percent = parseFloat(e.target.value);
-    const newPrice = calculatePrice(isLong ? -Math.abs(percent) : Math.abs(percent)).toFixed(2);
+    const newPrice = calculatePrice(
+      isLong ? -Math.abs(percent) : Math.abs(percent)
+    ).toFixed(2);
     onStopLossChange(newPrice);
   };
 
@@ -95,7 +99,9 @@ const TPSLInputSection = ({
             <div className="relative w-20">
               <Input
                 type="number"
-                value={Math.round(Math.abs(calculatePercentage(Number(takeProfit))))}
+                value={Math.round(
+                  Math.abs(calculatePercentage(Number(takeProfit)))
+                )}
                 onChange={handleTPPercentChange}
                 className="pr-6 text-right"
                 placeholder="0"
@@ -125,7 +131,9 @@ const TPSLInputSection = ({
             <div className="relative w-20">
               <Input
                 type="number"
-                value={Math.round(Math.abs(calculatePercentage(Number(stopLoss))))}
+                value={Math.round(
+                  Math.abs(calculatePercentage(Number(stopLoss)))
+                )}
                 onChange={handleSLPercentChange}
                 className="pr-6 text-right"
                 placeholder="0"
