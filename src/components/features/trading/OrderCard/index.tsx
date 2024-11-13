@@ -16,6 +16,7 @@ import { WalletBox } from "../WalletEquity";
 import { useOrderForm } from "./hooks/useOrderForm";
 import { useTradeCalculations } from "./hooks/useTradeCalculations";
 import { OrderCardProps } from "./types";
+import { useBalances } from "../../../../hooks/use-balances";
 
 export function OrderCard({
   leverage,
@@ -30,6 +31,7 @@ export function OrderCard({
     useMarketOrderActions();
   const { allMarkets } = useMarketData();
   const { prices } = usePrices();
+  const { balances } = useBalances("arbitrum");
 
   const {
     formState,
@@ -47,6 +49,9 @@ export function OrderCard({
   const calculatedMargin = formState.amount
     ? parseFloat(formState.amount) / parseFloat(leverage)
     : 0;
+
+  const marginWalletBalance = parseFloat(balances?.formattedMusdBalance || "0");
+  const hasInsufficientBalance = calculatedMargin > marginWalletBalance;
 
   const tradeDetails = useTradeCalculations({
     amount: formState.amount,
@@ -128,6 +133,7 @@ export function OrderCard({
     if (activeTab === "limit" && !formState.limitPrice)
       return "Enter Limit Price";
     if (placingOrders) return "Placing Order...";
+    if (hasInsufficientBalance) return "Insufficient Margin Balance";
 
     // Add liquidity check
     const orderSize = parseFloat(formState.amount) || 0;
@@ -261,6 +267,7 @@ export function OrderCard({
                 isNetworkSwitching ||
                 (activeTab === "market" && !tradeDetails.entryPrice) ||
                 (activeTab === "limit" && !formState.limitPrice) ||
+                hasInsufficientBalance ||
                 (() => {
                   const orderSize = parseFloat(formState.amount) || 0;
                   const availableLiquidity = formState.isLong
