@@ -18,7 +18,7 @@ import { useTradeCalculations } from "./hooks/useTradeCalculations";
 import { OrderCardProps } from "./types";
 import { useBalances } from "../../../../hooks/use-balances";
 
-const TRADING_FEE_RATE = 0.001; // 0.1% fee, adjust this value based on actual fee rate
+const TRADING_FEE_RATE = 0.001; // 0.1% fee
 
 export function OrderCard({
   leverage,
@@ -141,9 +141,8 @@ export function OrderCard({
     if (activeTab === "limit" && !formState.limitPrice)
       return "Enter Limit Price";
     if (placingOrders) return "Placing Order...";
-    if (hasInsufficientBalance) return `Insufficient Balance (Need ${totalRequired.toFixed(2)} USDC)`;
+    if (hasInsufficientBalance) return "Insufficient Balance";
 
-    // Add liquidity check
     const availableLiquidity = formState.isLong
       ? market?.availableLiquidity?.long
       : market?.availableLiquidity?.short;
@@ -152,12 +151,8 @@ export function OrderCard({
       return "Not Enough Liquidity";
     }
 
-    // If margin wallet balance is insufficient but combined balance is sufficient
     if (needsDeposit) {
-      const depositAmount = (totalRequired - marginWalletBalance).toFixed(2);
-      return `Auto-Deposit ${depositAmount} & Place ${activeTab === "market" ? "Market" : "Limit"} ${
-        formState.isLong ? "Long" : "Short"
-      }`;
+      return `Deposit & Place ${formState.isLong ? "Long" : "Short"}`;
     }
 
     return `Place ${activeTab === "market" ? "Market" : "Limit"} ${
@@ -259,12 +254,8 @@ export function OrderCard({
 
           <TradeDetails details={tradeDetails} pair={market?.pair} />
 
-          {/* Display fee information */}
+          {/* Only show total required */}
           <div className="mt-2 text-sm text-muted-foreground">
-            <div className="flex justify-between">
-              <span>Trading Fee:</span>
-              <span>{tradingFee.toFixed(2)} USDC</span>
-            </div>
             <div className="flex justify-between">
               <span>Total Required:</span>
               <span>{totalRequired.toFixed(2)} USDC</span>
