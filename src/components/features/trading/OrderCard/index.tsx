@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "../../../ui/button";
 import { Card, CardContent } from "../../../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs";
@@ -120,7 +121,6 @@ export function OrderCard({
   };
 
   const getButtonText = () => {
-    if (!isConnected) return "Connect Wallet to Trade";
     if (isNetworkSwitching) return "Switching to Arbitrum...";
     if (!smartAccount?.address) return "Establish Connection";
     if (activeTab === "market" && !tradeDetails.entryPrice)
@@ -151,6 +151,7 @@ export function OrderCard({
       handlePlaceOrder();
     }
   };
+
   return (
     <Card className="w-[350px]">
       <CardContent className="p-4">
@@ -237,31 +238,45 @@ export function OrderCard({
 
           <TradeDetails details={tradeDetails} pair={market?.pair} />
 
-          <Button
-            variant="market"
-            className="w-full mt-4"
-            disabled={
-              !isConnected ||
-              placingOrders ||
-              isNetworkSwitching ||
-              (activeTab === "market" && !tradeDetails.entryPrice) ||
-              (activeTab === "limit" && !formState.limitPrice) ||
-              // Add liquidity check
-              (() => {
-                const orderSize = parseFloat(formState.amount) || 0;
-                const availableLiquidity = formState.isLong
-                  ? market?.availableLiquidity?.long
-                  : market?.availableLiquidity?.short;
-                return (
-                  availableLiquidity !== undefined &&
-                  orderSize > availableLiquidity
-                );
-              })()
-            }
-            onClick={handleButtonClick}
-          >
-            {getButtonText()}
-          </Button>
+          {!isConnected ? (
+            <div className="w-full mt-4">
+              <ConnectButton.Custom>
+                {({ openConnectModal }) => (
+                  <Button
+                    variant="market"
+                    className="w-full"
+                    onClick={openConnectModal}
+                  >
+                    Connect Wallet
+                  </Button>
+                )}
+              </ConnectButton.Custom>
+            </div>
+          ) : (
+            <Button
+              variant="market"
+              className="w-full mt-4"
+              disabled={
+                placingOrders ||
+                isNetworkSwitching ||
+                (activeTab === "market" && !tradeDetails.entryPrice) ||
+                (activeTab === "limit" && !formState.limitPrice) ||
+                (() => {
+                  const orderSize = parseFloat(formState.amount) || 0;
+                  const availableLiquidity = formState.isLong
+                    ? market?.availableLiquidity?.long
+                    : market?.availableLiquidity?.short;
+                  return (
+                    availableLiquidity !== undefined &&
+                    orderSize > availableLiquidity
+                  );
+                })()
+              }
+              onClick={handleButtonClick}
+            >
+              {getButtonText()}
+            </Button>
+          )}
 
           {/* Add divider and WalletBox */}
           <div className="h-px my-4 bg-border" />
