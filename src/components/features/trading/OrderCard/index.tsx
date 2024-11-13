@@ -11,7 +11,7 @@ import { LeverageDialog } from "../LeverageDialog";
 import { MarketOrderForm } from "./components/MarketOrderForm";
 import { LimitOrderForm } from "./components/LimitOrderForm";
 import { TradeDetails } from "./components/TradeDetails";
-import { WalletBox } from "../walletBox"; // Add this import
+import { WalletBox } from "../WalletEquity"; // Add this import
 import { useOrderForm } from "./hooks/useOrderForm";
 import { useTradeCalculations } from "./hooks/useTradeCalculations";
 import { OrderCardProps } from "./types";
