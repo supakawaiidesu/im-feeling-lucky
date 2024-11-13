@@ -16,6 +16,9 @@ import { WalletBox } from "../WalletEquity";
 import { useOrderForm } from "./hooks/useOrderForm";
 import { useTradeCalculations } from "./hooks/useTradeCalculations";
 import { OrderCardProps } from "./types";
+import { useBalances } from "../../../../hooks/use-balances";
+
+const TRADING_FEE_RATE = 0.001; // 0.1% fee
 
 export function OrderCard({
   leverage,
@@ -30,6 +33,7 @@ export function OrderCard({
     useMarketOrderActions();
   const { allMarkets } = useMarketData();
   const { prices } = usePrices();
+  const { balances } = useBalances("arbitrum");
 
   const {
     formState,
@@ -47,6 +51,16 @@ export function OrderCard({
   const calculatedMargin = formState.amount
     ? parseFloat(formState.amount) / parseFloat(leverage)
     : 0;
+
+  const calculatedSize = formState.amount ? parseFloat(formState.amount) : 0;
+  const tradingFee = calculatedSize * TRADING_FEE_RATE;
+  const totalRequired = calculatedMargin + tradingFee;
+
+  const marginWalletBalance = parseFloat(balances?.formattedMusdBalance || "0");
+  const onectWalletBalance = parseFloat(balances?.formattedUsdcBalance || "0");
+  const combinedBalance = marginWalletBalance + onectWalletBalance;
+  const hasInsufficientBalance = totalRequired > combinedBalance;
+  const needsDeposit = totalRequired > marginWalletBalance && totalRequired <= combinedBalance;
 
   const tradeDetails = useTradeCalculations({
     amount: formState.amount,
@@ -87,7 +101,6 @@ export function OrderCard({
   const handlePlaceOrder = () => {
     if (!isConnected || !smartAccount?.address) return;
 
-    const calculatedSize = formState.amount ? parseFloat(formState.amount) : 0;
     const tpsl = formState.tpslEnabled
       ? {
           takeProfit: formState.takeProfit,
@@ -128,15 +141,18 @@ export function OrderCard({
     if (activeTab === "limit" && !formState.limitPrice)
       return "Enter Limit Price";
     if (placingOrders) return "Placing Order...";
+    if (hasInsufficientBalance) return "Insufficient Balance";
 
-    // Add liquidity check
-    const orderSize = parseFloat(formState.amount) || 0;
     const availableLiquidity = formState.isLong
       ? market?.availableLiquidity?.long
       : market?.availableLiquidity?.short;
 
-    if (availableLiquidity !== undefined && orderSize > availableLiquidity) {
+    if (availableLiquidity !== undefined && calculatedSize > availableLiquidity) {
       return "Not Enough Liquidity";
+    }
+
+    if (needsDeposit) {
+      return `Deposit & Place ${formState.isLong ? "Long" : "Short"}`;
     }
 
     return `Place ${activeTab === "market" ? "Market" : "Limit"} ${
@@ -238,6 +254,14 @@ export function OrderCard({
 
           <TradeDetails details={tradeDetails} pair={market?.pair} />
 
+          {/* Only show total required */}
+          <div className="mt-2 text-sm text-muted-foreground">
+            <div className="flex justify-between">
+              <span>Total Required:</span>
+              <span>{totalRequired.toFixed(2)} USDC</span>
+            </div>
+          </div>
+
           {!isConnected ? (
             <div className="w-full mt-4">
               <ConnectButton.Custom>
@@ -261,14 +285,14 @@ export function OrderCard({
                 isNetworkSwitching ||
                 (activeTab === "market" && !tradeDetails.entryPrice) ||
                 (activeTab === "limit" && !formState.limitPrice) ||
+                hasInsufficientBalance ||
                 (() => {
-                  const orderSize = parseFloat(formState.amount) || 0;
                   const availableLiquidity = formState.isLong
                     ? market?.availableLiquidity?.long
                     : market?.availableLiquidity?.short;
                   return (
                     availableLiquidity !== undefined &&
-                    orderSize > availableLiquidity
+                    calculatedSize > availableLiquidity
                   );
                 })()
               }
@@ -278,7 +302,6 @@ export function OrderCard({
             </Button>
           )}
 
-          {/* Add divider and WalletBox */}
           <div className="h-px my-4 bg-border" />
           <div className="mt-4">
             <WalletBox />

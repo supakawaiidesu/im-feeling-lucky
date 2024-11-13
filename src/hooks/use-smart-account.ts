@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useWalletClient, usePublicClient, useAccount } from 'wagmi';
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
-import { createKernelAccount, createKernelAccountClient, createZeroDevPaymasterClient } from "@zerodev/sdk";
+import { createKernelAccount, createKernelAccountClient, createZeroDevPaymasterClient, KernelAccountAbi  } from "@zerodev/sdk";
 import { ENTRYPOINT_ADDRESS_V07 } from "permissionless";
 import { walletClientToSmartAccountSigner } from 'permissionless';
-import { http, Chain, createPublicClient } from 'viem';
+import { http, Chain, createPublicClient, zeroAddress, toFunctionSelector, getAbiItem } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { toECDSASigner } from "@zerodev/permissions/signers";
 import {
@@ -223,7 +223,11 @@ export function useSmartAccount() {
             signer: sessionKeySigner,
             policies: [toSudoPolicy({})],
             kernelVersion: KERNEL_V3_1
-          })
+          }),
+          action: {  
+            address: zeroAddress,  
+            selector: toFunctionSelector(getAbiItem({ abi: KernelAccountAbi, name: "executeBatch" })),  
+          },
         },
         entryPoint: ENTRYPOINT_ADDRESS_V07,
         kernelVersion: KERNEL_V3_1
