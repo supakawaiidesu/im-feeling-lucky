@@ -13,6 +13,7 @@ interface PositionDialogProps {
   onClose: () => void;
   onClosePosition: (position: Position) => void;
   isClosing: boolean;
+  onOpenSLTP?: () => void;
 }
 
 export function PositionDialog({
@@ -22,21 +23,23 @@ export function PositionDialog({
   onClose,
   onClosePosition,
   isClosing,
+  onOpenSLTP,
 }: PositionDialogProps) {
   if (!position) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]" style={{ 
-  backgroundColor: '#17161d',
-  borderColor: '#1f1e26'
-}}>
+        backgroundColor: '#17161d',
+        borderColor: '#1f1e26'
+      }}>
         <PositionDetails
           position={position}
           triggerOrder={triggerOrder}
           onClose={onClose}
           onClosePosition={onClosePosition}
           isClosing={isClosing}
+          onOpenSLTP={onOpenSLTP}
         />
       </DialogContent>
     </Dialog>

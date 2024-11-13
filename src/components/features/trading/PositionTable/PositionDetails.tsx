@@ -17,6 +17,7 @@ interface PositionDetailsProps {
   onClose: () => void;
   onClosePosition: (position: Position) => void;
   isClosing: boolean;
+  onOpenSLTP?: () => void;
 }
 
 export function PositionDetails({
@@ -25,6 +26,7 @@ export function PositionDetails({
   onClose,
   onClosePosition,
   isClosing,
+  onOpenSLTP,
 }: PositionDetailsProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { prices } = usePrices();
@@ -51,6 +53,14 @@ export function PositionDetails({
     return numValue >= 0
       ? `$${numValue.toFixed(2)}`
       : `-$${Math.abs(numValue).toFixed(2)}`;
+  };
+
+  const handleSLTPClick = () => {
+    setIsDropdownOpen(false);
+    onClose();
+    if (onOpenSLTP) {
+      onOpenSLTP();
+    }
   };
 
   const pnlValue = parseFloat(calculateFinalPnl());
@@ -186,14 +196,17 @@ export function PositionDetails({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-48 text-white bg-zinc-800" style={{ borderColor: '#1f1e26' }}>
-            <DropdownMenuItem className="focus:bg-zinc-700 focus:text-white">
-              Set Stop Loss
+            <DropdownMenuItem 
+              className="focus:bg-zinc-700 focus:text-white"
+              onClick={handleSLTPClick}
+            >
+              Set SL/TP
             </DropdownMenuItem>
             <DropdownMenuItem className="focus:bg-zinc-700 focus:text-white">
-              Set Take Profit
+              Edit Position Size
             </DropdownMenuItem>
             <DropdownMenuItem className="focus:bg-zinc-700 focus:text-white">
-              Add to Position
+              Edit Collateral
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

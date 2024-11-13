@@ -11,6 +11,7 @@ import {
 import { usePrices } from "../../../../lib/websocket-price-context";
 import { useState } from "react";
 import { PositionDialog } from "./PositionDialog";
+import { PositionSLTPDialog } from "./PositionSLTPDialog";
 
 interface PositionsContentProps {
   positions: Position[];
@@ -38,6 +39,8 @@ export function PositionsContent({
   const { prices } = usePrices();
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSLTPDialogOpen, setIsSLTPDialogOpen] = useState(false);
+  const [selectedSLTPPosition, setSelectedSLTPPosition] = useState<Position | null>(null);
 
   const calculateFinalPnl = (position: Position) => {
     const pnlWithoutFees = parseFloat(position.pnl.replace(/[^0-9.-]/g, ""));
@@ -69,6 +72,19 @@ export function PositionsContent({
   const handleRowClick = (position: Position) => {
     setSelectedPosition(position);
     setIsDialogOpen(true);
+  };
+
+  const handleSLTPClick = (position: Position, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedSLTPPosition(position);
+    setIsSLTPDialogOpen(true);
+  };
+
+  const handleOpenSLTP = () => {
+    if (selectedPosition) {
+      setSelectedSLTPPosition(selectedPosition);
+      setIsSLTPDialogOpen(true);
+    }
   };
 
   return (
@@ -144,7 +160,10 @@ export function PositionsContent({
                   <div>{currentPrice?.toFixed(2) || "Loading..."}</div>
                   <div className="text-red-500">{position.liquidationPrice}</div>
                 </TableCell>
-                <TableCell>
+                <TableCell 
+                  className="cursor-pointer hover:bg-[#272734]"
+                  onClick={(e) => handleSLTPClick(position, e)}
+                >
                   <div className="text-red-500">
                     {triggerOrder?.stopLoss
                       ? `${triggerOrder.stopLoss.price} (${triggerOrder.stopLoss.size}%)`
@@ -195,7 +214,30 @@ export function PositionsContent({
         }}
         onClosePosition={handleClosePosition}
         isClosing={selectedPosition ? closingPositions[Number(selectedPosition.positionId)] : false}
+        onOpenSLTP={handleOpenSLTP}
       />
+
+      {selectedSLTPPosition && (
+        <PositionSLTPDialog
+          position={{
+            id: Number(selectedSLTPPosition.positionId),
+            symbol: selectedSLTPPosition.market,
+            isLong: selectedSLTPPosition.isLong,
+            entryPrice: parseFloat(selectedSLTPPosition.entryPrice),
+            markPrice: prices[selectedSLTPPosition.market.split("/")[0].toLowerCase()]?.price || 0,
+            pnl: parseFloat(calculateFinalPnl(selectedSLTPPosition)),
+            pnlPercentage: parseFloat(calculatePnLPercentage(
+              parseFloat(calculateFinalPnl(selectedSLTPPosition)),
+              selectedSLTPPosition.margin
+            ))
+          }}
+          isOpen={isSLTPDialogOpen}
+          onClose={() => {
+            setIsSLTPDialogOpen(false);
+            setSelectedSLTPPosition(null);
+          }}
+        />
+      )}
     </>
   );
 }
