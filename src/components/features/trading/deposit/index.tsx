@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSmartAccount } from "@/hooks/use-smart-account";
@@ -49,6 +49,8 @@ export default function DepositBox() {
     "arbitrum" | "optimism"
   >("arbitrum");
 
+  const depositBoxRef = useRef<HTMLDivElement>(null);
+
   const {
     smartAccount,
     kernelClient,
@@ -65,6 +67,24 @@ export default function DepositBox() {
     refetchBalances,
   } = useBalances(selectedNetwork);
   const { transferToSmartAccount, isTransferring } = useTokenTransferActions();
+
+    // Add click outside handler
+    useEffect(() => {
+      function handleClickOutside(event: MouseEvent) {
+        if (
+          depositBoxRef.current && 
+          !depositBoxRef.current.contains(event.target as Node) &&
+          isOpen
+        ) {
+          setIsOpen(false);
+        }
+      }
+  
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [isOpen]);
 
   useEffect(() => {
     if (smartAccount?.address) {
@@ -357,7 +377,7 @@ export default function DepositBox() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={depositBoxRef}>
       <Button
         variant="outline"
         onClick={() => setIsOpen(!isOpen)}
