@@ -38,7 +38,7 @@ function BalanceDisplayItem({
     />
   );
 
-  if (title === "UniDex V4 Balance") {
+  if (title === "Margin Wallet Balance") {
     return (
       <Card className="h-full bg-muted/30">
         <CardContent className="p-4">
@@ -114,7 +114,7 @@ export function BalanceDisplay({
         />
       </div>
       <BalanceDisplayItem
-        title="UniDex V4 Balance"
+        title="Margin Wallet Balance"
         address=""
         balance={marginBalance}
         isLoading={isLoading}

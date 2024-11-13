@@ -81,7 +81,7 @@ export function WalletBox() {
         </div>
 
         <div className="flex justify-between">
-          <span>UniDex V4 Balance</span>
+          <span>Margin Wallet Balance</span>
           <span>
             {balancesLoading
               ? "Loading..."
