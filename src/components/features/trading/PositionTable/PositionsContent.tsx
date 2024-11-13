@@ -225,11 +225,15 @@ export function PositionsContent({
             isLong: selectedSLTPPosition.isLong,
             entryPrice: parseFloat(selectedSLTPPosition.entryPrice),
             markPrice: prices[selectedSLTPPosition.market.split("/")[0].toLowerCase()]?.price || 0,
-            pnl: parseFloat(calculateFinalPnl(selectedSLTPPosition)),
+            pnl: formatPnL(calculateFinalPnl(selectedSLTPPosition)),
             pnlPercentage: parseFloat(calculatePnLPercentage(
               parseFloat(calculateFinalPnl(selectedSLTPPosition)),
               selectedSLTPPosition.margin
-            ))
+            )),
+            size: selectedSLTPPosition.size,
+            margin: selectedSLTPPosition.margin,
+            liquidationPrice: selectedSLTPPosition.liquidationPrice,
+            fees: selectedSLTPPosition.fees
           }}
           isOpen={isSLTPDialogOpen}
           onClose={() => {

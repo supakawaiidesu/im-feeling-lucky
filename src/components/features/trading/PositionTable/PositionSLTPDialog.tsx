@@ -12,8 +12,16 @@ interface Position {
   isLong: boolean
   entryPrice: number
   markPrice: number
-  pnl: number
+  pnl: string
   pnlPercentage: number
+  size: string
+  margin: string
+  liquidationPrice: string
+  fees: {
+    positionFee: string
+    borrowFee: string
+    fundingFee: string
+  }
 }
 
 interface PositionSLTPDialogProps {
@@ -29,6 +37,87 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
   const [slLoss, setSlLoss] = useState("")
   const { addTPSL, settingTPSL } = usePositionActions()
 
+  const getNumericValue = (value: string) => {
+    return parseFloat(value.replace(/[^0-9.-]/g, ""))
+  }
+
+  const calculatePnL = (targetPrice: string) => {
+    if (!targetPrice) return 0
+    const price = parseFloat(targetPrice)
+    const size = getNumericValue(position.size)
+    const priceDiff = position.isLong ? price - position.entryPrice : position.entryPrice - price
+    return priceDiff * size
+  }
+
+  const calculateGainPercentage = (targetPrice: string) => {
+    if (!targetPrice) return 0
+    const pnl = calculatePnL(targetPrice)
+    const margin = getNumericValue(position.margin)
+    return (pnl / margin) * 100
+  }
+
+  // Update price when gain percentage changes
+  const handleGainChange = (gainStr: string, isTP: boolean) => {
+    if (!gainStr) {
+      isTP ? setTpPrice("") : setSlPrice("")
+      isTP ? setTpGain("") : setSlLoss("")
+      return
+    }
+
+    const gainPercentage = parseFloat(gainStr)
+    const margin = getNumericValue(position.margin)
+    const size = getNumericValue(position.size)
+    const leverage = size / margin
+    
+    // Calculate required price movement percentage
+    // If we want 100% gain on margin with 100x leverage, we need 1% price movement
+    const requiredPriceMovementPercent = gainPercentage / leverage
+    
+    // Calculate the actual price based on the required movement
+    const newPrice = position.isLong ?
+      position.entryPrice * (1 + requiredPriceMovementPercent / 100) :
+      position.entryPrice * (1 - requiredPriceMovementPercent / 100)
+
+    if (isTP) {
+      setTpPrice(newPrice.toFixed(2))
+      setTpGain(gainStr)
+    } else {
+      setSlPrice(newPrice.toFixed(2))
+      setSlLoss(gainStr)
+    }
+  }
+
+  // Update gain percentage when price changes
+  const handlePriceChange = (priceStr: string, isTP: boolean) => {
+    if (!priceStr) {
+      isTP ? setTpPrice("") : setSlPrice("")
+      isTP ? setTpGain("") : setSlLoss("")
+      return
+    }
+
+    const price = parseFloat(priceStr)
+    const size = getNumericValue(position.size)
+    const margin = getNumericValue(position.margin)
+    
+    // Calculate PnL based on price difference and size
+    const priceDiff = position.isLong ? 
+      price - position.entryPrice : 
+      position.entryPrice - price
+    const pnl = priceDiff * size
+    
+    // Calculate gain/loss percentage relative to margin
+    const gainPercentage = (pnl / margin) * 100
+    
+    if (isTP) {
+      setTpPrice(priceStr)
+      setTpGain(gainPercentage.toFixed(2))
+    } else {
+      setSlPrice(priceStr)
+      setSlLoss(gainPercentage.toFixed(2))
+    }
+  }
+
+  // Rest of the component remains the same...
   const handleSubmit = async () => {
     const tp = tpPrice ? parseFloat(tpPrice) : null
     const sl = slPrice ? parseFloat(slPrice) : null
@@ -48,25 +137,17 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
     onClose()
   }
 
-  const calculatePnL = (targetPrice: string) => {
-    if (!targetPrice) return 0
-    const price = parseFloat(targetPrice)
-    const priceDiff = position.isLong ? price - position.entryPrice : position.entryPrice - price
-    return priceDiff * 0.01
-  }
-
   const getTPText = () => {
     if (!tpPrice) return null
-    const pnl = calculatePnL(tpPrice)
-    const isProfit = position.isLong ? 
-      parseFloat(tpPrice) > position.entryPrice : 
-      parseFloat(tpPrice) < position.entryPrice
+    const margin = getNumericValue(position.margin)
+    const gainPercentage = parseFloat(tpGain)
+    const pnl = (gainPercentage / 100) * margin
 
     return (
       <div className="mb-4 text-sm text-gray-400">
-        If the oracle price {position.isLong ? "reaches" : "reaches"} {tpPrice}, 
-        a market order will trigger with an estimated {isProfit ? "profit" : "loss"} of{" "}
-        <span className={isProfit ? "text-emerald-500" : "text-red-500"}>
+        If the price reaches {tpPrice}, 
+        a market order will trigger with an profit of{" "}
+        <span className="text-emerald-500">
           ${Math.abs(pnl).toFixed(2)}
         </span>.
       </div>
@@ -75,16 +156,15 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
 
   const getSLText = () => {
     if (!slPrice) return null
-    const pnl = calculatePnL(slPrice)
-    const isLoss = position.isLong ? 
-      parseFloat(slPrice) < position.entryPrice : 
-      parseFloat(slPrice) > position.entryPrice
+    const margin = getNumericValue(position.margin)
+    const lossPercentage = parseFloat(slLoss)
+    const pnl = (lossPercentage / 100) * margin
 
     return (
       <div className="mb-4 text-sm text-gray-400">
-        If the oracle price {position.isLong ? "reaches" : "reaches"} {slPrice}, 
-        a market order will trigger with an estimated {isLoss ? "loss" : "profit"} of{" "}
-        <span className={isLoss ? "text-red-500" : "text-emerald-500"}>
+        If the price reaches {slPrice}, 
+        a market order will trigger with an loss of{" "}
+        <span className="text-red-500">
           ${Math.abs(pnl).toFixed(2)}
         </span>.
       </div>
@@ -109,17 +189,35 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
             <div className="mb-6 space-y-4">
               <div className="flex justify-between text-gray-400">
                 <span>Est. Current PnL</span>
-                <span className={position.pnl >= 0 ? "text-emerald-500" : "text-red-500"}>
-                  {position.pnl >= 0 ? "+" : ""}{position.pnl.toFixed(2)} ({position.pnlPercentage.toFixed(2)}%)
+                <span className={parseFloat(position.pnl) >= 0 ? "text-emerald-500" : "text-red-500"}>
+                  {position.pnl} ({position.pnlPercentage.toFixed(2)}%)
                 </span>
               </div>
               <div className="flex justify-between text-gray-400">
+                <span>Size</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-white">{position.size}</span>
+                  <span className="text-zinc-400">USDC</span>
+                </div>
+              </div>
+              <div className="flex justify-between text-gray-400">
+                <span>Margin</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-white">{position.margin}</span>
+                  <span className="text-zinc-400">USDC</span>
+                </div>
+              </div>
+              <div className="flex justify-between text-gray-400">
+                <span>Liquidation Price</span>
+                <span className="text-red-500">{position.liquidationPrice}</span>
+              </div>
+              <div className="flex justify-between text-gray-400">
                 <span>Entry Price</span>
-                <span className="text-white">{position.entryPrice.toFixed(2)}</span>
+                <span className="text-white">${position.entryPrice.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-gray-400">
                 <span>Market Price</span>
-                <span className="text-white">{position.markPrice.toFixed(2)}</span>
+                <span className="text-white">${position.markPrice.toFixed(2)}</span>
               </div>
             </div>
 
@@ -134,7 +232,7 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
                     <Input
                       id="take-profit-price"
                       value={tpPrice}
-                      onChange={(e) => setTpPrice(e.target.value)}
+                      onChange={(e) => handlePriceChange(e.target.value, true)}
                       className="text-white bg-transparent border-gray-800"
                       type="number"
                       step="0.01"
@@ -142,12 +240,12 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
                   </div>
                   <div>
                     <Label htmlFor="take-profit-gain" className="text-gray-400">
-                      Gain
+                      Gain %
                     </Label>
                     <Input
                       id="take-profit-gain"
                       value={tpGain}
-                      onChange={(e) => setTpGain(e.target.value)}
+                      onChange={(e) => handleGainChange(e.target.value, true)}
                       className="text-white bg-transparent border-gray-800"
                       type="number"
                       step="0.01"
@@ -167,7 +265,7 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
                     <Input 
                       id="stop-loss-price" 
                       value={slPrice}
-                      onChange={(e) => setSlPrice(e.target.value)}
+                      onChange={(e) => handlePriceChange(e.target.value, false)}
                       className="text-white bg-transparent border-gray-800"
                       type="number"
                       step="0.01"
@@ -175,12 +273,12 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
                   </div>
                   <div>
                     <Label htmlFor="stop-loss-loss" className="text-gray-400">
-                      Loss
+                      Loss %
                     </Label>
                     <Input 
                       id="stop-loss-loss" 
                       value={slLoss}
-                      onChange={(e) => setSlLoss(e.target.value)}
+                      onChange={(e) => handleGainChange(e.target.value, false)}
                       className="text-white bg-transparent border-gray-800"
                       type="number"
                       step="0.01"
