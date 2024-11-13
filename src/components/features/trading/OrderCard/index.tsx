@@ -18,6 +18,8 @@ import { useTradeCalculations } from "./hooks/useTradeCalculations";
 import { OrderCardProps } from "./types";
 import { useBalances } from "../../../../hooks/use-balances";
 
+const TRADING_FEE_RATE = 0.001; // 0.1% fee, adjust this value based on actual fee rate
+
 export function OrderCard({
   leverage,
   onLeverageChange,
@@ -50,8 +52,15 @@ export function OrderCard({
     ? parseFloat(formState.amount) / parseFloat(leverage)
     : 0;
 
+  const calculatedSize = formState.amount ? parseFloat(formState.amount) : 0;
+  const tradingFee = calculatedSize * TRADING_FEE_RATE;
+  const totalRequired = calculatedMargin + tradingFee;
+
   const marginWalletBalance = parseFloat(balances?.formattedMusdBalance || "0");
-  const hasInsufficientBalance = calculatedMargin > marginWalletBalance;
+  const onectWalletBalance = parseFloat(balances?.formattedUsdcBalance || "0");
+  const combinedBalance = marginWalletBalance + onectWalletBalance;
+  const hasInsufficientBalance = totalRequired > combinedBalance;
+  const needsDeposit = totalRequired > marginWalletBalance && totalRequired <= combinedBalance;
 
   const tradeDetails = useTradeCalculations({
     amount: formState.amount,
@@ -92,7 +101,6 @@ export function OrderCard({
   const handlePlaceOrder = () => {
     if (!isConnected || !smartAccount?.address) return;
 
-    const calculatedSize = formState.amount ? parseFloat(formState.amount) : 0;
     const tpsl = formState.tpslEnabled
       ? {
           takeProfit: formState.takeProfit,
@@ -133,16 +141,23 @@ export function OrderCard({
     if (activeTab === "limit" && !formState.limitPrice)
       return "Enter Limit Price";
     if (placingOrders) return "Placing Order...";
-    if (hasInsufficientBalance) return "Insufficient Margin Balance";
+    if (hasInsufficientBalance) return `Insufficient Balance (Need ${totalRequired.toFixed(2)} USDC)`;
 
     // Add liquidity check
-    const orderSize = parseFloat(formState.amount) || 0;
     const availableLiquidity = formState.isLong
       ? market?.availableLiquidity?.long
       : market?.availableLiquidity?.short;
 
-    if (availableLiquidity !== undefined && orderSize > availableLiquidity) {
+    if (availableLiquidity !== undefined && calculatedSize > availableLiquidity) {
       return "Not Enough Liquidity";
+    }
+
+    // If margin wallet balance is insufficient but combined balance is sufficient
+    if (needsDeposit) {
+      const depositAmount = (totalRequired - marginWalletBalance).toFixed(2);
+      return `Auto-Deposit ${depositAmount} & Place ${activeTab === "market" ? "Market" : "Limit"} ${
+        formState.isLong ? "Long" : "Short"
+      }`;
     }
 
     return `Place ${activeTab === "market" ? "Market" : "Limit"} ${
@@ -244,6 +259,18 @@ export function OrderCard({
 
           <TradeDetails details={tradeDetails} pair={market?.pair} />
 
+          {/* Display fee information */}
+          <div className="mt-2 text-sm text-muted-foreground">
+            <div className="flex justify-between">
+              <span>Trading Fee:</span>
+              <span>{tradingFee.toFixed(2)} USDC</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Total Required:</span>
+              <span>{totalRequired.toFixed(2)} USDC</span>
+            </div>
+          </div>
+
           {!isConnected ? (
             <div className="w-full mt-4">
               <ConnectButton.Custom>
@@ -269,13 +296,12 @@ export function OrderCard({
                 (activeTab === "limit" && !formState.limitPrice) ||
                 hasInsufficientBalance ||
                 (() => {
-                  const orderSize = parseFloat(formState.amount) || 0;
                   const availableLiquidity = formState.isLong
                     ? market?.availableLiquidity?.long
                     : market?.availableLiquidity?.short;
                   return (
                     availableLiquidity !== undefined &&
-                    orderSize > availableLiquidity
+                    calculatedSize > availableLiquidity
                   );
                 })()
               }
@@ -285,7 +311,6 @@ export function OrderCard({
             </Button>
           )}
 
-          {/* Add divider and WalletBox */}
           <div className="h-px my-4 bg-border" />
           <div className="mt-4">
             <WalletBox />
