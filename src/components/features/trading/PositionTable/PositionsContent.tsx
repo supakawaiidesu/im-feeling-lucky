@@ -9,6 +9,8 @@ import {
   TableRow,
 } from "../../../ui/table";
 import { usePrices } from "../../../../lib/websocket-price-context";
+import { useState } from "react";
+import { PositionDialog } from "./PositionDialog";
 
 interface PositionsContentProps {
   positions: Position[];
@@ -34,6 +36,8 @@ export function PositionsContent({
   setHoveredPosition,
 }: PositionsContentProps) {
   const { prices } = usePrices();
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const calculateFinalPnl = (position: Position) => {
     const pnlWithoutFees = parseFloat(position.pnl.replace(/[^0-9.-]/g, ""));
@@ -60,6 +64,11 @@ export function PositionsContent({
     const sizeValue = parseFloat(size.replace(/[^0-9.-]/g, ""));
     const marginValue = parseFloat(margin.replace(/[^0-9.-]/g, ""));
     return (sizeValue / marginValue).toFixed(1);
+  };
+
+  const handleRowClick = (position: Position) => {
+    setSelectedPosition(position);
+    setIsDialogOpen(true);
   };
 
   return (
@@ -108,7 +117,11 @@ export function PositionsContent({
             );
 
             return (
-              <TableRow key={position.positionId}>
+              <TableRow 
+                key={position.positionId}
+                className="cursor-pointer hover:bg-zinc-800/50"
+                onClick={() => handleRowClick(position)}
+              >
                 <TableCell>
                   <div>{position.market}</div>
                   <div className={position.isLong ? "text-green-500" : "text-red-500"}>
@@ -152,7 +165,7 @@ export function PositionsContent({
                   <div>{formatPnL(finalPnl)}</div>
                   <div>{pnlPercentage}%</div>
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <Button
                     variant="destructive"
                     size="sm"
@@ -169,6 +182,20 @@ export function PositionsContent({
           })
         )}
       </TableBody>
+
+      <PositionDialog
+        position={selectedPosition}
+        triggerOrder={triggerOrders.find(
+          (order) => order.positionId === selectedPosition?.positionId
+        )}
+        isOpen={isDialogOpen}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setSelectedPosition(null);
+        }}
+        onClosePosition={handleClosePosition}
+        isClosing={selectedPosition ? closingPositions[Number(selectedPosition.positionId)] : false}
+      />
     </>
   );
 }
