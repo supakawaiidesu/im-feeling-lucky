@@ -9,6 +9,9 @@ interface TradeDetailsProps {
 export function TradeDetails({ details, pair }: TradeDetailsProps) {
   const { entryPrice, notionalSize, liquidationPrice, fees } = details;
 
+  // Convert trading fee to correct display value (fees are already in percentage form)
+  const displayTradingFee = (fees.tradingFee / 100).toFixed(2);
+
   return (
     <div className="mt-4 space-y-2 text-sm text-muted-foreground">
       <div className="flex justify-between">
@@ -30,7 +33,7 @@ export function TradeDetails({ details, pair }: TradeDetailsProps) {
       <div className="flex justify-between">
         <span>Trading Fee </span>
         <span>
-          ${fees.tradingFee.toFixed(2)} ({fees.tradingFeePercent}%)
+          ${displayTradingFee} ({fees.tradingFeePercent}%)
         </span>
       </div>
       <div className="flex justify-between">
