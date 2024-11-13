@@ -119,7 +119,7 @@ export function PositionsContent({
             return (
               <TableRow 
                 key={position.positionId}
-                className="cursor-pointer hover:bg-zinc-800/50"
+                className="cursor-pointer hover:[background-color:#1f1f29]"
                 onClick={() => handleRowClick(position)}
               >
                 <TableCell>

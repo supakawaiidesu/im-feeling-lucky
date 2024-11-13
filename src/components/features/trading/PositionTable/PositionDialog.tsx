@@ -27,7 +27,10 @@ export function PositionDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-zinc-700">
+      <DialogContent className="sm:max-w-[425px]" style={{ 
+  backgroundColor: '#17161d',
+  borderColor: '#1f1e26'
+}}>
         <PositionDetails
           position={position}
           triggerOrder={triggerOrder}
