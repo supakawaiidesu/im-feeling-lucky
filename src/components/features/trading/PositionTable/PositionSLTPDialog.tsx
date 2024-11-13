@@ -48,6 +48,49 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
     onClose()
   }
 
+  const calculatePnL = (targetPrice: string) => {
+    if (!targetPrice) return 0
+    const price = parseFloat(targetPrice)
+    const priceDiff = position.isLong ? price - position.entryPrice : position.entryPrice - price
+    return priceDiff * 0.01
+  }
+
+  const getTPText = () => {
+    if (!tpPrice) return null
+    const pnl = calculatePnL(tpPrice)
+    const isProfit = position.isLong ? 
+      parseFloat(tpPrice) > position.entryPrice : 
+      parseFloat(tpPrice) < position.entryPrice
+
+    return (
+      <div className="mb-4 text-sm text-gray-400">
+        If the oracle price {position.isLong ? "reaches" : "reaches"} {tpPrice}, 
+        a market order will trigger with an estimated {isProfit ? "profit" : "loss"} of{" "}
+        <span className={isProfit ? "text-emerald-500" : "text-red-500"}>
+          ${Math.abs(pnl).toFixed(2)}
+        </span>.
+      </div>
+    )
+  }
+
+  const getSLText = () => {
+    if (!slPrice) return null
+    const pnl = calculatePnL(slPrice)
+    const isLoss = position.isLong ? 
+      parseFloat(slPrice) < position.entryPrice : 
+      parseFloat(slPrice) > position.entryPrice
+
+    return (
+      <div className="mb-4 text-sm text-gray-400">
+        If the oracle price {position.isLong ? "reaches" : "reaches"} {slPrice}, 
+        a market order will trigger with an estimated {isLoss ? "loss" : "profit"} of{" "}
+        <span className={isLoss ? "text-red-500" : "text-emerald-500"}>
+          ${Math.abs(pnl).toFixed(2)}
+        </span>.
+      </div>
+    )
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="p-0 border-0">
@@ -111,10 +154,7 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
                     />
                   </div>
                 </div>
-                <div className="mb-4 text-sm text-gray-400">
-                  If the oracle price climbs to {tpPrice || "0.00"}, a market order will trigger with an estimated profit of{" "}
-                  <span className="text-emerald-500">${((Number(tpPrice) - position.entryPrice) * 0.01).toFixed(2)}</span>.
-                </div>
+                {getTPText()}
               </div>
 
               <div>
@@ -147,10 +187,7 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
                     />
                   </div>
                 </div>
-                <div className="mb-4 text-sm text-gray-400">
-                  If the oracle price falls to {slPrice || "0.00"}, a market order will trigger with an estimated loss of{" "}
-                  <span className="text-red-500">${((Number(slPrice) - position.entryPrice) * 0.01).toFixed(2)}</span>.
-                </div>
+                {getSLText()}
               </div>
 
               <Button 
