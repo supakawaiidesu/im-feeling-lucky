@@ -1,4 +1,5 @@
 import { Position } from "../../../../hooks/use-positions";
+import { TriggerOrder } from "../../../../hooks/use-orders";
 import { Button } from "../../../ui/button";
 import {
   TableBody,
@@ -11,6 +12,7 @@ import { usePrices } from "../../../../lib/websocket-price-context";
 
 interface PositionsContentProps {
   positions: Position[];
+  triggerOrders?: TriggerOrder[];
   loading: boolean;
   error: Error | null;
   closingPositions: { [key: number]: boolean };
@@ -22,6 +24,7 @@ interface PositionsContentProps {
 
 export function PositionsContent({
   positions,
+  triggerOrders = [],
   loading,
   error,
   closingPositions,
@@ -68,6 +71,7 @@ export function PositionsContent({
           <TableHead>Margin</TableHead>
           <TableHead>Entry Price</TableHead>
           <TableHead>Market/Liq. Price</TableHead>
+          <TableHead>SL/TP</TableHead>
           <TableHead>uPnL</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
@@ -75,19 +79,19 @@ export function PositionsContent({
       <TableBody>
         {loading ? (
           <TableRow>
-            <TableCell colSpan={7} className="text-center">
+            <TableCell colSpan={8} className="text-center">
               Loading positions...
             </TableCell>
           </TableRow>
         ) : error ? (
           <TableRow>
-            <TableCell colSpan={7} className="text-center text-red-500">
+            <TableCell colSpan={8} className="text-center text-red-500">
               {error.message}
             </TableCell>
           </TableRow>
         ) : positions.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={7} className="text-center">
+            <TableCell colSpan={8} className="text-center">
               No open positions
             </TableCell>
           </TableRow>
@@ -99,6 +103,9 @@ export function PositionsContent({
             const pnlPercentage = calculatePnLPercentage(pnlValue, position.margin);
             const basePair = position.market.split("/")[0].toLowerCase();
             const currentPrice = prices[basePair]?.price;
+            const triggerOrder = triggerOrders.find(
+              (order) => order.positionId === position.positionId
+            );
 
             return (
               <TableRow key={position.positionId}>
@@ -123,6 +130,18 @@ export function PositionsContent({
                 <TableCell>
                   <div>{currentPrice?.toFixed(2) || "Loading..."}</div>
                   <div className="text-red-500">{position.liquidationPrice}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-red-500">
+                    {triggerOrder?.stopLoss
+                      ? `${triggerOrder.stopLoss.price} (${triggerOrder.stopLoss.size}%)`
+                      : "-"}
+                  </div>
+                  <div className="text-green-500">
+                    {triggerOrder?.takeProfit
+                      ? `${triggerOrder.takeProfit.price} (${triggerOrder.takeProfit.size}%)`
+                      : "-"}
+                  </div>
                 </TableCell>
                 <TableCell
                   ref={setRef(position.positionId)}

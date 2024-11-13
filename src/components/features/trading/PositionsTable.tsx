@@ -74,6 +74,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
         return (
           <PositionsContent
             positions={positions}
+            triggerOrders={triggerOrders}
             loading={positionsLoading}
             error={positionsError}
             closingPositions={closingPositions}
