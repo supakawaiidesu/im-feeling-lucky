@@ -98,12 +98,23 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
         </div>
 
         {/* Long/Short Ratio Group */}
-        <div className="flex items-center px-4 border-r min-w-[160px]">
-          <div>
-            <div className="text-muted-foreground">Long/Short Ratio</div>
-            <div>
-              {marketData.longShortRatio.longPercentage.toFixed(1)}% /{" "}
-              {marketData.longShortRatio.shortPercentage.toFixed(1)}%
+        <div className="flex items-center px-4 border-r min-w-[200px]">
+          <div className="w-full">
+            <div className="flex justify-between text-xs mb-1.5">
+              <span className="text-green-500">
+                <span className="text-muted-foreground">(L)</span> {marketData.longShortRatio.longPercentage.toFixed(1)}%
+              </span>
+              <span className="text-red-500">
+                {marketData.longShortRatio.shortPercentage.toFixed(1)}% <span className="text-muted-foreground">(S)</span>
+              </span>
+            </div>
+            <div className="w-full h-2 overflow-hidden rounded-full bg-red-500/20">
+              <div
+                className="h-full transition-all duration-300 ease-in-out rounded-l-full bg-green-500/50"
+                style={{
+                  width: `${marketData.longShortRatio.longPercentage}%`,
+                }}
+              />
             </div>
           </div>
         </div>
