@@ -77,7 +77,7 @@ export function PositionDetails({
   const leverage = calculateLeverage();
 
   return (
-    <div className="w-full text-white" style={{ backgroundColor: '#17161d' }}>
+    <div className="w-full text-white">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-1.5">
           <Bitcoin className="w-5 h-5 text-amber-500" />
@@ -180,7 +180,7 @@ export function PositionDetails({
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2 mt-2 border-t" style={{ borderColor: '#1f1e26' }}>
+        <div className="flex items-center justify-between pt-2 mt-2 border-t border-zinc-800">
           <span className="text-zinc-400">Unrealized PnL</span>
           <div className="flex items-center gap-1">
             <span className={pnlValue >= 0 ? "text-emerald-500" : "text-red-500"}>
@@ -205,7 +205,7 @@ export function PositionDetails({
               <ChevronDown className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-48 text-white bg-zinc-800" style={{ borderColor: '#1f1e26' }}>
+          <DropdownMenuContent className="w-48 text-white bg-zinc-800 border-zinc-700">
             <DropdownMenuItem 
               className="focus:bg-zinc-700 focus:text-white"
               onClick={handleSLTPClick}

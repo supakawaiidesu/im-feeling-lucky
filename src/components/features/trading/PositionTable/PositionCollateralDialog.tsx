@@ -1,6 +1,5 @@
 "use client"
 
-import { ArrowLeft, X } from 'lucide-react'
 import { Button } from "../../../ui/button"
 import { Card, CardContent, CardHeader } from "../../../ui/card"
 import { Tabs, TabsList, TabsTrigger } from "../../../ui/tabs"
@@ -22,17 +21,11 @@ export function PositionCollateralDialog({
   if (!position) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="p-0 border-0">
-        <Card className="w-full max-w-md border-0 shadow-lg" style={{ background: "#17161d" }}>
+<Dialog open={isOpen} onOpenChange={onClose}>
+  <DialogContent className="p-0 border-0 sm:max-w-md bg-[#17161d]">
+    <Card className="w-full border-0 shadow-lg bg-[#17161d]">
           <CardHeader className="flex flex-row items-center p-4 space-x-0 border-b border-zinc-800">
-            <Button variant="ghost" size="icon" className="w-6 h-6" onClick={onClose}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <div className="flex-1 font-medium text-center text-white">Edit Collateral</div>
-            <Button variant="ghost" size="icon" className="w-6 h-6" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="flex-1 font-medium text-center text-white">Edit Margin</div>
           </CardHeader>
           <Tabs defaultValue="withdraw" className="w-full">
             <TabsList className="w-full h-12 bg-transparent border-b rounded-none border-zinc-800">
