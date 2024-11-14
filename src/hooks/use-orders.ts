@@ -166,7 +166,7 @@ export function useOrders() {
         triggerData.triggers.forEach((t: TriggerData) => {
           const orderData = {
             price: Number(formatUnits(t.price, SCALING_FACTOR)).toFixed(2),
-            size: Number(formatUnits(t.amountPercent, SCALING_FACTOR)).toFixed(2),
+            size: Number(formatUnits(t.amountPercent, 3)),
             type: t.isTP ? "TakeProfit" : "StopLoss"
           };
 
