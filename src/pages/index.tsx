@@ -43,7 +43,7 @@ export default function TradingInterface() {
         {/* Chart and Positions */}
         <div className="flex flex-col flex-1">
           <PairHeader selectedPair={selectedPair} />
-          <Chart />
+          <Chart selectedPair={selectedPair} />
           <PositionsTable address={address} />
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { ResolutionString } from "../../../../public/static/charting_library/charting_library";
 import datafeed from "../../../utils/datafeed.js";
 
@@ -13,7 +13,32 @@ const chartingLibraryPath = "/static/charting_library/";
 // Calculate time ranges
 const now = Math.floor(Date.now() / 1000);
 
-export function Chart() {
+// Define special pairs and their prefixes
+const SPECIAL_PAIRS: Record<string, string> = {
+  "EUR/USD": "FX",
+  "GBP/USD": "FX",
+  "XAU/USD": "Metal",
+  "XAG/USD": "Metal",
+  "QQQ/USD": "Equity.US",
+  "SPY/USD": "Equity.US",
+  "GMCI30/USD": "Crypto.Index",
+  "GML2/USD": "Crypto.Index",
+  "GMMEME/USD": "Crypto.Index",
+};
+
+interface ChartProps {
+  selectedPair?: string;
+}
+
+export function Chart({ selectedPair = "ETH/USD" }: ChartProps) {
+  const widgetRef = useRef<any>(null);
+
+  // Function to get the correct symbol format based on the pair
+  const getFormattedSymbol = (pair: string) => {
+    const prefix = SPECIAL_PAIRS[pair] || "Crypto";
+    return `${prefix}.${pair}`;
+  };
+
   useEffect(() => {
     const loadTradingView = async () => {
       try {
@@ -28,7 +53,7 @@ export function Chart() {
           locale: "en",
           library_path: chartingLibraryPath,
           datafeed: datafeed,
-          symbol: "Crypto.BTC/USD",
+          symbol: getFormattedSymbol(selectedPair),
           interval: "15" as ResolutionString,
           autosize: true,
           debug: true,
@@ -93,6 +118,8 @@ export function Chart() {
           },
         });
 
+        widgetRef.current = widget;
+
         widget.onChartReady(() => {
           const chart = widget.chart();
           chart.getSeries().setChartStyleProperties(1, {
@@ -110,7 +137,19 @@ export function Chart() {
     };
 
     loadTradingView();
-  }, []);
+
+    // Cleanup function
+    return () => {
+      if (widgetRef.current) {
+        try {
+          widgetRef.current.remove();
+          widgetRef.current = null;
+        } catch (error) {
+          console.error("Error cleaning up TradingView widget:", error);
+        }
+      }
+    };
+  }, [selectedPair]); // Re-initialize when selectedPair changes
 
   return (
     <div
