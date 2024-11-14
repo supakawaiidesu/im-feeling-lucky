@@ -15,9 +15,16 @@ interface AddTPSLResponse {
   requiredGasFee: string;
 }
 
+interface ModifyCollateralResponse {
+  calldata: string;
+  vaultAddress: string;
+  requiredGasFee: string;
+}
+
 export function usePositionActions() {
   const [closingPositions, setClosingPositions] = useState<{ [key: number]: boolean }>({});
   const [settingTPSL, setSettingTPSL] = useState<{ [key: number]: boolean }>({});
+  const [modifyingCollateral, setModifyingCollateral] = useState<{ [key: number]: boolean }>({});
   const publicClient = usePublicClient();
   const { toast } = useToast();
   const { smartAccount, kernelClient } = useSmartAccount();
@@ -186,11 +193,87 @@ export function usePositionActions() {
       setSettingTPSL(prev => ({ ...prev, [positionId]: false }));
     }
   };
+  const modifyCollateral = async (
+    positionId: number,
+    amount: number,
+    isAdd: boolean
+  ) => {
+    if (!kernelClient || !smartAccount?.address || !publicClient) {
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setModifyingCollateral(prev => ({ ...prev, [positionId]: true }));
+
+      toast({
+        title: `${isAdd ? 'Adding' : 'Removing'} Collateral`,
+        description: "Preparing transaction...",
+      });
+
+      const response = await fetch('https://unidexv4-api-production.up.railway.app/api/position/modify-collateral', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          positionId,
+          amount,
+          isAdd,
+          userAddress: smartAccount.address
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to modify collateral');
+      }
+
+      const data: ModifyCollateralResponse = await response.json();
+
+      toast({
+        title: "Confirm Transaction",
+        description: "Please confirm the transaction in your wallet",
+      });
+
+      const tx = await kernelClient.sendTransaction({
+        to: data.vaultAddress,
+        data: data.calldata,
+      });
+
+      toast({
+        title: "Transaction Sent",
+        description: "Waiting for confirmation...",
+      });
+
+      await kernelClient.waitForTransactionReceipt({ hash: tx });
+
+      toast({
+        title: "Success",
+        description: `Successfully ${isAdd ? 'added' : 'removed'} collateral`,
+      });
+
+    } catch (err) {
+      console.error('Error modifying collateral:', err);
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to modify collateral",
+        variant: "destructive",
+      });
+    } finally {
+      setModifyingCollateral(prev => ({ ...prev, [positionId]: false }));
+    }
+  };
 
   return {
     closePosition,
     closingPositions,
     addTPSL,
-    settingTPSL
+    settingTPSL,
+    modifyCollateral,
+    modifyingCollateral
   };
 }

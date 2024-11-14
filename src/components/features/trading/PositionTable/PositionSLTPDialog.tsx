@@ -203,9 +203,9 @@ export function PositionSLTPDialog({ position, isOpen, onClose }: PositionSLTPDi
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="p-0 border-0">
-        <Card className="w-full max-w-md border-0 shadow-lg" style={{ background: "#17161d" }}>
+<Dialog open={isOpen} onOpenChange={onClose}>
+  <DialogContent className="p-0 border-0 sm:max-w-md bg-[#17161d]">
+    <Card className="w-full border-0 shadow-lg bg-[#17161d]">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center justify-center w-8 h-8 text-white bg-orange-500 rounded-full">₿</div>

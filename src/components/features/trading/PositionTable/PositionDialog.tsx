@@ -14,6 +14,7 @@ interface PositionDialogProps {
   onClosePosition: (position: Position) => void;
   isClosing: boolean;
   onOpenSLTP?: () => void;
+  onOpenCollateral?: () => void;
 }
 
 export function PositionDialog({
@@ -24,15 +25,13 @@ export function PositionDialog({
   onClosePosition,
   isClosing,
   onOpenSLTP,
+  onOpenCollateral,
 }: PositionDialogProps) {
   if (!position) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]" style={{ 
-        backgroundColor: '#17161d',
-        borderColor: '#1f1e26'
-      }}>
+      <DialogContent className="sm:max-w-[425px] p-4 bg-[#17161d] border-zinc-800">
         <PositionDetails
           position={position}
           triggerOrder={triggerOrder}
@@ -40,6 +39,7 @@ export function PositionDialog({
           onClosePosition={onClosePosition}
           isClosing={isClosing}
           onOpenSLTP={onOpenSLTP}
+          onOpenCollateral={onOpenCollateral}
         />
       </DialogContent>
     </Dialog>
