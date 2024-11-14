@@ -8,6 +8,7 @@ import { Input } from "../../../ui/input"
 import { Dialog, DialogContent } from "../../../ui/dialog"
 import { Position } from "../../../../hooks/use-positions"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { usePositionActions } from "@/hooks/use-position-actions"
 
 interface PositionCollateralDialogProps {
   position: Position | null
@@ -22,6 +23,7 @@ export function PositionCollateralDialog({
 }: PositionCollateralDialogProps) {
   const [collateralAmount, setCollateralAmount] = useState<string>("")
   const [activeTab, setActiveTab] = useState<"deposit" | "withdraw">("withdraw")
+  const { modifyCollateral, modifyingCollateral } = usePositionActions()
   
   if (!position) return null
   
@@ -113,8 +115,25 @@ export function PositionCollateralDialog({
     }
   }
 
+  const handleSubmit = async () => {
+    if (!position || !collateralAmount || parseFloat(collateralAmount) <= 0) return;
+    
+    const positionId = parseInt(position.positionId);
+    const amount = parseFloat(collateralAmount);
+    const isAdd = activeTab === "deposit";
+
+    try {
+      await modifyCollateral(positionId, amount, isAdd);
+      onClose();
+      setCollateralAmount("");
+    } catch (error) {
+      console.error("Failed to modify collateral:", error);
+    }
+  };
+
   const validationMessage = getValidationMessage()
   const isValid = isLeverageWithinLimits() && !validationMessage
+  const isLoading = modifyingCollateral[parseInt(position.positionId)]
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -241,12 +260,16 @@ export function PositionCollateralDialog({
             </div>
             <Button 
               className="w-full text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-              disabled={!collateralAmount || parseFloat(collateralAmount) <= 0 || !isValid}
+              disabled={!collateralAmount || parseFloat(collateralAmount) <= 0 || !isValid || isLoading}
+              onClick={handleSubmit}
             >
-              {activeTab === "withdraw" 
-                ? `Withdraw ${collateralAmount || "0"} USDC`
-                : `Deposit ${collateralAmount || "0"} USDC`
-              }
+              {isLoading ? (
+                "Processing..."
+              ) : (
+                activeTab === "withdraw" 
+                  ? `Withdraw ${collateralAmount || "0"} USDC`
+                  : `Deposit ${collateralAmount || "0"} USDC`
+              )}
             </Button>
           </CardContent>
         </Card>
