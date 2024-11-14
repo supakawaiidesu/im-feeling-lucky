@@ -70,12 +70,12 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
     <div className="p-2 mr-2 my-2 h-auto border rounded-lg shadow-sm bg-[hsl(var(--component-background))]">
       <div className="flex flex-wrap items-center text-sm">
         {/* Price Group */}
-        <div className="flex items-center min-w-[100px] pr-2 border-r">
-          <div className="flex items-center gap-2 px-4">
+        <div className="flex min-w-[130px] pr-2 border-r">
+          <div className="flex flex-col px-4">
+            <div className="mb-1 text-muted-foreground">{selectedPair}</div>
             <div className="font-bold text-md font-mono w-[75px] text-left">
               {currentPrice ? currentPrice.toLocaleString() : "Loading..."}
             </div>
-            <div className="text-muted-foreground">{selectedPair}</div>
           </div>
         </div>
 

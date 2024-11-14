@@ -1,107 +1,190 @@
-// TokenIcon.tsx
+/**
+ * This module provides components and hooks for handling token pair icons in a trading interface.
+ * It includes utilities for displaying token icons with proper fallbacks and type safety.
+ */
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
-// Cache object to store image paths
-const imagePathCache: Record<string, string> = {};
+/**
+ * Supported trading pairs and their corresponding icon file names.
+ * This mapping ensures type safety and quick lookups for token icons.
+ */
+export const SUPPORTED_PAIRS = {
+  'ETH/USD': 'ETH-USD.svg',
+  'BTC/USD': 'BTC-USD.svg',
+  'SOL/USD': 'SOL-USD.svg',
+  'AVAX/USD': 'AVAX-USD.svg',
+  'ARB/USD': 'ARB-USD.svg',
+  'MATIC/USD': 'MATIC.svg',
+  'LINK/USD': 'LINK-USD.svg',
+  'AAVE/USD': 'AAVE-USD.svg',
+  'ADA/USD': 'ADA-USD.svg',
+  'ATOM/USD': 'ATOM-USD.svg',
+  'AERO/USD': 'AERO-USD.webp',
+  'AEVO/USD': 'AEVO-USD.svg',
+  'ALICE/USD': 'ALICE-USD.svg',
+  'APE/USD': 'APE-USD.webp',
+  'APT/USD': 'APT-USD.svg',
+  'BLUR/USD': 'BLUR-USD.webp',
+  'BNB/USD': 'BNB-USD.svg',
+  'BOBA/USD': 'BOBA-USD.svg',
+  'BOME/USD': 'BOME-USD.webp',
+  'CRV/USD': 'CRV-USD.svg',
+  'DOGE/USD': 'DOGE-USD.svg',
+  'DYDX/USD': 'DYDX-USD.webp',
+  'DYM/USD': 'DYM-USD.png',
+  'ENS/USD': 'ENS-USD.webp',
+  'FTM/USD': 'FTM-USD.svg',
+  'GMX/USD': 'GMX-USD.svg',
+  'INJ/USD': 'INJ-USD.png',
+  'JTO/USD': 'JTO-USD.webp',
+  'JUP/USD': 'JUP-USD.png',
+  'LDO/USD': 'LDO-USD.webp',
+  'LTC/USD': 'LTC-USD.svg',
+  'NEAR/USD': 'NEAR-USD.png',
+  'OP/USD': 'OP-USD.svg',
+  'ORDI/USD': 'ORDI-USD.webp',
+  'PEPE/USD': 'PEPE-USD.webp',
+  'PYTH/USD': 'PYTH-USD.webp',
+  'RDNT/USD': 'RDNT-USD.svg',
+  'RNDR/USD': 'RNDR-USD.svg',
+  'RUNE/USD': 'RUNE-USD.svg',
+  'SEI/USD': 'SEI-USD.webp',
+  'SUI/USD': 'SUI-USD.svg',
+  'TIA/USD': 'TIA-USD.png',
+  'TON/USD': 'TON-USD.svg',
+  'UNI/USD': 'UNI.svg',
+  'WLD/USD': 'WLD-USD.webp',
+  'XMR/USD': 'XMR-USD.svg',
+  'XRP/USD': 'XRP-USD.svg',
+  'MERL/USD': 'MERL-USD.svg',
+  'SAFE/USD': 'SAFE-USD.svg',
+  'OMNI/USD': 'OMNI-USD.svg',
+  'REZ/USD': 'REZ-USD.svg',
+  'ETHFI/USD': 'ETHFI-USD.svg',
+  'TAO/USD': 'TAO-USD.png',
+  'POPCAT/USD': 'POPCAT-USD.webp',
+  'ZRO/USD': 'ZRO-USD.svg',
+  'MEW/USD': 'MEW-USD.svg',
+  'BEAM/USD': 'BEAM-USD.svg',
+  'STRK/USD': 'STRK-USD.png',
+  'NOT/USD': 'NOT-USD.svg',
+  'RLB/USD': 'RLB-USD.png',
+  'AVAIL/USD': 'AVAIL-USD.svg',
+  'DEGEN/USD': 'DEGEN-USD.svg',
+  'EIGEN/USD': 'EIGEN-USD.svg',
+  'XAU/USD': 'XAU-USD.svg',
+  'XAG/USD': 'XAG-USD.svg',
+  'QQQ/USD': 'QQQ-USD.png',
+  'SPY/USD': 'SPY-USD.png',
+  'GMCI30/USD': 'GMCI30-USD.svg',
+  'GMCL20/USD': 'GMCL20-USD.svg',
+  'GMMEME/USD': 'GMMEME-USD.svg',
+  'EUR/USD': 'EUR-USD.svg',
+  'GBP/USD': 'GBP-USD.svg',
+} as const;
 
+// Type for supported trading pairs
+export type SupportedPair = keyof typeof SUPPORTED_PAIRS;
+
+// Validate that a string is a supported pair
+export const isSupportedPair = (pair: string): pair is SupportedPair => {
+  return pair in SUPPORTED_PAIRS;
+};
+
+/**
+ * Hook to get the image path for a token pair's icon.
+ * @param pair - The trading pair (e.g., "ETH/USD")
+ * @returns The path to the token icon or null if not found
+ */
 export const useTokenImagePath = (pair: string) => {
-  const [imagePath, setImagePath] = useState<string | null>(
-    imagePathCache[pair] || null
-  );
+  const [imagePath, setImagePath] = useState<string | null>(null);
 
   useEffect(() => {
-    const findImagePath = async () => {
-      if (imagePathCache[pair]) {
-        setImagePath(imagePathCache[pair]);
-        return;
-      }
-
-      const fileName = pair.replace("/", "-");
-      const extensions = ["svg", "webp", "png"] as const;
-
-      for (const ext of extensions) {
-        const path = `/static/images/tokens/${fileName}.${ext}`;
-        try {
-          const response = await fetch(path, { method: "HEAD" });
-          if (response.ok) {
-            imagePathCache[pair] = path;
-            setImagePath(path);
-            return;
-          }
-        } catch {
-          continue;
-        }
-      }
-
+    if (isSupportedPair(pair)) {
+      setImagePath(`/static/images/tokens/${SUPPORTED_PAIRS[pair]}`);
+    } else {
       setImagePath(null);
-    };
-
-    if (!imagePathCache[pair]) {
-      findImagePath();
     }
   }, [pair]);
 
   return imagePath;
 };
 
-export const TokenIcon = ({ pair }: { pair: string }) => {
+interface TokenIconProps {
+  pair: string;
+  size?: number;
+  className?: string;
+}
+
+/**
+ * Component to display a token pair's icon with fallback.
+ * @param props.pair - The trading pair (e.g., "ETH/USD")
+ * @param props.size - Optional size in pixels (default: 24)
+ * @param props.className - Optional additional CSS classes
+ */
+export const TokenIcon: React.FC<TokenIconProps> = ({ 
+  pair, 
+  size = 24,
+  className = ''
+}) => {
   const imagePath = useTokenImagePath(pair);
+  const baseToken = pair.split("/")[0];
 
   if (!imagePath) {
-    const baseToken = pair.split("/")[0];
     return (
-      <div className="flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-muted">
+      <div 
+        className={`flex items-center justify-center text-xs font-medium rounded-full bg-muted ${className}`}
+        style={{ width: size, height: size }}
+      >
         {baseToken[0]}
       </div>
     );
   }
 
   return (
-    <div className="relative w-6 h-6">
+    <div 
+      className={`relative rounded-full ${className}`}
+      style={{ width: size, height: size }}
+    >
       <Image
         src={imagePath}
         alt={`${pair} icon`}
-        width={24}
-        height={24}
+        width={size}
+        height={size}
         className="rounded-full"
       />
     </div>
   );
 };
 
-export const TokenPairDisplay = ({ pair }: { pair: string }) => {
+interface TokenPairDisplayProps {
+  pair: string;
+  iconSize?: number;
+  className?: string;
+}
+
+/**
+ * Component to display a token pair with its icon.
+ * @param props.pair - The trading pair (e.g., "ETH/USD")
+ * @param props.iconSize - Optional icon size in pixels (default: 24)
+ * @param props.className - Optional additional CSS classes
+ */
+export const TokenPairDisplay: React.FC<TokenPairDisplayProps> = ({ 
+  pair,
+  iconSize = 24,
+  className = ''
+}) => {
   return (
-    <div className="flex items-center gap-2">
-      <TokenIcon pair={pair} />
+    <div className={`flex items-center gap-2 ${className}`}>
+      <TokenIcon pair={pair} size={iconSize} />
       <span>{pair}</span>
     </div>
   );
 };
 
-// PrefetchTokenImages component to handle pre-fetching
-export const PrefetchTokenImages = ({ pairs }: { pairs: string[] }) => {
-  useEffect(() => {
-    pairs.forEach((pair) => {
-      if (!imagePathCache[pair]) {
-        const fileName = pair.replace("/", "-");
-        const extensions = ["svg", "webp", "png"] as const;
-
-        extensions.forEach((ext) => {
-          const path = `/static/images/tokens/${fileName}.${ext}`;
-          fetch(path, { method: "HEAD" })
-            .then((response) => {
-              if (response.ok && !imagePathCache[pair]) {
-                imagePathCache[pair] = path;
-              }
-            })
-            .catch(() => {
-              // Ignore errors - will try next extension
-            });
-        });
-      }
-    });
-  }, [pairs]);
-
-  return null; // This component doesn't render anything
-};
+/**
+ * Legacy component maintained for backward compatibility.
+ * @deprecated Use TokenIcon or TokenPairDisplay components directly
+ */
+export const PrefetchTokenImages: React.FC<{ pairs: string[] }> = () => null;
