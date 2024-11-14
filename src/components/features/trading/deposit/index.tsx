@@ -76,7 +76,11 @@ export default function DepositBox() {
           !depositBoxRef.current.contains(event.target as Node) &&
           isOpen
         ) {
-          setIsOpen(false);
+          // Check if the click target is part of the Select dropdown
+          const selectContent = document.querySelector('[role="listbox"]');
+          if (!selectContent?.contains(event.target as Node)) {
+            setIsOpen(false);
+          }
         }
       }
   
