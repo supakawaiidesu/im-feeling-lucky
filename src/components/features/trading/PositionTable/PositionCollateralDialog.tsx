@@ -170,21 +170,22 @@ export function PositionCollateralDialog({
               </Alert>
             )}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="text-zinc-400">Collateral</div>
-                <div className="flex items-center gap-2">
-                  <Input
+              <div className="relative">
+                <div className="flex items-center h-12 px-4 border rounded-lg border-zinc-800 focus-within:border-zinc-700 bg-zinc-900/50">
+                  <span className="text-zinc-400">Collateral</span>
+                  <input
                     type="number"
                     value={collateralAmount}
                     onChange={(e) => setCollateralAmount(e.target.value)}
-                    className="w-20 text-2xl font-medium text-right text-white bg-transparent focus:outline-none"
+                    className="flex-1 text-right bg-transparent outline-none text-zinc-100"
+                    placeholder="0.00"
                   />
-                  <div 
-                    className="text-xs cursor-pointer text-zinc-500 hover:text-white"
+                  <button
                     onClick={handleMaxClick}
+                    className="px-2 ml-2 text-xs text-zinc-500 hover:text-white"
                   >
                     MAX
-                  </div>
+                  </button>
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -217,7 +218,7 @@ export function PositionCollateralDialog({
                           ? "text-emerald-400" 
                           : "text-red-400"
                       } ${!isValid ? "opacity-50" : ""}`}>
-                        {newMargin.toFixed(2)} USDC
+                        {newMargin.toFixed(2)} USD
                       </span>
                     </>
                   )}
@@ -226,7 +227,7 @@ export function PositionCollateralDialog({
               <div className="flex items-center justify-between">
                 <div className="text-zinc-400">Fee</div>
                 <div className="text-zinc-300">
-                  {collateralAmount ? (parseFloat(collateralAmount) * 0.001).toFixed(4) : "0.00"} USDC
+                  {collateralAmount ? (parseFloat(collateralAmount) * 0.001).toFixed(4) : "0.00"} USD
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -254,7 +255,7 @@ export function PositionCollateralDialog({
               <div className="flex items-center justify-between">
                 <div className="text-zinc-400">{activeTab === "withdraw" ? "Receive" : "Pay"}</div>
                 <div className="text-zinc-300">
-                  {collateralAmount ? `${collateralAmount} USDC` : "0.00 USDC"}
+                  {collateralAmount ? `${collateralAmount} USD` : "0.00 USD"}
                 </div>
               </div>
             </div>
@@ -267,8 +268,8 @@ export function PositionCollateralDialog({
                 "Processing..."
               ) : (
                 activeTab === "withdraw" 
-                  ? `Withdraw ${collateralAmount || "0"} USDC`
-                  : `Deposit ${collateralAmount || "0"} USDC`
+                  ? `Withdraw ${collateralAmount || "0"} USD`
+                  : `Deposit ${collateralAmount || "0"} USD`
               )}
             </Button>
           </CardContent>
