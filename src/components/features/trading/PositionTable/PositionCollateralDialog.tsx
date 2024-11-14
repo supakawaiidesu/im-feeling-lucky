@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from "../../../ui/tabs"
 import { Input } from "../../../ui/input"
 import { Dialog, DialogContent } from "../../../ui/dialog"
 import { Position } from "../../../../hooks/use-positions"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface PositionCollateralDialogProps {
   position: Position | null
@@ -48,10 +49,10 @@ export function PositionCollateralDialog({
   const positionSize = getNumericValue(position.size)
   const newLeverage = (positionSize / newMargin).toFixed(1)
   
-  // Calculate new liquidation price - this is a simplified example
+  // Calculate new liquidation price
   const currentLiqPrice = parseFloat(position.liquidationPrice)
   const entryPrice = parseFloat(position.entryPrice)
-  const liquidationThreshold = position.isLong ? 0.9 : 1.1 // 10% threshold example
+  const liquidationThreshold = position.isLong ? 0.9 : 1.1
   
   const calculateNewLiquidationPrice = () => {
     if (!collateralAmount) return currentLiqPrice
@@ -66,16 +67,54 @@ export function PositionCollateralDialog({
 
   const newLiquidationPrice = calculateNewLiquidationPrice()
 
-  const handleMaxClick = () => {
+  // Validation functions
+  const isLeverageWithinLimits = (): boolean => {
+    if (!collateralAmount) return true
+    const leverageValue = parseFloat(newLeverage)
+    
     if (activeTab === "withdraw") {
-      // Set max withdrawable amount (leaving some margin for safety)
-      const maxWithdraw = (currentMargin * 0.95).toFixed(2)
-      setCollateralAmount(maxWithdraw)
+      return leverageValue <= 100
     } else {
-      // Example max deposit - could be based on user's wallet balance
-      setCollateralAmount("100")
+      return leverageValue >= 1.1
     }
   }
+
+  const getValidationMessage = (): string | null => {
+    if (!collateralAmount) return null
+    const leverageValue = parseFloat(newLeverage)
+    
+    if (activeTab === "withdraw") {
+      if (collateralChange >= currentMargin) {
+        return "Cannot withdraw entire collateral"
+      }
+      if (leverageValue > 100) {
+        return "Cannot increase leverage above 100x"
+      }
+    } else {
+      if (leverageValue < 1.1) {
+        return "Cannot decrease leverage below 1.1x"
+      }
+    }
+    return null
+  }
+
+  const handleMaxClick = () => {
+    if (activeTab === "withdraw") {
+      // Calculate max withdrawal while maintaining leverage <= 100x
+      const minMarginFor100x = positionSize / 100
+      const maxWithdrawable = currentMargin - minMarginFor100x
+      const safeMaxWithdraw = Math.min(maxWithdrawable, currentMargin * 0.95)
+      setCollateralAmount(Math.max(0, safeMaxWithdraw).toFixed(2))
+    } else {
+      // Calculate max deposit to maintain leverage >= 1.1x
+      const maxMarginFor1_1x = positionSize / 1.1
+      const maxDeposit = maxMarginFor1_1x - currentMargin
+      setCollateralAmount(Math.max(0, maxDeposit).toFixed(2))
+    }
+  }
+
+  const validationMessage = getValidationMessage()
+  const isValid = isLeverageWithinLimits() && !validationMessage
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -84,7 +123,10 @@ export function PositionCollateralDialog({
           <CardHeader className="flex flex-row items-center p-4 space-x-0 border-b border-zinc-800">
             <div className="flex-1 font-medium text-center text-white">Edit Margin</div>
           </CardHeader>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "deposit" | "withdraw")} className="w-full">
+          <Tabs value={activeTab} onValueChange={(v) => {
+            setActiveTab(v as "deposit" | "withdraw")
+            setCollateralAmount("") // Reset amount when switching tabs
+          }} className="w-full">
             <TabsList className="w-full h-12 bg-transparent border-b rounded-none border-zinc-800">
               <TabsTrigger
                 value="deposit"
@@ -101,6 +143,13 @@ export function PositionCollateralDialog({
             </TabsList>
           </Tabs>
           <CardContent className="p-4 space-y-4">
+            {validationMessage && (
+              <Alert variant="destructive" className="py-2 border-red-900/20 bg-red-900/10">
+                <AlertDescription className="text-sm text-red-400">
+                  {validationMessage}
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="text-zinc-400">Collateral</div>
@@ -126,7 +175,11 @@ export function PositionCollateralDialog({
                   {collateralAmount && (
                     <>
                       <span className="text-zinc-600">→</span>
-                      <span className={parseFloat(newLeverage) > parseFloat(currentLeverage) ? "text-red-400" : "text-emerald-400"}>
+                      <span className={`${
+                        parseFloat(newLeverage) > parseFloat(currentLeverage) 
+                          ? "text-red-400" 
+                          : "text-emerald-400"
+                      } ${!isValid ? "opacity-50" : ""}`}>
                         {newLeverage}x
                       </span>
                     </>
@@ -140,7 +193,11 @@ export function PositionCollateralDialog({
                   {collateralAmount && (
                     <>
                       <span className="text-zinc-600">→</span>
-                      <span className={newMargin > currentMargin ? "text-emerald-400" : "text-red-400"}>
+                      <span className={`${
+                        newMargin > currentMargin 
+                          ? "text-emerald-400" 
+                          : "text-red-400"
+                      } ${!isValid ? "opacity-50" : ""}`}>
                         {newMargin.toFixed(2)} USDC
                       </span>
                     </>
@@ -164,7 +221,11 @@ export function PositionCollateralDialog({
                   {collateralAmount && (
                     <>
                       <span className="text-zinc-600">→</span>
-                      <span className={newLiquidationPrice > currentLiqPrice ? "text-red-400" : "text-emerald-400"}>
+                      <span className={`${
+                        newLiquidationPrice > currentLiqPrice 
+                          ? "text-red-400" 
+                          : "text-emerald-400"
+                      } ${!isValid ? "opacity-50" : ""}`}>
                         {newLiquidationPrice.toFixed(2)}
                       </span>
                     </>
@@ -179,8 +240,8 @@ export function PositionCollateralDialog({
               </div>
             </div>
             <Button 
-              className="w-full text-white bg-blue-600 hover:bg-blue-700"
-              disabled={!collateralAmount || parseFloat(collateralAmount) <= 0}
+              className="w-full text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              disabled={!collateralAmount || parseFloat(collateralAmount) <= 0 || !isValid}
             >
               {activeTab === "withdraw" 
                 ? `Withdraw ${collateralAmount || "0"} USDC`
