@@ -5,6 +5,7 @@ import { usePrices } from '../lib/websocket-price-context';
 import { useSmartAccount } from './use-smart-account';
 import { lensAbi } from '../lib/abi/lens';
 import { arbitrum } from 'viem/chains';
+import { TRADING_PAIRS } from './use-market-data';
 
 const LENS_CONTRACT_ADDRESS = '0xeae57c7bce5caf160343a83440e98bc976ab7274' as `0x${string}`;
 const SCALING_FACTOR = 30; // For formatUnits
@@ -63,16 +64,15 @@ interface ContractAccruedFees {
   fundingFee: bigint;
 }
 
-const TOKEN_ID_TO_PRICE_KEY: { [key: string]: string } = {
-  "1": "btc",
-  "2": "eth",
-};
-
-const TOKEN_ID_TO_MARKET: { [key: string]: string } = {
-  "1": "BTC/USD",
-  "2": "ETH/USD",
-};
-
+// Helper function to get price key from token ID
+function getPriceKeyFromTokenId(tokenId: string): string {
+  const market = TRADING_PAIRS[tokenId];
+  if (!market) return '';
+  
+  // Extract the token symbol before /USD and convert to lowercase
+  const symbol = market.split('/')[0].toLowerCase();
+  return symbol;
+}
 
 // Helper functions for bigint conversions
 const fromBigInt = (value: bigint): number => {
@@ -182,9 +182,9 @@ export function usePositions() {
     }
 
     const formattedPositions = positionsData.map((position: ContractPosition, index: number) => {
-      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] ||
-        `Token${position.tokenId.toString()}/USD`;
-      const priceKey = TOKEN_ID_TO_PRICE_KEY[position.tokenId.toString()];
+      const tokenId = position.tokenId.toString();
+      const market = TRADING_PAIRS[tokenId] || `Token${tokenId}/USD`;
+      const priceKey = getPriceKeyFromTokenId(tokenId);
       const currentPrice = priceKey && prices[priceKey]?.price;
       const entryPrice = Number(formatUnits(position.averagePrice, SCALING_FACTOR));
     

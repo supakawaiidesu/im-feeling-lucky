@@ -5,6 +5,7 @@ import { usePrices } from '../lib/websocket-price-context';
 import { useSmartAccount } from './use-smart-account';
 import { lensAbi } from '../lib/abi/lens';
 import { arbitrum } from 'viem/chains';
+import { TRADING_PAIRS } from './use-market-data';
 
 const LENS_CONTRACT_ADDRESS = '0xeae57c7bce5caf160343a83440e98bc976ab7274' as `0x${string}`;
 const SCALING_FACTOR = 30; // For formatUnits
@@ -85,22 +86,22 @@ interface ContractAccruedFees {
   fundingFee: bigint;
 }
 
-const TOKEN_ID_TO_PRICE_KEY: { [key: string]: string } = {
-  "1": "btc",
-  "2": "eth",
-};
-
-const TOKEN_ID_TO_MARKET: { [key: string]: string } = {
-  "1": "BTC/USD",
-  "2": "ETH/USD",
-};
-
 const ORDER_TYPE_MAP: { [key: number]: string } = {
   0: "Limit",
   1: "Stop",
   2: "StopLimit",
   3: "TakeProfit",
 };
+
+// Helper function to get price key from token ID
+function getPriceKeyFromTokenId(tokenId: string): string {
+  const market = TRADING_PAIRS[tokenId];
+  if (!market) return '';
+  
+  // Extract the token symbol before /USD and convert to lowercase
+  const symbol = market.split('/')[0].toLowerCase();
+  return symbol;
+}
 
 function getOrderType(positionType: bigint, stepType: bigint): string {
   const typeNumber = Number(stepType);
@@ -153,8 +154,8 @@ export function useOrders() {
 
     const formattedTriggerOrders = positions.map((position: ContractPosition, index: number) => {
       const triggerData = triggers[index] as { triggers: TriggerData[] };
-      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] ||
-        `Token${position.tokenId.toString()}/USD`;
+      const tokenId = position.tokenId.toString();
+      const market = TRADING_PAIRS[tokenId] || `Token${tokenId}/USD`;
 
       // Process trigger orders (TP/SL)
       let takeProfit = null;
@@ -208,9 +209,9 @@ export function useOrders() {
 
     const formattedOrders = positions.map((position: ContractPosition, index: number) => {
       const order = orders_[index] as ContractOrder;
-      const market = TOKEN_ID_TO_MARKET[position.tokenId.toString()] ||
-        `Token${position.tokenId.toString()}/USD`;
-      const priceKey = TOKEN_ID_TO_PRICE_KEY[position.tokenId.toString()];
+      const tokenId = position.tokenId.toString();
+      const market = TRADING_PAIRS[tokenId] || `Token${tokenId}/USD`;
+      const priceKey = getPriceKeyFromTokenId(tokenId);
       const currentPrice = priceKey && prices[priceKey]?.price;
 
       // Calculate total fees
