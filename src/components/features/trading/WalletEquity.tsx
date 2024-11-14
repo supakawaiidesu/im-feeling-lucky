@@ -76,7 +76,7 @@ export function WalletBox() {
               (totalUnrealizedPnl || 0) >= 0 ? "text-green-400" : "text-red-400"
             }
           >
-            {positionsLoading ? "Loading..." : formatPnL(totalUnrealizedPnl)}
+            {positionsLoading ? "Loading..." : formatPnL(totalUnrealizedPnl)} USD
           </span>
         </div>
 
@@ -85,7 +85,7 @@ export function WalletBox() {
           <span>
             {balancesLoading
               ? "Loading..."
-              : `${formatBalance(balances?.formattedMusdBalance)} USDC`}
+              : `$${formatBalance(balances?.formattedMusdBalance)} USD`}
           </span>
         </div>
 

@@ -20,7 +20,7 @@ export function TradeDetails({ details, pair }: TradeDetailsProps) {
     <div className="mt-4 space-y-2 text-sm text-muted-foreground">
       <div className="flex justify-between">
         <span>Entry Price</span>
-        <span>${entryPrice ? formatNumber(parseFloat(entryPrice.toFixed(2))) : "0.00"}</span>
+        <span>${entryPrice ? formatNumber(parseFloat(entryPrice.toFixed(6))) : "0.00"}</span>
       </div>
       <div className="flex justify-between">
         <span>Notional Size</span>
@@ -31,7 +31,7 @@ export function TradeDetails({ details, pair }: TradeDetailsProps) {
       <div className="flex justify-between">
         <span>Liquidation Price</span>
         <span className="text-red-500">
-          ${liquidationPrice ? formatNumber(parseFloat(liquidationPrice.toFixed(2))) : "0.00"}
+          ${liquidationPrice ? formatNumber(parseFloat(liquidationPrice.toFixed(6))) : "0.00"}
         </span>
       </div>
       <div className="flex justify-between">

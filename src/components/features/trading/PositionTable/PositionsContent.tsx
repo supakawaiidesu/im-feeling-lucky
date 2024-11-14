@@ -160,7 +160,7 @@ export function PositionsContent({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div>{formatNumber(position.size)}</div>
+                  <div>${formatNumber(position.size)}</div>
                   <div className="text-sm text-muted-foreground">
                     {(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)} {basePair.toUpperCase()}
                   </div>
