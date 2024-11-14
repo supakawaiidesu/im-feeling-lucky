@@ -45,6 +45,11 @@ export function PositionsContent({
   const [isCollateralDialogOpen, setIsCollateralDialogOpen] = useState(false);
   const [selectedCollateralPosition, setSelectedCollateralPosition] = useState<Position | null>(null);
 
+  const formatNumber = (value: string | number) => {
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    return new Intl.NumberFormat('en-US').format(numValue);
+  };
+
   const calculateFinalPnl = (position: Position) => {
     const pnlWithoutFees = parseFloat(position.pnl.replace(/[^0-9.-]/g, ""));
     const totalFees =
@@ -57,8 +62,8 @@ export function PositionsContent({
   const formatPnL = (value: string | number) => {
     const numValue = typeof value === "string" ? parseFloat(value) : value;
     return numValue >= 0
-      ? `$${numValue.toFixed(2)}`
-      : `-$${Math.abs(numValue).toFixed(2)}`;
+      ? `$${formatNumber(numValue.toFixed(2))}`
+      : `-$${formatNumber(Math.abs(numValue).toFixed(2))}`;
   };
 
   const calculatePnLPercentage = (pnl: number, margin: string) => {
@@ -155,20 +160,20 @@ export function PositionsContent({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div>{position.size}</div>
+                  <div>{formatNumber(position.size)}</div>
                   <div className="text-sm text-muted-foreground">
                     {(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)} {basePair.toUpperCase()}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div>{position.margin}</div>
+                  <div>${formatNumber(position.margin)}</div>
                 </TableCell>
                 <TableCell>
-                  <div>{position.entryPrice}</div>
+                  <div>${formatNumber(position.entryPrice)}</div>
                 </TableCell>
                 <TableCell>
-                  <div>{currentPrice?.toFixed(2) || "Loading..."}</div>
-                  <div className="text-red-500">{position.liquidationPrice}</div>
+                  <div>{currentPrice ? `$${formatNumber(currentPrice.toFixed(2))}` : "Loading..."}</div>
+                  <div className="text-red-500">${formatNumber(position.liquidationPrice)}</div>
                 </TableCell>
                 <TableCell 
                   className="cursor-pointer hover:bg-[#272734]"
@@ -176,12 +181,12 @@ export function PositionsContent({
                 >
                   <div className="text-red-500">
                     {triggerOrder?.stopLoss
-                      ? `${triggerOrder.stopLoss.price} (${triggerOrder.stopLoss.size}%)`
+                      ? `$${formatNumber(triggerOrder.stopLoss.price)} (${triggerOrder.stopLoss.size}%)`
                       : "-"}
                   </div>
                   <div className="text-green-500">
                     {triggerOrder?.takeProfit
-                      ? `${triggerOrder.takeProfit.price} (${triggerOrder.takeProfit.size}%)`
+                      ? `$${formatNumber(triggerOrder.takeProfit.price)} (${triggerOrder.takeProfit.size}%)`
                       : "-"}
                   </div>
                 </TableCell>
