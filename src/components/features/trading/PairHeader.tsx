@@ -67,8 +67,8 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto">
-      <div className="p-2 mr-2 my-2 h-auto border rounded-lg shadow-sm bg-[hsl(var(--component-background))]">
+    <div className="w-full overflow-x-auto">
+      <div className="p-2 my-2 h-auto border rounded-lg shadow-sm bg-[hsl(var(--component-background))]">
         <div className="flex items-center text-sm flex-nowrap" style={{ width: "fit-content" }}>
           {/* Price Group */}
           <div className="flex min-w-[130px] pr-2 border-r">
