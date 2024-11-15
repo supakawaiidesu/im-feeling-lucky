@@ -54,7 +54,7 @@ export function PairSelector({
     return (
       <div className="flex items-center mx-0.25 my-2">
         <Select value={selectedPair} onValueChange={onPairChange}>
-          <SelectTrigger className="w-[350px] h-[55px] bg-[hsl(var(--component-background))] border rounded-lg shadow-sm">
+          <SelectTrigger className="w-full md:w-[350px] h-[55px] bg-[hsl(var(--component-background))] border rounded-lg shadow-sm">
             <SelectValue>Loading...</SelectValue>
           </SelectTrigger>
         </Select>
@@ -64,16 +64,15 @@ export function PairSelector({
 
   return (
     <div className="flex items-center mx-0.25 my-2">
-      {/* Prefetch all token images */}
       <PrefetchTokenImages pairs={allMarkets.map((market) => market.pair)} />
 
       <Select value={selectedPair} onValueChange={onPairChange}>
-        <SelectTrigger className="w-[350px] h-[55px] bg-[hsl(var(--component-background))] border rounded-lg shadow-sm">
+        <SelectTrigger className="w-full md:w-[350px] h-[55px] bg-[hsl(var(--component-background))] border rounded-lg shadow-sm">
           <SelectValue>
             <TokenPairDisplay pair={selectedPair} />
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="w-[800px] bg-[hsl(var(--component-background))]">
+        <SelectContent className="w-full md:w-[800px] bg-[hsl(var(--component-background))]">
           {allMarkets.map((market) => (
             <SelectItem
               key={market.pair}
