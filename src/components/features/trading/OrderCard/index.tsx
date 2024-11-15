@@ -169,7 +169,7 @@ export function OrderCard({
   };
 
   return (
-    <Card className="w-[350px]">
+    <Card className="w-full md:w-[350px]">
       <CardContent className="p-4">
         {error && (
           <div className="mb-4 text-red-500">Error: {error.message}</div>

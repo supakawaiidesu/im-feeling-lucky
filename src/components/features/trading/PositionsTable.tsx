@@ -99,7 +99,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
   };
 
   return (
-    <div className="mb-4 mr-2 border rounded-lg bg-[hsl(var(--component-background))]">
+    <div className="w-full mb-4 border rounded-lg bg-[hsl(var(--component-background))]">
       <div className="flex items-center p-2 border-b">
         <Button
           variant={activeTab === "positions" ? "default" : "ghost"}
@@ -123,7 +123,11 @@ export function PositionsTable({ address }: PositionsTableProps) {
           Trades
         </Button>
       </div>
-      <Table>{renderTableContent()}</Table>
+      <div className="w-full overflow-x-auto">
+        <div style={{ minWidth: "1240px" }}>
+          <Table>{renderTableContent()}</Table>
+        </div>
+      </div>
 
       {portalContainer &&
         hoveredPosition &&

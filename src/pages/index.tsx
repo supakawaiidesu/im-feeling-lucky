@@ -21,12 +21,12 @@ export default function TradingInterface() {
   const assetId = selectedMarket ? selectedMarket.assetId : "";
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-background text-foreground">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
 
-      <div className="flex flex-1">
+      <div className="w-full md:flex md:flex-1">
         {/* Trading Panel */}
-        <div className="flex flex-col px-2">
+        <div className="w-full min-w-0 px-2 md:w-auto">
           <PairSelector
             selectedPair={selectedPair}
             onPairChange={setSelectedPair}
@@ -41,7 +41,7 @@ export default function TradingInterface() {
         </div>
 
         {/* Chart and Positions */}
-        <div className="flex flex-col flex-1">
+        <div className="w-full min-w-0 md:flex md:flex-col md:flex-1">
           <PairHeader selectedPair={selectedPair} />
           <Chart selectedPair={selectedPair} />
           <PositionsTable address={address} />
