@@ -123,7 +123,11 @@ export function PositionsTable({ address }: PositionsTableProps) {
           Trades
         </Button>
       </div>
-      <Table>{renderTableContent()}</Table>
+      <div className="overflow-x-auto">
+        <div style={{ minWidth: "1240px" }}>
+          <Table>{renderTableContent()}</Table>
+        </div>
+      </div>
 
       {portalContainer &&
         hoveredPosition &&

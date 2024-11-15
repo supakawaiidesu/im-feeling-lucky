@@ -67,96 +67,98 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
   };
 
   return (
-    <div className="p-2 mr-2 my-2 h-auto border rounded-lg shadow-sm bg-[hsl(var(--component-background))]">
-      <div className="flex flex-wrap items-center text-sm">
-        {/* Price Group */}
-        <div className="flex min-w-[130px] pr-2 border-r">
-          <div className="flex flex-col px-4">
-            <div className="mb-1 text-muted-foreground">{selectedPair}</div>
-            <div className="font-bold text-md font-mono w-[75px] text-left">
-              {currentPrice ? currentPrice.toLocaleString() : "Loading..."}
+    <div className="overflow-x-auto">
+      <div className="p-2 mr-2 my-2 h-auto border rounded-lg shadow-sm bg-[hsl(var(--component-background))]">
+        <div className="flex items-center text-sm flex-nowrap" style={{ width: "fit-content" }}>
+          {/* Price Group */}
+          <div className="flex min-w-[130px] pr-2 border-r">
+            <div className="flex flex-col px-4">
+              <div className="mb-1 text-muted-foreground">{selectedPair}</div>
+              <div className="font-bold text-md font-mono w-[75px] text-left">
+                {currentPrice ? currentPrice.toLocaleString() : "Loading..."}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Open Interest Group */}
-        <div className="flex items-center space-x-8 px-4 border-r min-w-[300px]">
-          <div>
-            <div className="text-muted-foreground">Long OI</div>
+          {/* Open Interest Group */}
+          <div className="flex items-center space-x-8 px-4 border-r min-w-[300px]">
             <div>
-              ${marketData.longOpenInterest.toLocaleString()} / $
-              {marketData.maxLongOpenInterest.toLocaleString()}
+              <div className="text-muted-foreground">Long OI</div>
+              <div>
+                ${marketData.longOpenInterest.toLocaleString()} / $
+                {marketData.maxLongOpenInterest.toLocaleString()}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Short OI</div>
+              <div>
+                ${marketData.shortOpenInterest.toLocaleString()} / $
+                {marketData.maxShortOpenInterest.toLocaleString()}
+              </div>
             </div>
           </div>
-          <div>
-            <div className="text-muted-foreground">Short OI</div>
-            <div>
-              ${marketData.shortOpenInterest.toLocaleString()} / $
-              {marketData.maxShortOpenInterest.toLocaleString()}
-            </div>
-          </div>
-        </div>
 
-        {/* Long/Short Ratio Group */}
-        <div className="flex items-center px-4 border-r min-w-[200px]">
-          <div className="w-full">
-            <div className="flex justify-between text-xs mb-1.5">
-              <span className="text-green-500">
-                <span className="text-muted-foreground">(L)</span> {marketData.longShortRatio.longPercentage.toFixed(1)}%
-              </span>
-              <span className="text-red-500">
-                {marketData.longShortRatio.shortPercentage.toFixed(1)}% <span className="text-muted-foreground">(S)</span>
-              </span>
+          {/* Long/Short Ratio Group */}
+          <div className="flex items-center px-4 border-r min-w-[200px]">
+            <div className="w-full">
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-green-500">
+                  <span className="text-muted-foreground">(L)</span> {marketData.longShortRatio.longPercentage.toFixed(1)}%
+                </span>
+                <span className="text-red-500">
+                  {marketData.longShortRatio.shortPercentage.toFixed(1)}% <span className="text-muted-foreground">(S)</span>
+                </span>
+              </div>
+              <div className="w-full h-2 overflow-hidden rounded-full bg-red-500/20">
+                <div
+                  className="h-full transition-all duration-300 ease-in-out rounded-l-full bg-green-500/50"
+                  style={{
+                    width: `${marketData.longShortRatio.longPercentage}%`,
+                  }}
+                />
+              </div>
             </div>
-            <div className="w-full h-2 overflow-hidden rounded-full bg-red-500/20">
+          </div>
+
+          {/* Borrow Rates Group */}
+          <div className="flex items-center px-4 min-w-[220px]">
+            <div className="flex gap-4">
+              <div>
+                <div className="text-muted-foreground">Borrowing (L)</div>
+                <div className="text-red-500">
+                  {getAnnualizedRate(marketData.borrowRateForLong).toFixed(4)}%
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Borrowing (S)</div>
+                <div className="text-red-500">
+                  {getAnnualizedRate(marketData.borrowRateForShort).toFixed(4)}%
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Funding Rate Group */}
+          <div className="flex items-center px-4 border-l min-w-[160px]">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Funding Rate</span>
+                <button
+                  onClick={() => setRateTimeframe(nextTimeframe())}
+                  className="px-2 py-0.5 text-xs rounded bg-secondary hover:bg-secondary/80"
+                >
+                  {rateTimeframe}
+                </button>
+              </div>
               <div
-                className="h-full transition-all duration-300 ease-in-out rounded-l-full bg-green-500/50"
-                style={{
-                  width: `${marketData.longShortRatio.longPercentage}%`,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Borrow Rates Group */}
-        <div className="flex items-center px-4 min-w-[220px]">
-          <div className="flex gap-4">
-            <div>
-              <div className="text-muted-foreground">Borrowing (L)</div>
-              <div className="text-red-500">
-                {getAnnualizedRate(marketData.borrowRateForLong).toFixed(4)}%
-              </div>
-            </div>
-            <div>
-              <div className="text-muted-foreground">Borrowing (S)</div>
-              <div className="text-red-500">
-                {getAnnualizedRate(marketData.borrowRateForShort).toFixed(4)}%
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Funding Rate Group */}
-        <div className="flex items-center px-4 border-l min-w-[160px]">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Funding Rate</span>
-              <button
-                onClick={() => setRateTimeframe(nextTimeframe())}
-                className="px-2 py-0.5 text-xs rounded bg-secondary hover:bg-secondary/80"
+                className={
+                  getAnnualizedRate(marketData.fundingRate) >= 0
+                    ? "text-green-500"
+                    : "text-red-500"
+                }
               >
-                {rateTimeframe}
-              </button>
-            </div>
-            <div
-              className={
-                getAnnualizedRate(marketData.fundingRate) >= 0
-                  ? "text-green-500"
-                  : "text-red-500"
-              }
-            >
-              {getAnnualizedRate(marketData.fundingRate).toFixed(4)}%
+                {getAnnualizedRate(marketData.fundingRate).toFixed(4)}%
+              </div>
             </div>
           </div>
         </div>
