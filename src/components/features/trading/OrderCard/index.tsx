@@ -39,6 +39,7 @@ export function OrderCard({
     formState,
     maxLeveragedAmount,
     handleAmountChange,
+    handleMarginChange,  // Add this
     handleLimitPriceChange,
     handleSliderChange,
     toggleDirection,
@@ -232,6 +233,7 @@ export function OrderCard({
               formState={formState}
               calculatedMargin={calculatedMargin}
               handleAmountChange={handleAmountChange}
+              handleMarginChange={handleMarginChange}  // Add this
               handleSliderChange={handleSliderChange}
               toggleTPSL={toggleTPSL}
               handleTakeProfitChange={(value) => handleTakeProfitChange(value)}
@@ -244,6 +246,7 @@ export function OrderCard({
               formState={formState}
               calculatedMargin={calculatedMargin}
               handleAmountChange={handleAmountChange}
+              handleMarginChange={handleMarginChange}  // Add this
               handleLimitPriceChange={handleLimitPriceChange}
               handleSliderChange={handleSliderChange}
               toggleTPSL={toggleTPSL}

@@ -17,6 +17,7 @@ interface UseOrderFormReturn {
   handleTakeProfitChange: (value: string, isPrice?: boolean) => void;
   handleStopLossChange: (value: string, isPrice?: boolean) => void;
   setFormState: React.Dispatch<React.SetStateAction<OrderFormState>>;
+  handleMarginChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormReturn {
@@ -53,8 +54,28 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
   // Handle amount input change
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAmount = e.target.value;
+    const leverageNum = parseFloat(leverage);
 
-    // Update slider value based on amount
+    let newSliderValue = [0];
+    if (maxLeveragedAmount > 0) {
+      const percentage = (parseFloat(newAmount) / maxLeveragedAmount) * 100;
+      newSliderValue = [Math.min(100, Math.max(0, percentage))];
+    }
+
+    setFormState(prev => ({
+      ...prev,
+      amount: newAmount,
+      sliderValue: newSliderValue
+    }));
+  };
+
+  // Handle margin input change
+  const handleMarginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newMargin = e.target.value;
+    const leverageNum = parseFloat(leverage);
+    const newAmount = (parseFloat(newMargin) * leverageNum).toFixed(2);
+
+    // Update slider value based on new amount
     let newSliderValue = [0];
     if (maxLeveragedAmount > 0) {
       const percentage = (parseFloat(newAmount) / maxLeveragedAmount) * 100;
@@ -166,5 +187,6 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
     handleTakeProfitChange,
     handleStopLossChange,
     setFormState,
+    handleMarginChange,
   };
 }
