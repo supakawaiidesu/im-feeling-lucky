@@ -46,16 +46,24 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
             Unstake
           </Button>
         </div>
-        <div className="space-y-4">
-          <div className="flex justify-between text-sm">
-            <span className="text-[#A0AEC0]">Unstaked Locked</span>
-            <span className="text-white">0.00 MOLTEN</span>
+        
+        <div className="border-t border-[#272734]" />
+        
+        <div className="flex items-center justify-between p-4 bg-[#272734] rounded-lg">
+          <div className="space-y-1">
+            <div className="text-sm text-[#A0AEC0]">MOLTEN Staking Rewards</div>
+            <div className="text-white">
+              0.00 MOLTEN <span className="text-[#A0AEC0] text-sm">($0.00)</span>
+            </div>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-[#A0AEC0]">Unlock Time</span>
-            <span className="text-white">-</span>
-          </div>
+          <Button 
+            className="bg-[#7B3FE4] hover:bg-[#6B2FD4] text-white"
+            onClick={() => {}}
+          >
+            Claim Rewards
+          </Button>
         </div>
+
       </CardContent>
     </Card>
   )
