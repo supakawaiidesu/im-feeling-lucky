@@ -50,7 +50,7 @@ a {
     --radius: 0.5rem;
   }
   .dark {
-    --background: 252 16% 6%;
+    --background: 240 13% 5%;
     --foreground: 0 0% 98%;
     --component-background: 250 12% 10%;
     --card: 250 12% 10%;
