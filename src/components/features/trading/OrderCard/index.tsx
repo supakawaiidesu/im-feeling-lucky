@@ -47,6 +47,7 @@ export function OrderCard({
     handleTakeProfitChange,
     handleStopLossChange,
     setFormState,
+    isValid, // Add this
   } = useOrderForm({ leverage });
 
   const calculatedMargin = formState.amount
@@ -143,6 +144,7 @@ export function OrderCard({
       return "Enter Limit Price";
     if (placingOrders) return "Placing Order...";
     if (hasInsufficientBalance) return "Insufficient Balance";
+    if (!isValid(formState.amount)) return "Minimum Margin: 1 USD";
 
     const availableLiquidity = formState.isLong
       ? market?.availableLiquidity?.long
@@ -289,6 +291,7 @@ export function OrderCard({
                 (activeTab === "market" && !tradeDetails.entryPrice) ||
                 (activeTab === "limit" && !formState.limitPrice) ||
                 hasInsufficientBalance ||
+                !isValid(formState.amount) || // Add this condition
                 (() => {
                   const availableLiquidity = formState.isLong
                     ? market?.availableLiquidity?.long
