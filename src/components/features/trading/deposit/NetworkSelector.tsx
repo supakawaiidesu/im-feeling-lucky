@@ -1,6 +1,7 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select";
 import { NetworkType, NetworkSelectorProps } from "./types";
+import { TokenIcon } from "@/hooks/use-token-icon";
 
 export function NetworkSelector({ selectedNetwork, onNetworkChange }: NetworkSelectorProps) {
   return (
@@ -10,26 +11,23 @@ export function NetworkSelector({ selectedNetwork, onNetworkChange }: NetworkSel
     >
       <SelectTrigger className="w-[180px] mt-2">
         <div className="flex items-center gap-2">
-          <div
-            className="w-4 h-4 rounded-full"
-            style={{
-              backgroundColor:
-                selectedNetwork === "arbitrum" ? "#28A0F0" : "#FF0420",
-            }}
+          <TokenIcon 
+            pair={selectedNetwork === "arbitrum" ? "ARB/USD" : "OP/USD"}
+            size={16}
           />
-          <SelectValue />
+          <span className="capitalize">{selectedNetwork}</span>
         </div>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="arbitrum">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-[#28A0F0]" />
+            <TokenIcon pair="ARB/USD" size={16} />
             <span>Arbitrum</span>
           </div>
         </SelectItem>
         <SelectItem value="optimism">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-[#FF0420]" />
+            <TokenIcon pair="OP/USD" size={16} />
             <span>Optimism</span>
           </div>
         </SelectItem>

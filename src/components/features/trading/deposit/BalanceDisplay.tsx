@@ -1,5 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 
+const getExplorerUrl = (address: string, network: "arbitrum" | "optimism") => {
+  if (network === "arbitrum") {
+    return `https://arbiscan.io/address/${address}`;
+  }
+  return `https://optimistic.etherscan.io/address/${address}`;
+};
+
 interface BalanceDisplayItemProps {
   title: string;
   address: string | undefined;
@@ -15,7 +22,7 @@ function BalanceDisplayItem({
   balance,
   isLoading,
   isEffectivelyInitialized = true,
-  network,
+  network = "arbitrum",
 }: BalanceDisplayItemProps) {
   const showConnectionStatus = title === "1CT Wallet";
   const displayAddress = showConnectionStatus
@@ -26,17 +33,24 @@ function BalanceDisplayItem({
 
   const truncateAddress = (addr: string | undefined) => {
     if (!addr || addr === "Not connected") return addr;
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    return `${addr.slice(0, 6)}...`;
   };
 
-  const networkDot = network && title === "Web Wallet" && (
-    <div
-      className="inline-block w-2 h-2 mr-1 rounded-full"
-      style={{
-        backgroundColor: network === "arbitrum" ? "#28A0F0" : "#FF0420",
-      }}
-    />
-  );
+  const renderAddress = (addr: string | undefined) => {
+    if (!addr || addr === "Not connected") return addr;
+    const truncated = truncateAddress(addr);
+    return (
+      <a
+        href={getExplorerUrl(addr, network)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="transition-colors hover:text-primary"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {truncated}
+      </a>
+    );
+  };
 
   if (title === "Margin Wallet Balance") {
     return (
@@ -59,11 +73,10 @@ function BalanceDisplayItem({
         <div className="flex flex-col space-y-2">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
-              {networkDot}
               {title}:
             </span>
             <span className="font-mono text-xs text-muted-foreground">
-              {truncateAddress(displayAddress)}
+              {renderAddress(displayAddress)}
             </span>
           </div>
           <div className="font-medium">
@@ -104,6 +117,7 @@ export function BalanceDisplay({
           address={eoaAddress}
           balance={eoaBalance}
           isLoading={isLoading}
+          network={selectedNetwork}
         />
         <BalanceDisplayItem
           title="1CT Wallet"
@@ -111,6 +125,7 @@ export function BalanceDisplay({
           balance={smartAccountBalance}
           isLoading={isLoading}
           isEffectivelyInitialized={isEffectivelyInitialized}
+          network={selectedNetwork}
         />
       </div>
       <BalanceDisplayItem
