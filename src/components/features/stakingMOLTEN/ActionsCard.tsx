@@ -19,7 +19,7 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
     const handleMax = () => {
         if (stakingData) {
           // Use full precision values for MAX
-          setAmount(isStaking ? stakingData.formattedWalletBalance : stakingData.formattedStakedBalance)
+          setAmount(stakingData.formattedWalletBalance)
         }
       }
 
@@ -127,7 +127,7 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
     return (
       <Card className="bg-[#16161D] border-[#1b1b22]">
         <CardHeader>
-          <CardTitle className="text-white">Actions</CardTitle>
+          <CardTitle className="text-white">Manage Position</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex gap-4">
