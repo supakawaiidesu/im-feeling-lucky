@@ -68,27 +68,25 @@ export default function DepositBox() {
   } = useBalances(selectedNetwork);
   const { transferToSmartAccount, isTransferring } = useTokenTransferActions();
 
-    // Add click outside handler
-    useEffect(() => {
-      function handleClickOutside(event: MouseEvent) {
-        if (
-          depositBoxRef.current && 
-          !depositBoxRef.current.contains(event.target as Node) &&
-          isOpen
-        ) {
-          // Check if the click target is part of the Select dropdown
-          const selectContent = document.querySelector('[role="listbox"]');
-          if (!selectContent?.contains(event.target as Node)) {
-            setIsOpen(false);
-          }
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        depositBoxRef.current &&
+        !depositBoxRef.current.contains(event.target as Node) &&
+        isOpen
+      ) {
+        const selectContent = document.querySelector('[role="listbox"]');
+        if (!selectContent?.contains(event.target as Node)) {
+          setIsOpen(false);
         }
       }
-  
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [isOpen]);
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (smartAccount?.address) {
@@ -139,6 +137,7 @@ export default function DepositBox() {
     }
   };
 
+  // Improved transaction handling for approve and deposit
   const handleApproveAndDeposit = async () => {
     if (!smartAccount || !kernelClient) return;
 
@@ -155,14 +154,43 @@ export default function DepositBox() {
         args: [TRADING_CONTRACT, parseUnits(tradingAmount, 6)],
       });
 
-      const tx = await kernelClient.sendTransaction({
-        to: USDC_TOKEN,
-        data: approveCalldata,
+      // Send both approve and deposit transactions in a batch
+      const depositResponse = await fetch(
+        "https://unidexv4-api-production.up.railway.app/api/wallet",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "deposit",
+            tokenAddress: USDC_TOKEN,
+            amount: tradingAmount,
+            smartAccountAddress: smartAccount.address,
+          }),
+        }
+      );
+
+      const depositData = await depositResponse.json();
+      if (!depositResponse.ok) {
+        throw new Error(
+          depositData.error || "Failed to process deposit operation"
+        );
+      }
+
+      // Use kernelClient's sendTransactions for batching
+      await kernelClient.sendTransactions({
+        transactions: [
+          { to: USDC_TOKEN, data: approveCalldata },
+          { to: depositData.vaultAddress, data: depositData.calldata },
+        ],
       });
 
-      await kernelClient.waitForTransactionReceipt({ hash: tx });
+      toast({
+        title: "Success",
+        description: `Successfully deposited ${tradingAmount} USDC`,
+      });
 
-      await handleTradingOperation("deposit");
+      setTradingAmount("");
+      refetchBalances();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -214,7 +242,6 @@ export default function DepositBox() {
     try {
       if (type === "deposit") {
         if (selectedNetwork === "optimism") {
-          // Do nothing here as the CrossChainDepositCall component will handle it
           return;
         }
         await transferToSmartAccount(smartAccountAmount, eoaAddress);
@@ -231,6 +258,7 @@ export default function DepositBox() {
     }
   };
 
+  // Improved transaction handling for trading operations
   const handleTradingOperation = async (type: "deposit" | "withdraw") => {
     if (!smartAccount || !kernelClient) {
       toast({
@@ -288,12 +316,11 @@ export default function DepositBox() {
       if (!response.ok)
         throw new Error(data.error || "Failed to process wallet operation");
 
-      const tx = await kernelClient.sendTransaction({
+      // Simplified transaction handling using kernelClient directly
+      await kernelClient.sendTransaction({
         to: data.vaultAddress,
         data: data.calldata,
       });
-
-      await kernelClient.waitForTransactionReceipt({ hash: tx });
 
       toast({
         title: "Success",
@@ -365,7 +392,6 @@ export default function DepositBox() {
 
     if (selectedNetwork === "optimism") {
       if (onCorrectChain) {
-        // Changed from !onCorrectChain
         return (
           <CrossChainDepositCall
             amount={smartAccountAmount}
@@ -443,7 +469,6 @@ export default function DepositBox() {
                 }
                 selectedNetwork={selectedNetwork}
               />
-
               <Tabs defaultValue="smart-account" className="w-full">
                 <TabsList className="w-full">
                   <TabsTrigger value="smart-account" className="flex-1">
