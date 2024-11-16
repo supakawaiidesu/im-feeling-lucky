@@ -1,53 +1,24 @@
-import { useState, useEffect, useRef } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useRef } from "react";
+import { Card } from "../../../ui/card";
+import { Button } from "../../../ui/button";
+import { Alert, AlertDescription } from "../../../ui/alert";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../ui/tabs";
 import { useSmartAccount } from "@/hooks/use-smart-account";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useBalances } from "@/hooks/use-balances";
 import { useTokenTransferActions } from "@/hooks/use-token-transfer-actions";
 import { useAccount, useSwitchChain } from "wagmi";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { parseUnits, encodeFunctionData } from "viem";
-import { AmountInput } from "./AmountInput";
-import { BalanceDisplay } from "./BalanceDisplay";
-import { ActionButtons } from "./ActionButtons";
-import { CrossChainDepositCall } from "./CrossChainDepositCall";
-import { Label } from "@/components/ui/label";
 import { arbitrum, optimism } from "wagmi/chains";
-
-const TRADING_CONTRACT = "0x5f19704F393F983d5932b4453C6C87E85D22095E";
-const USDC_TOKEN = "0xaf88d065e77c8cc2239327c5edb3a432268e5831";
-
-const ERC20_ABI = [
-  {
-    inputs: [
-      { name: "spender", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    name: "approve",
-    outputs: [{ name: "", type: "bool" }],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-] as const;
+import { BalanceDisplay } from "./BalanceDisplay";
+import { DepositForm } from "./DepositForm";
+import { useTransactionHandler } from "./useTransactionHandler";
+import { NetworkType } from "./types";
 
 export default function DepositBox() {
   const [isOpen, setIsOpen] = useState(false);
   const [smartAccountAmount, setSmartAccountAmount] = useState("");
   const [tradingAmount, setTradingAmount] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
-  const [selectedNetwork, setSelectedNetwork] = useState<
-    "arbitrum" | "optimism"
-  >("arbitrum");
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>("arbitrum");
 
   const depositBoxRef = useRef<HTMLDivElement>(null);
 
@@ -67,6 +38,18 @@ export default function DepositBox() {
     refetchBalances,
   } = useBalances(selectedNetwork);
   const { transferToSmartAccount, isTransferring } = useTokenTransferActions();
+
+  const {
+    isLoading,
+    isApproving,
+    handleApproveAndDeposit,
+    handleTradingOperation,
+  } = useTransactionHandler({
+    smartAccount,
+    kernelClient,
+    toast,
+    refetchBalances,
+  });
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -137,71 +120,6 @@ export default function DepositBox() {
     }
   };
 
-  // Improved transaction handling for approve and deposit
-  const handleApproveAndDeposit = async () => {
-    if (!smartAccount || !kernelClient) return;
-
-    try {
-      setIsApproving(true);
-      toast({
-        title: "Processing",
-        description: "Approving USDC for trading contract...",
-      });
-
-      const approveCalldata = encodeFunctionData({
-        abi: ERC20_ABI,
-        functionName: "approve",
-        args: [TRADING_CONTRACT, parseUnits(tradingAmount, 6)],
-      });
-
-      // Send both approve and deposit transactions in a batch
-      const depositResponse = await fetch(
-        "https://unidexv4-api-production.up.railway.app/api/wallet",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "deposit",
-            tokenAddress: USDC_TOKEN,
-            amount: tradingAmount,
-            smartAccountAddress: smartAccount.address,
-          }),
-        }
-      );
-
-      const depositData = await depositResponse.json();
-      if (!depositResponse.ok) {
-        throw new Error(
-          depositData.error || "Failed to process deposit operation"
-        );
-      }
-
-      // Use kernelClient's sendTransactions for batching
-      await kernelClient.sendTransactions({
-        transactions: [
-          { to: USDC_TOKEN, data: approveCalldata },
-          { to: depositData.vaultAddress, data: depositData.calldata },
-        ],
-      });
-
-      toast({
-        title: "Success",
-        description: `Successfully deposited ${tradingAmount} USDC`,
-      });
-
-      setTradingAmount("");
-      refetchBalances();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to approve and deposit USDC",
-        variant: "destructive",
-      });
-    } finally {
-      setIsApproving(false);
-    }
-  };
-
   const handleSmartAccountOperation = async (type: "deposit" | "withdraw") => {
     if (!eoaAddress || !smartAccount) {
       toast({
@@ -225,20 +143,6 @@ export default function DepositBox() {
       return;
     }
 
-    if (
-      type === "deposit" &&
-      balances &&
-      parseFloat(smartAccountAmount) >
-        parseFloat(balances.formattedEoaUsdcBalance)
-    ) {
-      toast({
-        title: "Error",
-        description: "Insufficient USDC balance in your wallet",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       if (type === "deposit") {
         if (selectedNetwork === "optimism") {
@@ -258,152 +162,27 @@ export default function DepositBox() {
     }
   };
 
-  // Improved transaction handling for trading operations
-  const handleTradingOperation = async (type: "deposit" | "withdraw") => {
-    if (!smartAccount || !kernelClient) {
-      toast({
-        title: "Error",
-        description: "Please connect your wallet first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (
-      type === "deposit" &&
-      balances &&
-      parseFloat(tradingAmount) > parseFloat(balances.formattedUsdcBalance)
-    ) {
-      toast({
-        title: "Error",
-        description: "Insufficient USDC balance in 1CT Wallet",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (
-      type === "withdraw" &&
-      balances &&
-      parseFloat(tradingAmount) > parseFloat(balances.formattedMusdBalance)
-    ) {
-      toast({
-        title: "Error",
-        description: "Insufficient deposited balance in Trading Contract",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      const response = await fetch(
-        "https://unidexv4-api-production.up.railway.app/api/wallet",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type,
-            tokenAddress: USDC_TOKEN,
-            amount: tradingAmount,
-            smartAccountAddress: smartAccount.address,
-          }),
-        }
-      );
-
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Failed to process wallet operation");
-
-      // Simplified transaction handling using kernelClient directly
-      await kernelClient.sendTransaction({
-        to: data.vaultAddress,
-        data: data.calldata,
-      });
-
-      toast({
-        title: "Success",
-        description: `Successfully ${type}ed ${tradingAmount} USDC`,
-      });
-
-      setTradingAmount("");
-      refetchBalances();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || `Failed to ${type}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const needsApproval = balances
     ? parseFloat(tradingAmount || "0") >
       parseFloat(balances.formattedUsdcAllowance)
     : false;
 
-  const handleCrossChainSuccess = () => {
-    setSmartAccountAmount("");
-    refetchBalances();
+  const handleTradingDeposit = () => {
+    if (needsApproval) {
+      handleApproveAndDeposit(tradingAmount)
+        .then(() => setTradingAmount(""))
+        .catch(() => {});
+    } else {
+      handleTradingOperation("deposit", tradingAmount)
+        .then(() => setTradingAmount(""))
+        .catch(() => {});
+    }
   };
 
-  const getActionButtonText = (
-    type: "deposit" | "withdraw",
-    mode: "smart-account" | "trading"
-  ) => {
-    if (mode === "smart-account" && type === "deposit" && !isOnCorrectChain()) {
-      return `Switch to ${
-        selectedNetwork === "arbitrum" ? "Arbitrum" : "Optimism"
-      }`;
-    }
-
-    if (mode === "trading" && type === "deposit" && needsApproval) {
-      return "Approve & Deposit";
-    }
-
-    return type === "deposit" ? "Deposit" : "Withdraw";
-  };
-
-  const getSmartAccountButtons = () => {
-    const onCorrectChain = isOnCorrectChain();
-    const commonProps = {
-      type: "smart-account" as const,
-      onDeposit: () => handleSmartAccountOperation("deposit"),
-      onWithdraw: () => handleSmartAccountOperation("withdraw"),
-      isLoading: isTransferring,
-      depositDisabled:
-        !smartAccountAmount ||
-        !eoaAddress ||
-        !balances ||
-        parseFloat(smartAccountAmount) >
-          parseFloat(balances.formattedEoaUsdcBalance),
-      withdrawDisabled:
-        !smartAccountAmount ||
-        !smartAccount ||
-        !balances ||
-        parseFloat(smartAccountAmount) >
-          parseFloat(balances.formattedUsdcBalance),
-      depositText: getActionButtonText("deposit", "smart-account"),
-      withdrawText: getActionButtonText("withdraw", "smart-account"),
-    };
-
-    if (selectedNetwork === "optimism") {
-      if (onCorrectChain) {
-        return (
-          <CrossChainDepositCall
-            amount={smartAccountAmount}
-            onSuccess={handleCrossChainSuccess}
-            chain={chain?.id}
-          />
-        );
-      }
-      return <ActionButtons {...commonProps} />;
-    }
-
-    return <ActionButtons {...commonProps} />;
+  const handleTradingWithdraw = () => {
+    handleTradingOperation("withdraw", tradingAmount)
+      .then(() => setTradingAmount(""))
+      .catch(() => {});
   };
 
   return (
@@ -479,98 +258,36 @@ export default function DepositBox() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="smart-account" className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Amount (USDC)</Label>
-                    <div className="flex gap-2">
-                      <Select
-                        value={selectedNetwork}
-                        onValueChange={(value: "arbitrum" | "optimism") =>
-                          setSelectedNetwork(value)
-                        }
-                      >
-                        <SelectTrigger className="w-[180px] mt-2">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-4 h-4 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  selectedNetwork === "arbitrum"
-                                    ? "#28A0F0"
-                                    : "#FF0420",
-                              }}
-                            />
-                            <SelectValue />
-                          </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="arbitrum">
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-[#28A0F0]" />
-                              <span>Arbitrum</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="optimism">
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-[#FF0420]" />
-                              <span>Optimism</span>
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <div className="flex-1">
-                        <AmountInput
-                          amount={smartAccountAmount}
-                          onAmountChange={setSmartAccountAmount}
-                          onMaxClick={() => handleMaxClick("smart-account")}
-                          disabled={!smartAccount || isLoadingBalances}
-                          isLoading={isLoadingBalances}
-                          label="" // Empty label since we have it above
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {getSmartAccountButtons()}
+                <TabsContent value="smart-account">
+                  <DepositForm
+                    type="smart-account"
+                    amount={smartAccountAmount}
+                    onAmountChange={setSmartAccountAmount}
+                    onMaxClick={() => handleMaxClick("smart-account")}
+                    isLoading={isTransferring}
+                    disabled={!smartAccount || isLoadingBalances}
+                    balances={balances}
+                    selectedNetwork={selectedNetwork}
+                    onNetworkChange={setSelectedNetwork}
+                    onDeposit={() => handleSmartAccountOperation("deposit")}
+                    onWithdraw={() => handleSmartAccountOperation("withdraw")}
+                    chain={chain?.id}
+                  />
                 </TabsContent>
 
-                <TabsContent value="trading" className="space-y-4">
-                  <AmountInput
+                <TabsContent value="trading">
+                  <DepositForm
+                    type="trading"
                     amount={tradingAmount}
                     onAmountChange={setTradingAmount}
                     onMaxClick={() => handleMaxClick("trading")}
-                    disabled={!smartAccount || isLoadingBalances}
-                    isLoading={isLoadingBalances}
-                  />
-                  <ActionButtons
-                    type="trading"
-                    onDeposit={
-                      needsApproval
-                        ? handleApproveAndDeposit
-                        : () => handleTradingOperation("deposit")
-                    }
-                    onWithdraw={() => handleTradingOperation("withdraw")}
                     isLoading={isLoading}
-                    isApproving={isApproving}
+                    disabled={!smartAccount || isLoadingBalances}
+                    balances={balances}
+                    onDeposit={handleTradingDeposit}
+                    onWithdraw={handleTradingWithdraw}
                     needsApproval={needsApproval}
-                    depositDisabled={
-                      !tradingAmount ||
-                      !balances ||
-                      parseFloat(tradingAmount) >
-                        parseFloat(balances.formattedUsdcBalance) ||
-                      !smartAccount ||
-                      isLoadingBalances
-                    }
-                    withdrawDisabled={
-                      !tradingAmount ||
-                      !balances ||
-                      parseFloat(tradingAmount) >
-                        parseFloat(balances.formattedMusdBalance) ||
-                      !smartAccount ||
-                      isLoadingBalances
-                    }
-                    depositText={getActionButtonText("deposit", "trading")}
-                    withdrawText={getActionButtonText("withdraw", "trading")}
+                    isApproving={isApproving}
                   />
                 </TabsContent>
               </Tabs>
