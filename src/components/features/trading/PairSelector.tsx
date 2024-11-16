@@ -72,21 +72,28 @@ export function PairSelector({
             <TokenPairDisplay pair={selectedPair} />
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="w-full md:w-[800px] bg-[hsl(var(--component-background))]">
+        <SelectContent className="w-full md:w-[900px] bg-[hsl(var(--component-background))]">
+          <div className="grid grid-cols-5 px-4 py-2 text-sm font-medium border-b text-muted-foreground">
+            <div className="w-[180px]">Pair</div>
+            <div className="w-[140px]">Market Price</div>
+            <div className="w-[140px]">Long Liquidity</div>
+            <div className="w-[140px]">Short Liquidity</div>
+            <div className="w-[140px]">Funding Rate</div>
+          </div>
           {allMarkets.map((market) => (
             <SelectItem
               key={market.pair}
               value={market.pair}
-              className="py-1.5 hover:bg-muted/60 cursor-pointer"
+              className="px-4 py-2 cursor-pointer hover:bg-muted/60"
             >
-              <div className="flex items-center text-sm">
-                <div className="flex items-center min-w-[150px]">
+              <div className="grid items-center grid-cols-5 text-sm">
+                <div className="w-[180px]">
                   <TokenPairDisplay pair={market.pair} />
-                  <span className="ml-2">{formatPrice(market.pair)}</span>
                 </div>
-                <div className="text-muted-foreground">
-                  Long: ${formatNumber(market.availableLiquidity.long)} Short: $
-                  {formatNumber(market.availableLiquidity.short)} Funding:{" "}
+                <div className="w-[140px]">{formatPrice(market.pair)}</div>
+                <div className="w-[140px]">${formatNumber(market.availableLiquidity.long)}</div>
+                <div className="w-[140px]">${formatNumber(market.availableLiquidity.short)}</div>
+                <div className="w-[140px]">
                   <span
                     className={cn(
                       market.fundingRate > 0
