@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { useMoltenStaking } from "@/hooks/use-molten-staking"
 import { useState } from "react"
 
 interface ActionsCardProps {
@@ -9,17 +10,25 @@ interface ActionsCardProps {
 }
 
 export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
-  const [amount, setAmount] = useState<string>("")
-
-  return (
-    <Card className="bg-[#16161D] border-[#1b1b22]">
+    const [amount, setAmount] = useState<string>("")
+    const { stakingData } = useMoltenStaking()
+  
+    const handleMax = () => {
+        if (stakingData) {
+          // Use full precision values for MAX
+          setAmount(isStaking ? stakingData.formattedWalletBalance : stakingData.formattedStakedBalance)
+        }
+      }
+  
+    return (
+      <Card className="bg-[#16161D] border-[#1b1b22]">
       <CardHeader>
         <CardTitle className="text-white">Actions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex gap-4">
           <div className="relative flex-1">
-            <Input
+          <Input
               type="number"
               placeholder="Enter amount"
               value={amount}
@@ -28,7 +37,7 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
             />
             <Button
               className="absolute right-1 top-1/2 -translate-y-1/2 h-8 bg-[#373745] hover:bg-[#474755] text-white text-xs px-2"
-              onClick={() => {}}
+              onClick={handleMax}
             >
               MAX
             </Button>
@@ -53,17 +62,17 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
           <div className="space-y-1">
             <div className="text-sm text-[#A0AEC0]">MOLTEN Staking Rewards</div>
             <div className="text-white">
-              0.00 MOLTEN <span className="text-[#A0AEC0] text-sm">($0.00)</span>
+              {stakingData?.displayEarnedBalance || '0.00'} MOLTEN
             </div>
           </div>
           <Button 
             className="bg-[#7B3FE4] hover:bg-[#6B2FD4] text-white"
+            disabled={!stakingData?.earnedBalance || stakingData.earnedBalance <= 0n}
             onClick={() => {}}
           >
             Claim Rewards
           </Button>
         </div>
-
       </CardContent>
     </Card>
   )
