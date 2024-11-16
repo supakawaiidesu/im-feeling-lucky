@@ -75,6 +75,13 @@ const STAKING_ABI = [
         stateMutability: 'nonpayable',
         inputs: [{ name: 'amount', type: 'uint256' }],
         outputs: []
+    },
+    {
+        name: 'totalSupply',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [{ type: 'uint256' }]
     }
 ] as const
 
@@ -97,6 +104,9 @@ export interface MoltenStakingData {
     displayStakedBalance: string
     displayEarnedBalance: string
     allowance: bigint
+    totalStaked: bigint
+    formattedTotalStaked: string
+    percentageStaked: string
 }
 
 
@@ -111,7 +121,7 @@ export function useMoltenStaking() {
         if (!eoaAddress || !publicClient) return
         setIsLoading(true)
         try {
-            const [walletBalance, stakedBalance, earnedBalance, allowance] = await publicClient.multicall({
+            const [walletBalance, stakedBalance, earnedBalance, allowance, totalStaked] = await publicClient.multicall({
                 contracts: [
                     {
                         address: MOLTEN_TOKEN,
@@ -136,12 +146,19 @@ export function useMoltenStaking() {
                         abi: TOKEN_ABI,
                         functionName: 'allowance',
                         args: [eoaAddress, MOLTEN_STAKING]
+                    },
+                    {
+                        address: MOLTEN_STAKING,
+                        abi: STAKING_ABI,
+                        functionName: 'totalSupply'
                     }
                 ]
             })
             const formattedWalletBalance = formatUnits(walletBalance.result || BigInt(0), 18)
             const formattedStakedBalance = formatUnits(stakedBalance.result || BigInt(0), 18)
             const formattedEarnedBalance = formatUnits(earnedBalance.result || BigInt(0), 18)
+            const formattedTotalStaked = formatUnits(totalStaked.result || BigInt(0), 18)
+            const percentageStaked = ((Number(totalStaked.result || BigInt(0)) / 10**18) / 3900000 * 100).toFixed(2)
 
             setStakingData({
                 walletBalance: walletBalance.result || BigInt(0),
@@ -153,7 +170,10 @@ export function useMoltenStaking() {
                 displayWalletBalance: formatDisplayValue(formattedWalletBalance),
                 displayStakedBalance: formatDisplayValue(formattedStakedBalance),
                 displayEarnedBalance: formatDisplayValue(formattedEarnedBalance),
-                allowance: allowance.result || BigInt(0)
+                allowance: allowance.result || BigInt(0),
+                totalStaked: totalStaked.result || BigInt(0),
+                formattedTotalStaked,
+                percentageStaked
             })
             setIsError(false)
         } catch (error) {

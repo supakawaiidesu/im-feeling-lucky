@@ -4,8 +4,9 @@ import { useState } from "react"
 import { Header } from "../../shared/Header"
 import { PositionCard } from "./PositionCard"
 import { ActionsCard } from "./ActionsCard"
-import { Button } from "@/components/ui/button"
-import { ArrowUpRight } from 'lucide-react'
+import { StatsBar } from "./StatsBar"
+import { StatsActions } from "./StatsActions"
+import { StatsDisplay } from "./StatsDisplay"
 
 export function StakingMOLTEN() {
   const [isStaking, setIsStaking] = useState(false)
@@ -15,49 +16,19 @@ export function StakingMOLTEN() {
       <Header />
       <div className="min-h-screen bg-[#0b0b0e] text-white p-6">
         <div className="max-w-6xl mx-auto space-y-6">
-          {/* Header */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-            </div>
+            <div className="flex items-center gap-2" />
             <h1 className="text-2xl font-semibold text-white">MOLTEN Staking</h1>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-6">
-              <div className="flex flex-wrap gap-8">
-                <div className="space-y-1">
-                  <div className="text-sm text-[#A0AEC0]">Total Staked</div>
-                  <div className="text-xl text-white">
-                    1.6M <span className="text-[#A0AEC0] text-sm">MOLTEN</span>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-sm text-[#A0AEC0]">% of Circ. Supply</div>
-                  <div className="text-xl text-white">49.14%</div>
-                </div>
-              </div>
+              <StatsDisplay />
               <PositionCard />
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap gap-8">
-                  <div className="space-y-1">
-                    <div className="text-sm text-[#A0AEC0]">Staking APR</div>
-                    <div className="text-xl text-white text-[#00FF00]">15.00%</div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-sm text-[#A0AEC0]">Current Price</div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 bg-[#7B3FE4] rounded-full" />
-                      <span className="text-xl text-white">0.2901</span>
-                    </div>
-                  </div>
-                </div>
-                <Button className="bg-[#272734] text-white hover:bg-[#373745]">
-                  Buy MOLTEN
-                </Button>
-              </div>
+              <StatsActions />
               <ActionsCard isStaking={isStaking} setIsStaking={setIsStaking} />
             </div>
           </div>
