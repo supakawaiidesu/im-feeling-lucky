@@ -14,6 +14,26 @@ const TOKEN_ABI = [
         outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
         stateMutability: 'view',
         type: 'function'
+    },
+    {
+        inputs: [
+            { internalType: 'address', name: 'spender', type: 'address' },
+            { internalType: 'uint256', name: 'amount', type: 'uint256' }
+        ],
+        name: 'approve',
+        outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [
+            { internalType: 'address', name: 'owner', type: 'address' },
+            { internalType: 'address', name: 'spender', type: 'address' }
+        ],
+        name: 'allowance',
+        outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function'
     }
 ] as const
 
@@ -34,6 +54,27 @@ const STAKING_ABI = [
             { name: '_rewardsToken', type: 'address' }
         ],
         outputs: [{ type: 'uint256' }]
+    },
+    {
+        name: 'getReward',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [],
+        outputs: []
+    },
+    {
+        name: 'stake',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [{ name: 'amount', type: 'uint256' }],
+        outputs: []
+    },
+    {
+        name: 'withdraw',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [{ name: 'amount', type: 'uint256' }],
+        outputs: []
     }
 ] as const
 
@@ -55,6 +96,7 @@ export interface MoltenStakingData {
     displayWalletBalance: string
     displayStakedBalance: string
     displayEarnedBalance: string
+    allowance: bigint
 }
 
 
@@ -69,7 +111,7 @@ export function useMoltenStaking() {
         if (!eoaAddress || !publicClient) return
         setIsLoading(true)
         try {
-            const [walletBalance, stakedBalance, earnedBalance] = await publicClient.multicall({
+            const [walletBalance, stakedBalance, earnedBalance, allowance] = await publicClient.multicall({
                 contracts: [
                     {
                         address: MOLTEN_TOKEN,
@@ -88,6 +130,12 @@ export function useMoltenStaking() {
                         abi: STAKING_ABI,
                         functionName: 'earned',
                         args: [eoaAddress, MOLTEN_TOKEN]
+                    },
+                    {
+                        address: MOLTEN_TOKEN,
+                        abi: TOKEN_ABI,
+                        functionName: 'allowance',
+                        args: [eoaAddress, MOLTEN_STAKING]
                     }
                 ]
             })
@@ -104,7 +152,8 @@ export function useMoltenStaking() {
                 formattedEarnedBalance,
                 displayWalletBalance: formatDisplayValue(formattedWalletBalance),
                 displayStakedBalance: formatDisplayValue(formattedStakedBalance),
-                displayEarnedBalance: formatDisplayValue(formattedEarnedBalance)
+                displayEarnedBalance: formatDisplayValue(formattedEarnedBalance),
+                allowance: allowance.result || BigInt(0)
             })
             setIsError(false)
         } catch (error) {
@@ -112,6 +161,74 @@ export function useMoltenStaking() {
             setIsError(true)
         } finally {
             setIsLoading(false)
+        }
+    }
+
+    const claim = async () => {
+        if (!eoaAddress || !publicClient) return
+        try {
+            const { request } = await publicClient.simulateContract({
+                address: MOLTEN_STAKING,
+                abi: STAKING_ABI,
+                functionName: 'getReward',
+                account: eoaAddress,
+            })
+            // Need to handle the request with your wallet client
+            return request
+        } catch (error) {
+            console.error('Error claiming rewards:', error)
+            throw error
+        }
+    }
+
+    const stake = async (amount: bigint) => {
+        if (!eoaAddress || !publicClient) return
+        try {
+            const { request } = await publicClient.simulateContract({
+                address: MOLTEN_STAKING,
+                abi: STAKING_ABI,
+                functionName: 'stake',
+                account: eoaAddress,
+                args: [amount]
+            })
+            return request
+        } catch (error) {
+            console.error('Error staking:', error)
+            throw error
+        }
+    }
+
+    const withdraw = async (amount: bigint) => {
+        if (!eoaAddress || !publicClient) return
+        try {
+            const { request } = await publicClient.simulateContract({
+                address: MOLTEN_STAKING,
+                abi: STAKING_ABI,
+                functionName: 'withdraw',
+                account: eoaAddress,
+                args: [amount]
+            })
+            return request
+        } catch (error) {
+            console.error('Error withdrawing:', error)
+            throw error
+        }
+    }
+
+    const approve = async (amount: bigint) => {
+        if (!eoaAddress || !publicClient) return
+        try {
+            const { request } = await publicClient.simulateContract({
+                address: MOLTEN_TOKEN,
+                abi: TOKEN_ABI,
+                functionName: 'approve',
+                args: [MOLTEN_STAKING, amount],
+                account: eoaAddress,
+            })
+            return request
+        } catch (error) {
+            console.error('Error approving:', error)
+            throw error
         }
     }
 
@@ -125,6 +242,10 @@ export function useMoltenStaking() {
         stakingData,
         isError,
         isLoading,
-        refetch: fetchBalances
+        refetch: fetchBalances,
+        claim,
+        stake,
+        withdraw,
+        approve
     }
 }
