@@ -190,7 +190,7 @@ export function useMarketOrderActions() {
           description: "Please confirm the batched deposit and order transaction",
         });
 
-        const txHash = await kernelClient.sendTransactions({
+        await kernelClient.sendTransactions({
           transactions: [
             {
               to: USDC_TOKEN,
@@ -207,13 +207,6 @@ export function useMarketOrderActions() {
           ],
         });
 
-        toast({
-          title: "Transaction Sent",
-          description: "Waiting for confirmation...",
-        });
-
-        await kernelClient.waitForTransactionReceipt({ hash: txHash });
-
       } else {
         // Just place the order
         toast({
@@ -221,17 +214,10 @@ export function useMarketOrderActions() {
           description: "Please confirm the transaction in your wallet",
         });
 
-        const tx = await kernelClient.sendTransaction({
+        await kernelClient.sendTransaction({
           to: orderData.vaultAddress,
           data: orderData.calldata,
         });
-
-        toast({
-          title: "Transaction Sent",
-          description: "Waiting for confirmation...",
-        });
-
-        await kernelClient.waitForTransactionReceipt({ hash: tx });
       }
 
       toast({

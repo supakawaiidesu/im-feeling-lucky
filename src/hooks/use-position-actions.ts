@@ -77,17 +77,10 @@ export function usePositionActions() {
         description: "Please confirm the transaction in your wallet",
       });
 
-      const tx = await kernelClient.sendTransaction({
+      await kernelClient.sendTransaction({
         to: data.vaultAddress,
         data: data.calldata,
       });
-
-      toast({
-        title: "Transaction Sent",
-        description: "Waiting for confirmation...",
-      });
-
-      await kernelClient.waitForTransactionReceipt({ hash: tx });
 
       toast({
         title: "Success",
@@ -165,17 +158,10 @@ export function usePositionActions() {
         description: "Please confirm the transaction in your wallet",
       });
 
-      const tx = await kernelClient.sendTransaction({
+      await kernelClient.sendTransaction({
         to: data.vaultAddress,
         data: data.calldata,
       });
-
-      toast({
-        title: "Transaction Sent",
-        description: "Waiting for confirmation...",
-      });
-
-      await kernelClient.waitForTransactionReceipt({ hash: tx });
 
       toast({
         title: "Success",
@@ -193,6 +179,7 @@ export function usePositionActions() {
       setSettingTPSL(prev => ({ ...prev, [positionId]: false }));
     }
   };
+
   const modifyCollateral = async (
     positionId: number,
     amount: number,
@@ -239,17 +226,10 @@ export function usePositionActions() {
         description: "Please confirm the transaction in your wallet",
       });
 
-      const tx = await kernelClient.sendTransaction({
+      await kernelClient.sendTransaction({
         to: data.vaultAddress,
         data: data.calldata,
       });
-
-      toast({
-        title: "Transaction Sent",
-        description: "Waiting for confirmation...",
-      });
-
-      await kernelClient.waitForTransactionReceipt({ hash: tx });
 
       toast({
         title: "Success",
