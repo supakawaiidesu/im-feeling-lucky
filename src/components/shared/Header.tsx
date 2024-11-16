@@ -1,6 +1,7 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "../ui/button";
 import DepositBox from "../features/trading/deposit";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,13 +14,16 @@ export function Header() {
   return (
     <header className="flex items-center px-4 h-14">
       <div className="flex items-center space-x-4">
-        <span className="font-bold">UniDex</span>
+        <Link href="/" className="font-bold hover:opacity-80">UniDex</Link>
         
         {/* Desktop Navigation */}
         <nav className="items-center hidden space-x-4 md:flex">
-          <Button variant="ghost">Portfolio</Button>
-          <Button variant="ghost">Markets</Button>
-          <Button variant="ghost">Trade</Button>
+        <Link href="/">
+            <Button variant="ghost">Trade</Button>
+          </Link>
+          <Link href="/staking">
+            <Button variant="ghost">Stake</Button>
+          </Link>
         </nav>
 
         {/* Mobile Navigation */}
@@ -31,14 +35,11 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem>
-                Portfolio
+              <DropdownMenuItem asChild>
+                <Link href="/staking">Stake</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                Markets
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Trade
+              <DropdownMenuItem asChild>
+                <Link href="/">Trade</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
