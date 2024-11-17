@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useBalances } from './use-balances'
 
 const USDM_TOKEN = '0x1e0aa9b3345727979665fcc838d76324cba22253'
-const USDM_STAKING = '0x5f19704F393F983d5932b4453C6C87E85D22095E'
+const USDM_VAULT = '0x5f19704F393F983d5932b4453C6C87E85D22095E'
 const USDC_TOKEN = '0xaf88d065e77c8cc2239327c5edb3a432268e5831'
 
 const USDM_ABI = [
@@ -106,13 +106,13 @@ export function useUsdm() {
             address: USDC_TOKEN,
             abi: ERC20_ABI,
             functionName: 'allowance',
-            args: [address, USDM_STAKING],
+            args: [address, USDM_VAULT],
           },
           {
             address: USDM_TOKEN,
             abi: ERC20_ABI,
             functionName: 'allowance',
-            args: [address, USDM_STAKING],
+            args: [address, USDM_VAULT],
           },
           {
             address: USDM_TOKEN,
@@ -121,13 +121,13 @@ export function useUsdm() {
             args: [address],
           },
           {
-            address: USDM_STAKING,
+            address: USDM_VAULT,
             abi: USDM_ABI,
             functionName: 'getUSDMPrice',
             args: [],
           },
           {
-            address: USDM_STAKING,
+            address: USDM_VAULT,
             abi: USDM_ABI,
             functionName: 'getVaultUSDBalance',
             args: [],
@@ -168,7 +168,7 @@ export function useUsdm() {
         address: USDC_TOKEN,
         abi: ERC20_ABI,
         functionName: 'approve',
-        args: [USDM_STAKING, amount],
+        args: [USDM_VAULT, amount],
         account: address,
       })
       return request
@@ -185,7 +185,7 @@ export function useUsdm() {
         address: USDM_TOKEN,
         abi: ERC20_ABI,
         functionName: 'approve',
-        args: [USDM_STAKING, amount],
+        args: [USDM_VAULT, amount],
         account: address,
       })
       return request
@@ -199,7 +199,7 @@ export function useUsdm() {
     if (!address || !publicClient) return
     try {
       const { request } = await publicClient.simulateContract({
-        address: USDM_STAKING,
+        address: USDM_VAULT,
         abi: USDM_ABI,
         functionName: 'stake',
         args: [address, USDC_TOKEN, amount],
@@ -216,7 +216,7 @@ export function useUsdm() {
     if (!address || !publicClient) return
     try {
       const { request } = await publicClient.simulateContract({
-        address: USDM_STAKING,
+        address: USDM_VAULT,
         abi: USDM_ABI,
         functionName: 'unstake',
         args: [USDC_TOKEN, amount],

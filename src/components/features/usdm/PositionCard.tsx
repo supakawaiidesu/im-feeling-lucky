@@ -1,10 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useMoltenStaking } from "@/hooks/use-molten-staking"
+import { useUsdmStaking } from "@/hooks/use-usdm-staking"
 import { useMoltenStats } from "@/hooks/use-molten-stats"
 import { useUsdm } from "@/hooks/use-usdm"
 
 export function PositionCard() {
-  const { stakingData } = useMoltenStaking()
+  const { stakingData: moltenStakingData } = useMoltenStaking()
+  const { stakingData: usdmStakingData } = useUsdmStaking()
   const { stats } = useMoltenStats()
   const { usdmData } = useUsdm()
   
@@ -40,15 +42,17 @@ export function PositionCard() {
           <div className="flex justify-between text-sm">
             <span className="text-[#A0AEC0]">Amount Staked</span>
             <span className="text-white">
-              {stakingData?.displayStakedBalance || '0.00'} MOLTEN {' '}
-              <span className="text-[#A0AEC0]">{formatUsdValue(stakingData?.displayStakedBalance || '0')}</span>
+              {usdmStakingData?.displayStakedBalance || '0.00'} USD.m {' '}
+              <span className="text-[#A0AEC0]">
+                (${((parseFloat(usdmStakingData?.formattedStakedBalance || '0') * parseFloat(usdmData?.formattedUsdmPrice || '0')).toFixed(2))})
+              </span>
             </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-[#A0AEC0]">Vesting Rewards</span>
             <span className="text-[#00FF00]">
-              {stakingData?.displayEarnedBalance || '0.00'} MOLTEN {' '}
-              <span className="text-[#A0AEC0]">{formatUsdValue(stakingData?.displayEarnedBalance || '0')}</span>
+              {moltenStakingData?.displayEarnedBalance || '0.00'} esMOLTEN {' '}
+              <span className="text-[#A0AEC0]">{formatUsdValue(moltenStakingData?.formattedEarnedBalance || '0')}</span>
             </span>
           </div>
           <div className="flex justify-between text-sm">
