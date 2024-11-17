@@ -14,7 +14,7 @@ The MOLTEN staking module provides a staking interface with real-time statistics
 - Displays key metrics about the staking pool
 - Uses molten-stats and molten-staking hooks for data
 
-### StakingMOLTEN/StatsBar & StatsActions
+### StakingMOLTEN/StatsActions
 - Displays APR, current price, and total staked amounts
 - Provides quick access to buy MOLTEN token
 - Shows real-time price and APR information
