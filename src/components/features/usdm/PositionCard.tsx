@@ -1,10 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useMoltenStaking } from "@/hooks/use-molten-staking"
 import { useMoltenStats } from "@/hooks/use-molten-stats"
+import { useUsdm } from "@/hooks/use-usdm"
 
 export function PositionCard() {
-  const { stakingData, isLoading } = useMoltenStaking()
+  const { stakingData } = useMoltenStaking()
   const { stats } = useMoltenStats()
+  const { usdmData } = useUsdm()
   
   const formatUsdValue = (moltenAmount: string) => {
     if (!stats?.price) return '($0.00)'
@@ -13,8 +15,11 @@ export function PositionCard() {
   }
 
   const calculateShareOfPool = () => {
-    if (!stakingData?.stakedBalance || !stakingData?.totalStaked || stakingData.totalStaked === BigInt(0)) return '0'
-    return ((Number(stakingData.stakedBalance) / Number(stakingData.totalStaked)) * 100).toFixed(2)
+    if (!usdmData?.formattedUsdmBalance || !usdmData?.formattedVaultBalance) return '0'
+    const userUsdValue = parseFloat(usdmData.formattedUsdmBalance) * parseFloat(usdmData.formattedUsdmPrice)
+    const totalVaultValue = parseFloat(usdmData.formattedVaultBalance)
+    if (totalVaultValue === 0) return '0'
+    return ((userUsdValue / totalVaultValue) * 100).toFixed(2)
   }
   
   return (
@@ -26,8 +31,8 @@ export function PositionCard() {
         <div className="space-y-2">
           <div className="text-[#A0AEC0] text-sm">Wallet Balance</div>
           <div className="text-2xl text-white">
-            {stakingData?.displayWalletBalance || '0.00'} <span className="text-[#A0AEC0] text-sm">USD.m</span>{' '}
-            <span className="text-[#A0AEC0] text-sm">{formatUsdValue(stakingData?.displayWalletBalance || '0')}</span>
+            {usdmData?.displayUsdmBalance || '0.00'} <span className="text-[#A0AEC0] text-sm">USD.m</span>{' '}
+            <span className="text-[#A0AEC0] text-sm">{formatUsdValue(usdmData?.formattedUsdmBalance || '0')}</span>
           </div>
         </div>
         <div className="border-t border-[#272734]" />

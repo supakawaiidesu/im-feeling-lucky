@@ -1,7 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDown, X } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
+import { useWalletClient } from 'wagmi'
+import { parseUnits } from 'viem'
+import { useUsdm } from "@/hooks/use-usdm"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -17,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useUsdcPrice } from "@/hooks/use-usdc-price"
 
 interface ActionsCardProps {
   isStaking: boolean
@@ -24,9 +28,144 @@ interface ActionsCardProps {
 }
 
 export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
-  const [amount, setAmount] = React.useState("100")
+  const [amount, setAmount] = React.useState("")
   const [isOpen, setIsOpen] = React.useState(true)
   const [action, setAction] = React.useState<'mint' | 'burn'>('mint')
+  const { data: walletClient } = useWalletClient()
+  const { 
+    usdmData,
+    approveUsdc,
+    approveUsdm,
+    mint,
+    burn,
+    refetch,
+    usdcBalance, // Add this
+    usdcBalanceRaw // Add this
+  } = useUsdm()
+  const { price: usdcPrice } = useUsdcPrice()
+
+  const handleTransaction = async () => {
+    if (!walletClient || !amount) return
+
+    try {
+      const parsedAmount = parseUnits(amount, 6) // USDC has 6 decimals
+      
+      if (action === 'mint') {
+        // Check if we need approval for USDC
+        if (usdmData && parsedAmount > usdmData.usdcAllowance) {
+          const request = await approveUsdc(parsedAmount)
+          if (request) {
+            await walletClient.writeContract(request)
+            await new Promise(r => setTimeout(r, 2000)) // Wait for allowance update
+            await refetch()
+          }
+          return
+        }
+        
+        // If approved, proceed with mint
+        const request = await mint(parsedAmount)
+        if (request) {
+          await walletClient.writeContract(request)
+          setAmount("")
+        }
+      } else {
+        // Check if we need approval for USDM
+        if (usdmData && parsedAmount > usdmData.usdmAllowance) {
+          const request = await approveUsdm(parsedAmount)
+          if (request) {
+            await walletClient.writeContract(request)
+            await new Promise(r => setTimeout(r, 2000)) // Wait for allowance update
+            await refetch()
+          }
+          return
+        }
+        
+        // If approved, proceed with burn
+        const request = await burn(parsedAmount)
+        if (request) {
+          await walletClient.writeContract(request)
+          setAmount("")
+        }
+      }
+    } catch (error) {
+      console.error('Transaction failed:', error)
+    }
+  }
+
+  const needsApproval = () => {
+    if (!amount || !usdmData) return false
+    try {
+      const parsedAmount = parseUnits(amount, 6)
+      return action === 'mint' 
+        ? parsedAmount > usdmData.usdcAllowance
+        : parsedAmount > usdmData.usdmAllowance
+    } catch {
+      return false
+    }
+  }
+
+  // Update the button text based on action and approval status
+  const getButtonText = () => {
+    if (needsApproval()) {
+      return action === 'mint' ? 'Approve USDC' : 'Approve USD.m'
+    }
+    return action === 'mint' ? 'Mint USD.m' : 'Burn USD.m'
+  }
+
+  // Fix: Update getAvailableBalance to use correct balance
+  const getAvailableBalance = () => {
+    if (action === 'mint') {
+      return `Available: ${usdcBalance} USDC`
+    }
+    return `Available: ${usdmData?.displayUsdmBalance || '0.00'} USD.m`
+  }
+
+  // Add: Handle max button click
+  const handleMaxClick = () => {
+    if (action === 'mint') {
+      setAmount(usdcBalance)
+    } else {
+      setAmount(usdmData?.displayUsdmBalance || '0')
+    }
+  }
+
+  // Add: Validate transaction
+  const canSubmit = () => {
+    if (!amount || amount === '0') return false
+    try {
+      const parsedAmount = parseUnits(amount, 6)
+      if (action === 'mint') {
+        return parsedAmount <= usdcBalanceRaw
+      } else {
+        return parsedAmount <= (usdmData?.usdmBalance || BigInt(0))
+      }
+    } catch {
+      return false
+    }
+  }
+
+  // Update percentage buttons to work
+  const handlePercentageClick = (percentage: number) => {
+    if (action === 'mint') {
+      const value = (Number(usdcBalance) * percentage).toFixed(6)
+      setAmount(value)
+    } else {
+      const value = (Number(usdmData?.formattedUsdmBalance || 0) * percentage).toFixed(18)
+      setAmount(value)
+    }
+  }
+
+  const calculateUsdValue = (inputAmount: string) => {
+    if (!inputAmount) return '0.00'
+    
+    // Use USDC price when minting, USD.m price when burning
+    const price = action === 'mint' 
+      ? usdcPrice 
+      : Number(usdmData?.formattedUsdmPrice || 0)
+      
+    const usdValue = Number(inputAmount) * price
+    return usdValue.toFixed(2)
+  }
 
   return (
     <Card className="w-full bg-[#1C1C1F] text-white border-none">
@@ -85,32 +224,27 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
                   placeholder="0.00"
                 />
                 <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
-                  ~ ${amount}
+                  ~${calculateUsdValue(amount)}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mb-4 text-gray-400">Available: 0.00</div>
+          <div className="mb-4 text-gray-400">
+            {getAvailableBalance()}
+          </div>
 
           <div className="grid grid-cols-4 gap-2 mb-6">
-            {["25%", "50%", "75%", "100%"].map((percent) => (
+            {["25", "50", "75", "100"].map((percent) => (
               <Button
                 key={percent}
                 variant="outline"
                 className="bg-[#2C2C30] border-0 hover:bg-[#3C3C40]"
+                onClick={() => handlePercentageClick(Number(percent) / 100)}
               >
-                {percent}
+                {percent}%
               </Button>
             ))}
-          </div>
-
-          <div className="bg-[#2C2C30] rounded-lg p-4 mb-6">
-            <p className="text-gray-200">
-              {action === 'mint'
-                ? 'Approval for USDC is required. You will need to deposit after the approval transaction is confirmed.'
-                : 'Burning USD.m will return USDC to your wallet.'}
-            </p>
           </div>
 
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -131,8 +265,12 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
             </CollapsibleContent>
           </Collapsible>
 
-          <Button className="w-full h-14 mt-6 bg-[#7C5CFF] hover:bg-[#6B4FE0] text-lg">
-            {action === 'mint' ? 'Approve' : 'Burn USD.m'}
+          <Button 
+            className="w-full h-14 mt-6 bg-[#7C5CFF] hover:bg-[#6B4FE0] text-lg"
+            onClick={handleTransaction}
+            disabled={!canSubmit()}
+          >
+            {getButtonText()}
           </Button>
         </div>
       </CardContent>
