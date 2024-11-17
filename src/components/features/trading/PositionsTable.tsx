@@ -68,36 +68,6 @@ export function PositionsTable({ address }: PositionsTableProps) {
     );
   };
 
-  const renderTableContent = () => {
-    switch (activeTab) {
-      case "positions":
-        return (
-          <PositionsContent
-            positions={positions}
-            triggerOrders={triggerOrders}
-            loading={positionsLoading}
-            error={positionsError}
-            closingPositions={closingPositions}
-            handleClosePosition={handleClosePosition}
-            setRef={setRef}
-            handleMouseEnter={handleMouseEnter}
-            setHoveredPosition={setHoveredPosition}
-          />
-        );
-      case "orders":
-        return (
-          <OrdersContent
-            orders={orders}
-            triggerOrders={triggerOrders}
-            loading={ordersLoading}
-            error={ordersError}
-          />
-        );
-      case "trades":
-        return <TradesContent />;
-    }
-  };
-
   return (
     <div className="w-full mb-4 border rounded-lg bg-[hsl(var(--component-background))]">
       <div className="flex items-center p-2 border-b">
@@ -125,7 +95,32 @@ export function PositionsTable({ address }: PositionsTableProps) {
       </div>
       <div className="w-full overflow-x-auto">
         <div style={{ minWidth: "1240px" }}>
-          <Table>{renderTableContent()}</Table>
+          <Table>
+            <div style={{ display: activeTab === "positions" ? "contents" : "none" }}>
+              <PositionsContent
+                positions={positions}
+                triggerOrders={triggerOrders}
+                loading={positionsLoading}
+                error={positionsError}
+                closingPositions={closingPositions}
+                handleClosePosition={handleClosePosition}
+                setRef={setRef}
+                handleMouseEnter={handleMouseEnter}
+                setHoveredPosition={setHoveredPosition}
+              />
+            </div>
+            <div style={{ display: activeTab === "orders" ? "contents" : "none" }}>
+              <OrdersContent
+                orders={orders}
+                triggerOrders={triggerOrders}
+                loading={ordersLoading}
+                error={ordersError}
+              />
+            </div>
+            <div style={{ display: activeTab === "trades" ? "contents" : "none" }}>
+              <TradesContent />
+            </div>
+          </Table>
         </div>
       </div>
 
