@@ -1,6 +1,8 @@
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../ui/table";
 import { useTradeHistory } from "../../../../hooks/use-trade-history";
 import { Bitcoin } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../ui/tooltip";
+import { useMemo } from 'react';
 
 interface TradeHistory {
   pair: string;
@@ -13,8 +15,46 @@ interface TradeHistory {
   date: string;
 }
 
+const formatShortDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return {
+    date: new Intl.DateTimeFormat('en-US', {
+      month: 'numeric',
+      day: 'numeric',
+      year: '2-digit'
+    }).format(date),
+    time: new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    }).format(date)
+  };
+};
+
+const formatFullDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: true
+  }).format(date);
+};
+
 export function TradesContent() {
   const { trades, loading, error } = useTradeHistory();
+  
+  const formattedTrades = useMemo(() => 
+    trades.map(trade => ({
+      ...trade,
+      shortDate: formatShortDate(trade.date),
+      fullDate: formatFullDate(trade.date)
+    })), 
+    [trades]
+  );
 
   const formatNumber = (value: string) => {
     return Number(value).toLocaleString('en-US', {
@@ -56,7 +96,7 @@ export function TradesContent() {
             <TableCell colSpan={7} className="text-center">No trade history</TableCell>
           </TableRow>
         ) : (
-          trades.map((trade: TradeHistory, index) => (
+          formattedTrades.map((trade, index) => (
             <TableRow key={index}>
               <TableCell>
                 <div>{trade.pair}</div>
@@ -64,7 +104,19 @@ export function TradesContent() {
                   {(parseFloat(trade.size) / parseFloat(trade.margin)).toFixed(1)}x {trade.isLong ? "Long" : "Short"}
                 </div>
               </TableCell>
-              <TableCell>{trade.date}</TableCell>
+              <TableCell>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="flex flex-col">
+                      <span>{formatShortDate(trade.date).date}</span>
+                      <span className="text-xs text-zinc-400">{formatShortDate(trade.date).time}</span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {trade.fullDate}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
               <TableCell>
                 <div className="flex flex-col">
                   <span>${formatNumber(trade.size)}</span>
