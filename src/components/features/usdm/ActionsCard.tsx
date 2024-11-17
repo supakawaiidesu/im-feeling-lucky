@@ -48,40 +48,40 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
     if (!walletClient || !amount) return
 
     try {
-      const parsedAmount = parseUnits(amount, 6) // USDC has 6 decimals
-      
       if (action === 'mint') {
-        // Check if we need approval for USDC
+        const parsedAmount = parseUnits(amount, 6) // USDC has 6 decimals
         if (usdmData && parsedAmount > usdmData.usdcAllowance) {
           const request = await approveUsdc(parsedAmount)
           if (request) {
             await walletClient.writeContract(request)
-            await new Promise(r => setTimeout(r, 2000)) // Wait for allowance update
+            await new Promise(r => setTimeout(r, 2000))
             await refetch()
           }
           return
         }
         
-        // If approved, proceed with mint
         const request = await mint(parsedAmount)
         if (request) {
           await walletClient.writeContract(request)
           setAmount("")
         }
       } else {
-        // Check if we need approval for USDM
-        if (usdmData && parsedAmount > usdmData.usdmAllowance) {
-          const request = await approveUsdm(parsedAmount)
+        // For approvals, use 18 decimals (ERC20 standard)
+        const approvalAmount = parseUnits(amount, 18)
+        // For burning, use 30 decimals (vault requirement)
+        const burnAmount = parseUnits(amount, 18)
+
+        if (usdmData && approvalAmount > usdmData.usdmAllowance) {
+          const request = await approveUsdm(approvalAmount)
           if (request) {
             await walletClient.writeContract(request)
-            await new Promise(r => setTimeout(r, 2000)) // Wait for allowance update
+            await new Promise(r => setTimeout(r, 2000))
             await refetch()
           }
           return
         }
         
-        // If approved, proceed with burn
-        const request = await burn(parsedAmount)
+        const request = await burn(burnAmount)
         if (request) {
           await walletClient.writeContract(request)
           setAmount("")
@@ -95,7 +95,9 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
   const needsApproval = () => {
     if (!amount || !usdmData) return false
     try {
-      const parsedAmount = parseUnits(amount, 6)
+      const parsedAmount = action === 'mint'
+        ? parseUnits(amount, 6)
+        : parseUnits(amount, 18) // Use 18 decimals for USD.m approvals
       return action === 'mint' 
         ? parsedAmount > usdmData.usdcAllowance
         : parsedAmount > usdmData.usdmAllowance
@@ -129,14 +131,16 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
     }
   }
 
-  // Add: Validate transaction
+  // Update canSubmit function to use correct decimal places for validation
   const canSubmit = () => {
     if (!amount || amount === '0') return false
     try {
-      const parsedAmount = parseUnits(amount, 6)
       if (action === 'mint') {
+        const parsedAmount = parseUnits(amount, 6)
         return parsedAmount <= usdcBalanceRaw
       } else {
+        // Use 18 decimals when checking USD.m balance
+        const parsedAmount = parseUnits(amount, 18)
         return parsedAmount <= (usdmData?.usdmBalance || BigInt(0))
       }
     } catch {
@@ -150,7 +154,8 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
       const value = (Number(usdcBalance) * percentage).toFixed(6)
       setAmount(value)
     } else {
-      const value = (Number(usdmData?.formattedUsdmBalance || 0) * percentage).toFixed(18)
+      // Update to show fewer decimal places for USD.m
+      const value = (Number(usdmData?.formattedUsdmBalance || 0) * percentage).toFixed(6)
       setAmount(value)
     }
   }
@@ -165,6 +170,42 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
       
     const usdValue = Number(inputAmount) * price
     return usdValue.toFixed(2)
+  }
+
+  // Update calculate output amount to account for fees
+  const calculateOutputAmount = (inputAmount: string) => {
+    if (!inputAmount || !usdmData) return '0.00'
+    try {
+      const input = Number(inputAmount)
+      const fee = input * 0.0025 // 0.25% fee
+      const amountAfterFees = input - fee
+      const usdmPrice = Number(usdmData.formattedUsdmPrice)
+
+      if (action === 'mint') {
+        // When minting: (USDC amount - fees) / USDM price
+        // Example: 9.975 USDC / 1.03847 = 9.6054 USDM
+        return (amountAfterFees / usdmPrice).toFixed(6)
+      } else {
+        // When burning: (USDM amount - fees) * USDM price
+        // Example: If burning 10 USDM with 1.03847 price
+        // 9.975 USDM * 1.03847 = 10.35873 USDC
+        return (amountAfterFees * usdmPrice).toFixed(6)
+      }
+    } catch {
+      return '0.00'
+    }
+  }
+
+  // Update the fee calculation to show 2 decimal places
+  const calculateFees = (inputAmount: string) => {
+    if (!inputAmount) return '0.00'
+    try {
+      const input = Number(inputAmount)
+      const fee = input * 0.0025 // 0.25%
+      return fee.toFixed(2) // Changed from toFixed(6) to toFixed(2)
+    } catch {
+      return '0.00'
+    }
   }
 
   return (
@@ -247,13 +288,22 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
               <ChevronDown className={`h-5 w-5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="bg-[#272734] rounded-lg mt-px p-4">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Balance</span>
-                <div className="flex items-center gap-2">
-                  <span>0.00</span>
-                  <span className="text-gray-400">→</span>
-                  <span>{amount}</span>
-                  <span className="text-gray-400">{action === 'mint' ? 'USD.m' : 'USDC'}</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Balance</span>
+                  <div className="flex items-center gap-2">
+                    <span>0.00</span>
+                    <span className="text-gray-400">→</span>
+                    <span>{amount ? calculateOutputAmount(amount) : '0.00'}</span>
+                    <span className="text-gray-400">{action === 'mint' ? 'USD.m' : 'USDC'}</span>
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Fees (0.25%)</span>
+                  <div className="flex items-center gap-2">
+                    <span>{amount ? calculateFees(amount) : '0.00'}</span>
+                    <span className="text-gray-400">{action === 'mint' ? 'USDC' : 'USD.m'}</span>
+                  </div>
                 </div>
               </div>
             </CollapsibleContent>
