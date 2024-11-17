@@ -18,11 +18,14 @@ export function Header() {
         
         {/* Desktop Navigation */}
         <nav className="items-center hidden space-x-4 md:flex">
-        <Link href="/">
+          <Link href="/">
             <Button variant="ghost">Trade</Button>
           </Link>
           <Link href="/staking">
             <Button variant="ghost">Stake</Button>
+          </Link>
+          <Link href="/usdm">
+            <Button variant="ghost">USD.m</Button>
           </Link>
         </nav>
 
@@ -40,6 +43,9 @@ export function Header() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/">Trade</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/usdm">USD.m</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
