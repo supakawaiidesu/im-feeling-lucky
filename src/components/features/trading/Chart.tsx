@@ -154,7 +154,7 @@ export function Chart({ selectedPair = "ETH/USD" }: ChartProps) {
   return (
     <div
       id="tv_chart_container"
-      className="absolute inset-0 w-full h-full"
+      className="absolute inset-0 w-full h-full overflow-hidden rounded-xl"
     />
   );
 }
