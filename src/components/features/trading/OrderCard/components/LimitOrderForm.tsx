@@ -9,12 +9,14 @@ interface LimitOrderFormProps {
   formState: OrderFormState;
   calculatedMargin: number;
   handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleMarginChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleLimitPriceChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSliderChange: (value: number[]) => void;
   toggleTPSL: () => void;
-  handleTakeProfitChange: (value: string) => void; // Updated
-  handleStopLossChange: (value: string) => void; // Updated
-  handleMarginChange: (e: React.ChangeEvent<HTMLInputElement>) => void; // Add this
+  handleTakeProfitChange: (value: string) => void;
+  handleStopLossChange: (value: string) => void;
+  leverage: string;
+  onLeverageChange: (value: string) => void;
 }
 
 export function LimitOrderForm({
@@ -27,6 +29,8 @@ export function LimitOrderForm({
   toggleTPSL,
   handleTakeProfitChange,
   handleStopLossChange,
+  leverage,
+  onLeverageChange,
 }: LimitOrderFormProps) {
   return (
     <div className="space-y-4">
@@ -35,10 +39,11 @@ export function LimitOrderForm({
           <Input
             type="number"
             placeholder="0.00"
-            value={formState.amount}
+            value={formState.amount || ''}
             onChange={handleAmountChange}
             className="text-right pr-7"
             label="Size"
+            suppressHydrationWarning
           />
           <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
             USD
@@ -48,10 +53,11 @@ export function LimitOrderForm({
           <Input
             type="number"
             placeholder="0.00"
-            value={formState.limitPrice}
+            value={formState.limitPrice || ''}
             onChange={handleLimitPriceChange}
             className="text-right pr-7"
             label="Limit Price"
+            suppressHydrationWarning
           />
           <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
             USD
@@ -61,10 +67,11 @@ export function LimitOrderForm({
           <Input
             type="number"
             placeholder="0.00"
-            value={calculatedMargin.toFixed(2)}
+            value={calculatedMargin ? calculatedMargin.toFixed(2) : ''}
             onChange={handleMarginChange}
             className="text-right pr-7"
             label="Margin"
+            suppressHydrationWarning
           />
           <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
             USD
@@ -104,29 +111,40 @@ export function LimitOrderForm({
             100%
           </Button>
         </div>
-        <div className="relative">
-          <Input
-            type="number"
-            placeholder="0"
-            onChange={(e) => {
-              const value = Math.floor(Number(e.target.value));
-              if (!isNaN(value) && value >= 0 && value <= 100) {
-                handleSliderChange([value]);
-              }
-            }}
-            onBlur={(e) => {
-              const value = Math.floor(Number(e.target.value));
-              if (isNaN(value) || value < 0) e.target.value = "0";
-              if (value > 100) e.target.value = "100";
-            }}
-            min="0"
-            max="100"
-            step="1"
-            className="w-full pr-6 text-xs text-right h-9"
-          />
-          <span className="absolute text-xs -translate-y-1/2 right-2 top-1/2 text-muted-foreground pointer-events-none">
-            %
-          </span>
+
+
+        <div className="pt-2 space-y-4"> {/* Changed from space-y-2 */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Leverage:</span>
+            <div className="relative w-16">
+              <Input
+                type="number"
+                value={leverage || ''}
+                onChange={(e) => {
+                  const value = Math.min(Math.max(1, Number(e.target.value)), 100);
+                  onLeverageChange(value.toString());
+                }}
+                className="text-sm text-center h-9 no-spinners" // Changed text-right to text-center
+                suppressHydrationWarning
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Slider
+              value={[Number(leverage)]}
+              min={1}
+              max={100}
+              step={1}
+              onValueChange={(value) => onLeverageChange(value[0].toString())}
+            />
+            <div className="flex justify-between px-1 text-xs text-muted-foreground">
+              <span>1x</span>
+              <span>25x</span>
+              <span>50x</span>
+              <span>75x</span>
+              <span>100x</span>
+            </div>
+          </div>
         </div>
 
         {/* TP/SL Section */}
@@ -135,7 +153,7 @@ export function LimitOrderForm({
           takeProfit={formState.takeProfit}
           stopLoss={formState.stopLoss}
           entryPrice={Number(formState.limitPrice) || 0}
-          isLong={formState.isLong} // Add this line
+          isLong={formState.isLong}
           onTakeProfitChange={handleTakeProfitChange}
           onStopLossChange={handleStopLossChange}
           toggleTPSL={toggleTPSL}

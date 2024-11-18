@@ -8,7 +8,6 @@ import { useMarketOrderActions } from "../../../../hooks/use-market-order-action
 import { useSmartAccount } from "../../../../hooks/use-smart-account";
 import { useMarketData } from "../../../../hooks/use-market-data";
 import { usePrices } from "../../../../lib/websocket-price-context";
-import { LeverageDialog } from "../LeverageDialog";
 import { MarketOrderForm } from "./components/MarketOrderForm";
 import { LimitOrderForm } from "./components/LimitOrderForm";
 import { TradeDetails } from "./components/TradeDetails";
@@ -178,13 +177,6 @@ export function OrderCard({
           <div className="mb-4 text-red-500">Error: {error.message}</div>
         )}
 
-        <div className="mb-4">
-          <LeverageDialog
-            leverage={leverage}
-            onLeverageChange={onLeverageChange}
-          />
-        </div>
-
         <Tabs defaultValue="market" onValueChange={setActiveTab}>
           <div className="grid grid-cols-2 gap-2 mb-4">
             <Button
@@ -240,6 +232,8 @@ export function OrderCard({
               toggleTPSL={toggleTPSL}
               handleTakeProfitChange={(value) => handleTakeProfitChange(value)}
               handleStopLossChange={(value) => handleStopLossChange(value)}
+              leverage={leverage}
+              onLeverageChange={onLeverageChange}
             />
           </TabsContent>
 
@@ -254,6 +248,8 @@ export function OrderCard({
               toggleTPSL={toggleTPSL}
               handleTakeProfitChange={(value) => handleTakeProfitChange(value)}
               handleStopLossChange={(value) => handleStopLossChange(value)}
+              leverage={leverage}
+              onLeverageChange={onLeverageChange}
             />
           </TabsContent>
 
