@@ -26,43 +26,18 @@ interface TradeHistory {
   isLong: boolean;
 }
 
-// Cache manager for trade history
-class TradeHistoryCache {
-  private static instance: TradeHistoryCache;
-  private cache: Map<string, { trades: TradeHistory[], timestamp: number }> = new Map();
-  private static CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-  static getInstance() {
-    if (!TradeHistoryCache.instance) {
-      TradeHistoryCache.instance = new TradeHistoryCache();
-    }
-    return TradeHistoryCache.instance;
-  }
-
-  get(address: string) {
-    const cached = this.cache.get(address);
-    if (!cached) return null;
-    
-    const isExpired = Date.now() - cached.timestamp > TradeHistoryCache.CACHE_DURATION;
-    return isExpired ? null : cached.trades;
-  }
-
-  set(address: string, trades: TradeHistory[]) {
-    this.cache.set(address, { trades, timestamp: Date.now() });
-  }
-}
-
 export function useTradeHistory() {
   const { smartAccount } = useSmartAccount();
-  const cache = TradeHistoryCache.getInstance();
   
-  // Initialize with cached data if available
-  const initialCachedData = smartAccount?.address 
-    ? cache.get(getAddress(smartAccount.address))
-    : null;
+  // Get initial data from session storage
+  const getInitialData = () => {
+    if (typeof window === 'undefined') return [];
+    const sessionData = sessionStorage.getItem('tradeHistory');
+    return sessionData ? JSON.parse(sessionData) : [];
+  };
 
-  const [trades, setTrades] = useState<TradeHistory[]>(initialCachedData || []);
-  const [loading, setLoading] = useState(!initialCachedData);
+  const [trades, setTrades] = useState<TradeHistory[]>(getInitialData());
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -71,14 +46,8 @@ export function useTradeHistory() {
 
       try {
         const checksumAddress = getAddress(smartAccount.address);
-        
-        // Don't set loading true if we have cached data
-        const cachedTrades = cache.get(checksumAddress);
-        if (!cachedTrades) {
-          setLoading(true);
-        }
+        setIsLoading(true);
 
-        // Fetch new data regardless of cache to keep it updated
         const response = await fetch('https://v4-subgraph-production.up.railway.app/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -127,24 +96,27 @@ export function useTradeHistory() {
           isLong: trade.isLong
         }));
 
-        // Update cache and state only if data is different
+        // Only update if data is different
         const currentTradesStr = JSON.stringify(trades);
         const newTradesStr = JSON.stringify(formattedTrades);
         
         if (currentTradesStr !== newTradesStr) {
-          cache.set(checksumAddress, formattedTrades);
+          sessionStorage.setItem('tradeHistory', JSON.stringify(formattedTrades));
           setTrades(formattedTrades);
         }
-
-        setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to fetch trade history'));
-        setLoading(false);
+      } finally {
+        setIsLoading(false);
       }
     }
 
     fetchTrades();
   }, [smartAccount?.address]);
 
-  return { trades, loading, error };
+  return { 
+    trades, 
+    loading: isLoading && trades.length === 0, // Only show loading if we have no data
+    error 
+  };
 }

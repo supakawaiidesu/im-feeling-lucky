@@ -96,7 +96,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
       <div className="w-full overflow-x-auto">
         <div style={{ minWidth: "1240px" }}>
           <Table>
-            <div style={{ display: activeTab === "positions" ? "contents" : "none" }}>
+            {activeTab === "positions" && (
               <PositionsContent
                 positions={positions}
                 triggerOrders={triggerOrders}
@@ -108,18 +108,18 @@ export function PositionsTable({ address }: PositionsTableProps) {
                 handleMouseEnter={handleMouseEnter}
                 setHoveredPosition={setHoveredPosition}
               />
-            </div>
-            <div style={{ display: activeTab === "orders" ? "contents" : "none" }}>
+            )}
+            {activeTab === "orders" && (
               <OrdersContent
                 orders={orders}
                 triggerOrders={triggerOrders}
                 loading={ordersLoading}
                 error={ordersError}
               />
-            </div>
-            <div style={{ display: activeTab === "trades" ? "contents" : "none" }}>
+            )}
+            {activeTab === "trades" && (
               <TradesContent />
-            </div>
+            )}
           </Table>
         </div>
       </div>
