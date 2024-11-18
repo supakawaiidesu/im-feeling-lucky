@@ -94,7 +94,7 @@ export function WalletBox() {
           <span>
             {balancesLoading
               ? "Loading..."
-              : `${formatBalance(balances?.formattedUsdcBalance)} USDC`}
+              : `${formatBalance(balances?.formattedEoaUsdcBalance)} USDC`}
           </span>
         </div>
 
@@ -103,7 +103,7 @@ export function WalletBox() {
           <span>
             {balancesLoading
               ? "Loading..."
-              : `${formatBalance(balances?.formattedEoaUsdcBalance)} USDC`}
+              : `${formatBalance(balances?.formattedUsdcBalance)} USDC`}
           </span>
         </div>
       </div>
