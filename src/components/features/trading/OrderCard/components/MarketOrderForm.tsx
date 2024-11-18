@@ -1,6 +1,6 @@
 import React from "react";
 import { Input } from "../../../../ui/input";
-import { Slider } from "../../../../ui/slider";
+import { Button } from "../../../../ui/button";
 import { OrderFormState } from "../types";
 import TPSLInputSection from "./TPSLInputSection";
 
@@ -54,20 +54,41 @@ export function MarketOrderForm({
             USD
           </div>
         </div>
-        <div className="pt-2">
-          <Slider
-            value={formState.sliderValue}
-            onValueChange={handleSliderChange}
-            max={100}
-            step={1}
-            className="mb-2"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>25%</span>
-            <span>50%</span>
-            <span>75%</span>
-            <span>100%</span>
-          </div>
+
+        {/* Replace slider with percentage buttons */}
+        <div className="grid grid-cols-4 gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSliderChange([25])}
+            className="w-full text-xs"
+          >
+            25%
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSliderChange([50])}
+            className="w-full text-xs"
+          >
+            50%
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSliderChange([75])}
+            className="w-full text-xs"
+          >
+            75%
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSliderChange([100])}
+            className="w-full text-xs"
+          >
+            100%
+          </Button>
         </div>
 
         {/* New TP/SL Section using the TPSLInputSection component */}

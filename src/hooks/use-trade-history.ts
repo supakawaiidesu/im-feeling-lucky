@@ -123,7 +123,7 @@ export function useTradeHistory() {
           entryPrice: Number(trade.averagePrice).toFixed(2),
           closePrice: Number(trade.closePrice).toFixed(2),
           pnl: Number(trade.pnl).toFixed(2),
-          date: new Date(Number(trade.closedAt) * 1000).toLocaleString(),
+          date: new Date(Number(trade.closedAt) * 1000).toISOString(), // Store as ISO string for easier formatting
           isLong: trade.isLong
         }));
 

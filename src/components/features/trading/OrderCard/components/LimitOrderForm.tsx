@@ -1,6 +1,7 @@
 import React from "react";
 import { Input } from "../../../../ui/input";
 import { Slider } from "../../../../ui/slider";
+import { Button } from "../../../../ui/button";
 import { OrderFormState } from "../types";
 import TPSLInputSection from "./TPSLInputSection";
 
@@ -69,20 +70,63 @@ export function LimitOrderForm({
             USD
           </div>
         </div>
-        <div className="pt-2">
-          <Slider
-            value={formState.sliderValue}
-            onValueChange={handleSliderChange}
-            max={100}
-            step={1}
-            className="mb-2"
+        <div className="grid grid-cols-4 gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSliderChange([25])}
+            className="w-full text-xs"
+          >
+            25%
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSliderChange([50])}
+            className="w-full text-xs"
+          >
+            50%
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSliderChange([75])}
+            className="w-full text-xs"
+          >
+            75%
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSliderChange([100])}
+            className="w-full text-xs"
+          >
+            100%
+          </Button>
+        </div>
+        <div className="relative">
+          <Input
+            type="number"
+            placeholder="0"
+            onChange={(e) => {
+              const value = Math.floor(Number(e.target.value));
+              if (!isNaN(value) && value >= 0 && value <= 100) {
+                handleSliderChange([value]);
+              }
+            }}
+            onBlur={(e) => {
+              const value = Math.floor(Number(e.target.value));
+              if (isNaN(value) || value < 0) e.target.value = "0";
+              if (value > 100) e.target.value = "100";
+            }}
+            min="0"
+            max="100"
+            step="1"
+            className="w-full pr-6 text-xs text-right h-9"
           />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>25%</span>
-            <span>50%</span>
-            <span>75%</span>
-            <span>100%</span>
-          </div>
+          <span className="absolute text-xs -translate-y-1/2 right-2 top-1/2 text-muted-foreground pointer-events-none">
+            %
+          </span>
         </div>
 
         {/* TP/SL Section */}

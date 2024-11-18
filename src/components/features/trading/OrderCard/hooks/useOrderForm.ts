@@ -58,12 +58,12 @@ export function useOrderForm({ leverage }: UseOrderFormProps): UseOrderFormRetur
     }
   }, [maxLeveragedAmount]);
 
-  // Handle slider change
+  // Update handleSliderChange to handle percentages more directly
   const handleSliderChange = (value: number[]) => {
-    const newAmount = (maxLeveragedAmount * value[0] / 100).toFixed(2);
+    const percentage = value[0];
+    const newAmount = (maxLeveragedAmount * percentage / 100).toFixed(2);
     const calculatedMargin = parseFloat(newAmount) / parseFloat(leverage);
     
-    // Only update if margin is >= MIN_MARGIN
     if (calculatedMargin >= MIN_MARGIN) {
       setFormState(prev => ({
         ...prev,
