@@ -30,8 +30,8 @@ export function PositionDialog({
   if (!position) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px] p-4 bg-[#17161d] border-zinc-800">
+    <Dialog open={isOpen} modal={true}>
+      <DialogContent className="sm:max-w-[425px] p-4 bg-[#17161d] border-zinc-800" onPointerDownOutside={() => onClose()}>
         <PositionDetails
           position={position}
           triggerOrder={triggerOrder}
