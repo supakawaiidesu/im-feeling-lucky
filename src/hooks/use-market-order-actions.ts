@@ -77,7 +77,8 @@ export function useMarketOrderActions() {
     size: number,
     orderType: "market" | "limit",
     takeProfit?: string,
-    stopLoss?: string
+    stopLoss?: string,
+    referrer: string = "0x0000000000000000000000000000000000000000"
   ) => {
     if (!kernelClient || !smartAccount?.address || !publicClient) {
       toast({
@@ -123,6 +124,7 @@ export function useMarketOrderActions() {
           size,
           userAddress: smartAccount.address,
           skipBalanceCheck: true, // Add skipBalanceCheck flag
+          referrer,  // Add referrer here
           ...(orderType === "limit" && { limitPrice: price }),
           ...(takeProfit && {
             takeProfit: parseFloat(takeProfit),
@@ -245,9 +247,10 @@ export function useMarketOrderActions() {
     margin: number,
     size: number,
     takeProfit?: string,
-    stopLoss?: string
+    stopLoss?: string,
+    referrer?: string
   ) => {
-    return placeOrder(pair, isLong, currentPrice, slippagePercent, margin, size, "market", takeProfit, stopLoss);
+    return placeOrder(pair, isLong, currentPrice, slippagePercent, margin, size, "market", takeProfit, stopLoss, referrer);
   };
 
   const placeLimitOrder = (
@@ -258,9 +261,10 @@ export function useMarketOrderActions() {
     margin: number,
     size: number,
     takeProfit?: string,
-    stopLoss?: string
+    stopLoss?: string,
+    referrer?: string
   ) => {
-    return placeOrder(pair, isLong, limitPrice, slippagePercent, margin, size, "limit", takeProfit, stopLoss);
+    return placeOrder(pair, isLong, limitPrice, slippagePercent, margin, size, "limit", takeProfit, stopLoss, referrer);
   };
 
   return {
