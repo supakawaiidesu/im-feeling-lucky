@@ -116,7 +116,7 @@ PnL: ${position.pnl}`
 
             {/* Trade Details */}
             <div className="flex items-end justify-between">
-              <div className="space-y-11">
+              <div className="space-y-10">
                 <div className="flex items-center space-x-4">
                   <span className={`text-lg font-medium ${position.isLong ? 'text-green-500' : 'text-red-500'}`}>
                     {position.isLong ? 'LONG' : 'SHORT'}
