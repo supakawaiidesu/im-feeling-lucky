@@ -4,13 +4,13 @@ import { TradeDetails as TradeDetailsType } from "../types";
 interface TradeDetailsProps {
   details: TradeDetailsType;
   pair?: string;
+  tradingFee: number;
+  totalRequired: number;
+  referrerSection: React.ReactNode; // Add this to pass the referrer UI
 }
 
-export function TradeDetails({ details, pair }: TradeDetailsProps) {
+export function TradeDetails({ details, pair, tradingFee, totalRequired, referrerSection }: TradeDetailsProps) {
   const { entryPrice, notionalSize, liquidationPrice, fees } = details;
-
-  // Convert trading fee to correct display value (fees are already in percentage form)
-  const displayTradingFee = (fees.tradingFee / 100).toFixed(2);
 
   const formatNumber = (value: number) => {
     return new Intl.NumberFormat('en-US').format(value);
@@ -35,23 +35,22 @@ export function TradeDetails({ details, pair }: TradeDetailsProps) {
         </span>
       </div>
       <div className="flex justify-between">
-        <span>Trading Fee </span>
-        <span>
-          ${formatNumber(parseFloat(displayTradingFee))} ({fees.tradingFeePercent}%)
-        </span>
+        <span>Trading Fee</span>
+        <span>{tradingFee.toFixed(2)} USDC ({fees.tradingFeePercent}%)</span>
       </div>
       <div className="flex justify-between">
         <span>Hourly Interest</span>
-        <span
-          className={
-            fees.hourlyInterest >= 0 ? "text-red-400" : "text-green-400"
-          }
-        >
+        <span className={fees.hourlyInterest >= 0 ? "text-red-400" : "text-green-400"}>
           {fees.hourlyInterest >= 0 ? "-" : "+"}$
           {formatNumber(Math.abs(parseFloat(fees.hourlyInterest.toFixed(2))))} (
           {Math.abs(fees.hourlyInterestPercent).toFixed(4)}%)
         </span>
       </div>
+      <div className="flex justify-between">
+        <span>Total Required</span>
+        <span>{totalRequired.toFixed(2)} USDC</span>
+      </div>
+      {referrerSection}
     </div>
   );
 }
