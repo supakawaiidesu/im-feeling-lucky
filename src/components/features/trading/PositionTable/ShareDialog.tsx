@@ -86,7 +86,7 @@ PnL: ${position.pnl}`
   }
 
   const handleShare = () => {
-    const tweetText = `Trading ${position.market} ${position.isLong ? 'LONG' : 'SHORT'} on @BuildersPerp`
+    const tweetText = `I'm currently ${position.isLong ? 'longing' : 'shorting'} ${position.market} through @UniDexFinance's perp aggregator 🌋`
     const encodedTweet = encodeURIComponent(tweetText)
     window.open(`https://twitter.com/intent/tweet?text=${encodedTweet}`, '_blank')
   }
