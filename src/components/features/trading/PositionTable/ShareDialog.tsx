@@ -94,13 +94,13 @@ PnL: ${position.pnl}`
   return (
     <Dialog open={isOpen} onOpenChange={onClose} modal={true}>
       <DialogContent 
-        className="sm:max-w-[600px] bg-zinc-900 border-zinc-700 text-white p-6" 
+        className="sm:max-w-[650px] bg-zinc-900 border-zinc-700 text-white p-8" 
         onPointerDownOutside={() => onClose()}
       >
         <div 
           ref={cardRef}
           style={{ backgroundImage: `url(/static/images/pnl-card-background${position.isLong ? '' : '-short'}.png)` }}
-          className="relative w-[570px] h-[335px] mb-4 rounded-lg overflow-hidden bg-cover bg-no-repeat bg-blend-overlay"
+          className="relative w-[570px] h-[335px] mx-auto mb-4 rounded-lg overflow-hidden bg-cover bg-no-repeat bg-blend-overlay"
         >
           <div className="absolute inset-0 flex flex-col justify-between p-8">
             {/* Header */}
