@@ -1,6 +1,6 @@
 import { Position } from "../../../../hooks/use-positions";
 import { TriggerOrder } from "../../../../hooks/use-orders";
-import { Bitcoin, ChevronDown } from "lucide-react";
+import { Bitcoin, ChevronDown, Share2 } from "lucide-react";
 import { Button } from "../../../ui/button";
 import {
   DropdownMenu,
@@ -19,6 +19,7 @@ interface PositionDetailsProps {
   isClosing: boolean;
   onOpenSLTP?: () => void;
   onOpenCollateral?: () => void;
+  onShare?: () => void;
 }
 
 export function PositionDetails({
@@ -29,6 +30,7 @@ export function PositionDetails({
   isClosing,
   onOpenSLTP,
   onOpenCollateral,
+  onShare,
 }: PositionDetailsProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { prices } = usePrices();
@@ -211,6 +213,16 @@ export function PositionDetails({
               onClick={handleSLTPClick}
             >
               Set SL/TP
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="focus:bg-zinc-700 focus:text-white"
+              onClick={() => {
+                setIsDropdownOpen(false);
+                if (onShare) onShare();
+              }}
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Share Trade
             </DropdownMenuItem>
             <DropdownMenuItem className="focus:bg-zinc-700 focus:text-white">
               Edit Position Size

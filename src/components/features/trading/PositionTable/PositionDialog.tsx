@@ -1,5 +1,7 @@
 import { Position } from "../../../../hooks/use-positions";
 import { TriggerOrder } from "../../../../hooks/use-orders";
+import { useState } from "react";
+import { ShareDialog } from "./ShareDialog";
 import {
   Dialog,
   DialogContent,
@@ -27,21 +29,32 @@ export function PositionDialog({
   onOpenSLTP,
   onOpenCollateral,
 }: PositionDialogProps) {
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  
   if (!position) return null;
 
   return (
-    <Dialog open={isOpen} modal={true}>
-      <DialogContent className="sm:max-w-[425px] p-4 bg-[#17161d] border-zinc-800" onPointerDownOutside={() => onClose()}>
-        <PositionDetails
-          position={position}
-          triggerOrder={triggerOrder}
-          onClose={onClose}
-          onClosePosition={onClosePosition}
-          isClosing={isClosing}
-          onOpenSLTP={onOpenSLTP}
-          onOpenCollateral={onOpenCollateral}
-        />
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={isOpen} modal={true}>
+        <DialogContent className="sm:max-w-[425px] p-4 bg-[#17161d] border-zinc-800" onPointerDownOutside={() => onClose()}>
+          <PositionDetails
+            position={position}
+            triggerOrder={triggerOrder}
+            onClose={onClose}
+            onClosePosition={onClosePosition}
+            isClosing={isClosing}
+            onOpenSLTP={onOpenSLTP}
+            onOpenCollateral={onOpenCollateral}
+            onShare={() => setIsShareOpen(true)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <ShareDialog 
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        position={position}
+      />
+    </>
   );
 }
