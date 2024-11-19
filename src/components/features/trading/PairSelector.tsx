@@ -79,7 +79,7 @@ export function PairSelector({
       <PrefetchTokenImages pairs={allMarkets.map((market) => market.pair)} />
 
       <Select value={selectedPair} onValueChange={onPairChange}>
-        <SelectTrigger className="w-full md:w-[350px] h-[55px] bg-[hsl(var(--component-background))] border rounded-lg shadow-sm">
+        <SelectTrigger className="w-full md:w-[350px] h-[62px] bg-[hsl(var(--component-background))] border rounded-lg shadow-sm">
           <SelectValue>
             <TokenPairDisplay pair={selectedPair} />
           </SelectValue>
