@@ -265,7 +265,7 @@ export function OrderCard({
 
   const referrerSection = (
     <div className="flex items-center justify-between">
-      <span>Referrer:</span>
+      <span>Referrer</span>
       {isEditingReferrer ? (
         <input
           ref={referrerInputRef}
