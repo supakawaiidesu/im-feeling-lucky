@@ -20,6 +20,8 @@ import { useReferralContract } from "../../../../hooks/use-referral-contract";
 
 const TRADING_FEE_RATE = 0.001; // 0.1% fee
 const DEFAULT_REFERRER = "0x0000000000000000000000000000000000000000";
+const STORAGE_KEY_CODE = 'unidex-referral-code';
+const STORAGE_KEY_ADDRESS = 'unidex-referral-address';
 
 export function OrderCard({
   leverage,
@@ -41,9 +43,20 @@ export function OrderCard({
   const [isEditingReferrer, setIsEditingReferrer] = useState(false);
   const referrerInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    const storedCode = localStorage.getItem(STORAGE_KEY_CODE);
+    const storedAddress = localStorage.getItem(STORAGE_KEY_ADDRESS);
+    
+    if (storedCode) {
+      setReferrerCode(storedCode);
+    }
+    if (storedAddress) {
+      setResolvedReferrer(storedAddress);
+    }
+  }, []);
+
   const {
     formState,
-    maxLeveragedAmount,
     handleAmountChange,
     handleMarginChange,  // Add this
     handleLimitPriceChange,
@@ -106,6 +119,22 @@ export function OrderCard({
     setFormState,
   ]);
 
+  useEffect(() => {
+    if (referrerCode && resolvedReferrer === DEFAULT_REFERRER) {
+      getReferralAddress(referrerCode).then(address => {
+        if (address !== DEFAULT_REFERRER) {
+          setResolvedReferrer(address);
+          localStorage.setItem(STORAGE_KEY_ADDRESS, address);
+        } else {
+          // Clear invalid cached code
+          setReferrerCode("");
+          localStorage.removeItem(STORAGE_KEY_CODE);
+          localStorage.removeItem(STORAGE_KEY_ADDRESS);
+        }
+      });
+    }
+  }, [referrerCode]);
+
   const shortenAddress = (address: string) => {
     if (address === DEFAULT_REFERRER) {
       return "Set Code";
@@ -117,7 +146,12 @@ export function OrderCard({
   };
 
   const handleReferrerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setReferrerCode(e.target.value);
+    const newCode = e.target.value;
+    setReferrerCode(newCode);
+    if (!newCode) {
+      localStorage.removeItem(STORAGE_KEY_CODE);
+      localStorage.removeItem(STORAGE_KEY_ADDRESS);
+    }
   };
 
   const handleReferrerClick = () => {
@@ -132,9 +166,17 @@ export function OrderCard({
       setResolvedReferrer(address);
       if (address === DEFAULT_REFERRER) {
         setReferrerCode("");
+        localStorage.removeItem(STORAGE_KEY_CODE);
+        localStorage.removeItem(STORAGE_KEY_ADDRESS);
+      } else {
+        // Cache valid referral code and address
+        localStorage.setItem(STORAGE_KEY_CODE, referrerCode);
+        localStorage.setItem(STORAGE_KEY_ADDRESS, address);
       }
     } else {
       setResolvedReferrer(DEFAULT_REFERRER);
+      localStorage.removeItem(STORAGE_KEY_CODE);
+      localStorage.removeItem(STORAGE_KEY_ADDRESS);
     }
   };
 
@@ -210,6 +252,30 @@ export function OrderCard({
       handlePlaceOrder();
     }
   };
+
+  const referrerSection = (
+    <div className="flex items-center justify-between">
+      <span>Referrer:</span>
+      {isEditingReferrer ? (
+        <input
+          ref={referrerInputRef}
+          type="text"
+          value={referrerCode}
+          onChange={handleReferrerChange}
+          onBlur={handleReferrerBlur}
+          placeholder="Enter code"
+          className="text-right bg-transparent border-b border-dashed outline-none border-muted-foreground"
+        />
+      ) : (
+        <span
+          onClick={handleReferrerClick}
+          className="cursor-pointer hover:text-primary"
+        >
+          {shortenAddress(resolvedReferrer)}
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <Card className="w-full md:w-[350px]">
@@ -294,36 +360,13 @@ export function OrderCard({
             />
           </TabsContent>
 
-          <TradeDetails details={tradeDetails} pair={market?.pair} />
-
-          {/* Only show total required */}
-          <div className="mt-2 text-sm text-muted-foreground">
-            <div className="flex justify-between">
-              <span>Total Required:</span>
-              <span>{totalRequired.toFixed(2)} USDC</span>
-            </div>
-            <div className="flex items-center justify-between mt-1">
-              <span>Referrer:</span>
-              {isEditingReferrer ? (
-                <input
-                  ref={referrerInputRef}
-                  type="text"
-                  value={referrerCode}
-                  onChange={handleReferrerChange}
-                  onBlur={handleReferrerBlur}
-                  placeholder="Enter code"
-                  className="text-right bg-transparent border-b border-dashed outline-none border-muted-foreground"
-                />
-              ) : (
-                <span
-                  onClick={handleReferrerClick}
-                  className="cursor-pointer hover:text-primary"
-                >
-                  {shortenAddress(resolvedReferrer)}
-                </span>
-              )}
-            </div>
-          </div>
+          <TradeDetails 
+            details={tradeDetails} 
+            pair={market?.pair} 
+            tradingFee={tradingFee}
+            totalRequired={totalRequired}
+            referrerSection={referrerSection}
+          />
 
           {!isConnected ? (
             <div className="w-full mt-4">
