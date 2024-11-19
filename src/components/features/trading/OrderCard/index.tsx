@@ -42,6 +42,7 @@ export function OrderCard({
   const [resolvedReferrer, setResolvedReferrer] = useState(DEFAULT_REFERRER);
   const [isEditingReferrer, setIsEditingReferrer] = useState(false);
   const referrerInputRef = useRef<HTMLInputElement>(null);
+  const [tempReferrerCode, setTempReferrerCode] = useState(""); // Add this for temporary input value
 
   useEffect(() => {
     const storedCode = localStorage.getItem(STORAGE_KEY_CODE);
@@ -49,6 +50,7 @@ export function OrderCard({
     
     if (storedCode) {
       setReferrerCode(storedCode);
+      setTempReferrerCode(storedCode); // Also set the temporary code
     }
     if (storedAddress) {
       setResolvedReferrer(storedAddress);
@@ -119,6 +121,51 @@ export function OrderCard({
     setFormState,
   ]);
 
+  const handleReferrerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTempReferrerCode(e.target.value); // Only update the temporary value while typing
+  };
+
+  const handleReferrerClick = () => {
+    setIsEditingReferrer(true);
+    setTempReferrerCode(referrerCode); // Initialize temp code with current value
+    setTimeout(() => referrerInputRef.current?.focus(), 0);
+  };
+
+  const handleReferrerBlur = async () => {
+    setIsEditingReferrer(false);
+    // Only validate and update when user is done editing
+    if (tempReferrerCode) {
+      const address = await getReferralAddress(tempReferrerCode);
+      if (address === DEFAULT_REFERRER) {
+        // Revert to previous valid code if it exists
+        if (referrerCode) {
+          setTempReferrerCode(referrerCode);
+        } else {
+          setTempReferrerCode("");
+          setReferrerCode("");
+          localStorage.removeItem(STORAGE_KEY_CODE);
+          localStorage.removeItem(STORAGE_KEY_ADDRESS);
+        }
+      } else {
+        setReferrerCode(tempReferrerCode);
+        setResolvedReferrer(address);
+        localStorage.setItem(STORAGE_KEY_CODE, tempReferrerCode);
+        localStorage.setItem(STORAGE_KEY_ADDRESS, address);
+      }
+    } else {
+      setReferrerCode("");
+      setResolvedReferrer(DEFAULT_REFERRER);
+      localStorage.removeItem(STORAGE_KEY_CODE);
+      localStorage.removeItem(STORAGE_KEY_ADDRESS);
+    }
+  };
+
+  const handleReferrerKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur(); // Trigger blur event to validate
+    }
+  };
+
   useEffect(() => {
     if (referrerCode && resolvedReferrer === DEFAULT_REFERRER) {
       getReferralAddress(referrerCode).then(address => {
@@ -139,45 +186,8 @@ export function OrderCard({
     if (address === DEFAULT_REFERRER) {
       return "Set Code";
     }
-    if (referrerCode) {
-      return referrerCode;
-    }
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
-  const handleReferrerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newCode = e.target.value;
-    setReferrerCode(newCode);
-    if (!newCode) {
-      localStorage.removeItem(STORAGE_KEY_CODE);
-      localStorage.removeItem(STORAGE_KEY_ADDRESS);
-    }
-  };
-
-  const handleReferrerClick = () => {
-    setIsEditingReferrer(true);
-    setTimeout(() => referrerInputRef.current?.focus(), 0);
-  };
-
-  const handleReferrerBlur = async () => {
-    setIsEditingReferrer(false);
-    if (referrerCode) {
-      const address = await getReferralAddress(referrerCode);
-      setResolvedReferrer(address);
-      if (address === DEFAULT_REFERRER) {
-        setReferrerCode("");
-        localStorage.removeItem(STORAGE_KEY_CODE);
-        localStorage.removeItem(STORAGE_KEY_ADDRESS);
-      } else {
-        // Cache valid referral code and address
-        localStorage.setItem(STORAGE_KEY_CODE, referrerCode);
-        localStorage.setItem(STORAGE_KEY_ADDRESS, address);
-      }
-    } else {
-      setResolvedReferrer(DEFAULT_REFERRER);
-      localStorage.removeItem(STORAGE_KEY_CODE);
-      localStorage.removeItem(STORAGE_KEY_ADDRESS);
-    }
+    // Always show the referral code if it exists
+    return referrerCode || `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   const handlePlaceOrder = () => {
@@ -260,9 +270,10 @@ export function OrderCard({
         <input
           ref={referrerInputRef}
           type="text"
-          value={referrerCode}
+          value={tempReferrerCode} // Use temporary value for input
           onChange={handleReferrerChange}
           onBlur={handleReferrerBlur}
+          onKeyDown={handleReferrerKeyDown} // Add keyboard handler
           placeholder="Enter code"
           className="text-right bg-transparent border-b border-dashed outline-none border-muted-foreground"
         />
