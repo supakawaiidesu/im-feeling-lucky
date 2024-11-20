@@ -5,6 +5,14 @@ import DepositBox from "../features/trading/deposit";
 import Link from "next/link";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
 import { Menu, ChevronDown } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faQuestionCircle, 
+  faBook, 
+  faComments, 
+  faBug, 
+  faChartLine 
+} from '@fortawesome/free-solid-svg-icons';
 
 export function Header() {
   return (
@@ -49,6 +57,7 @@ export function Header() {
               <DropdownItem
                 key="help"
                 description="Get help and support"
+                startContent={<FontAwesomeIcon icon={faQuestionCircle} />}
                 onClick={() => window.open("https://samplelink.com/help", "_blank")}
               >
                 Help & Support
@@ -56,6 +65,7 @@ export function Header() {
               <DropdownItem
                 key="documentation"
                 description="Read the documentation"
+                startContent={<FontAwesomeIcon icon={faBook} />}
                 onClick={() => window.open("https://samplelink.com/documentation", "_blank")}
               >
                 Documentation
@@ -63,6 +73,7 @@ export function Header() {
               <DropdownItem
                 key="feedback"
                 description="Provide your feedback"
+                startContent={<FontAwesomeIcon icon={faComments} />}
                 onClick={() => window.open("https://samplelink.com/feedback", "_blank")}
               >
                 Give Feedback
@@ -70,6 +81,7 @@ export function Header() {
               <DropdownItem
                 key="bug-bounty"
                 description="Participate in our bug bounty program"
+                startContent={<FontAwesomeIcon icon={faBug} />}
                 onClick={() => window.open("https://samplelink.com/bug-bounty", "_blank")}
               >
                 Bug Bounty
@@ -77,6 +89,7 @@ export function Header() {
               <DropdownItem
                 key="stats"
                 description="View the latest stats"
+                startContent={<FontAwesomeIcon icon={faChartLine} />}
                 onClick={() => window.open("https://samplelink.com/stats", "_blank")}
               >
                 Stats
