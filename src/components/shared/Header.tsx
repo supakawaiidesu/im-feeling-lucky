@@ -3,13 +3,8 @@ import Image from 'next/image';
 import { Button } from "../ui/button";
 import DepositBox from "../features/trading/deposit";
 import Link from "next/link";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Menu } from "lucide-react";
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
+import { Menu, MoreHorizontal } from "lucide-react";
 
 export function Header() {
   return (
@@ -36,28 +31,129 @@ export function Header() {
           <Link href="/usdm">
             <Button variant="ghost">USD.m</Button>
           </Link>
+          <Dropdown>
+            <DropdownTrigger>
+              <Button variant="ghost" className="gap-1">
+                More <MoreHorizontal size={16} />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu 
+              aria-label="More actions"
+              className="w-[240px]"
+              itemClasses={{
+                base: "gap-4",
+                title: "text-sm",
+                description: "text-xs text-default-400"
+              }}
+            >
+              <DropdownItem
+                key="help"
+                description="Get help and support"
+                onClick={() => window.open("https://samplelink.com/help", "_blank")}
+              >
+                Help & Support
+              </DropdownItem>
+              <DropdownItem
+                key="documentation"
+                description="Read the documentation"
+                onClick={() => window.open("https://samplelink.com/documentation", "_blank")}
+              >
+                Documentation
+              </DropdownItem>
+              <DropdownItem
+                key="feedback"
+                description="Provide your feedback"
+                onClick={() => window.open("https://samplelink.com/feedback", "_blank")}
+              >
+                Give Feedback
+              </DropdownItem>
+              <DropdownItem
+                key="bug-bounty"
+                description="Participate in our bug bounty program"
+                onClick={() => window.open("https://samplelink.com/bug-bounty", "_blank")}
+              >
+                Bug Bounty
+              </DropdownItem>
+              <DropdownItem
+                key="stats"
+                description="View the latest stats"
+                onClick={() => window.open("https://samplelink.com/stats", "_blank")}
+              >
+                Stats
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+          <Link href="/referral">
+            <Button variant="ghost">Referrals</Button>
+          </Link>
         </nav>
 
         {/* Mobile Navigation */}
         <div className="md:hidden">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <Dropdown>
+            <DropdownTrigger>
               <Button variant="ghost" size="icon">
-                <Menu className="w-5 h-5" />
+                <Menu size={20} />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link href="/staking">Stake</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/">Trade</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/usdm">USD.m</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownTrigger>
+            <DropdownMenu 
+              aria-label="Mobile navigation"
+              className="w-[240px]"
+              itemClasses={{
+                base: "gap-4",
+                title: "text-sm",
+                description: "text-xs text-default-400"
+              }}
+            >
+              <DropdownItem onClick={() => window.location.href = "/staking"}>
+                Stake
+              </DropdownItem>
+              <DropdownItem onClick={() => window.location.href = "/"}>
+                Trade
+              </DropdownItem>
+              <DropdownItem onClick={() => window.location.href = "/usdm"}>
+                USD.m
+              </DropdownItem>
+              <DropdownItem
+                key="help"
+                description="Get help and support"
+                onClick={() => window.open("https://samplelink.com/help", "_blank")}
+              >
+                Help & Support
+              </DropdownItem>
+              <DropdownItem
+                key="documentation"
+                description="Read the documentation"
+                onClick={() => window.open("https://samplelink.com/documentation", "_blank")}
+              >
+                Documentation
+              </DropdownItem>
+              <DropdownItem
+                key="feedback"
+                description="Provide your feedback"
+                onClick={() => window.open("https://samplelink.com/feedback", "_blank")}
+              >
+                Give Feedback
+              </DropdownItem>
+              <DropdownItem
+                key="bug-bounty"
+                description="Participate in our bug bounty program"
+                onClick={() => window.open("https://samplelink.com/bug-bounty", "_blank")}
+              >
+                Bug Bounty
+              </DropdownItem>
+              <DropdownItem
+                key="stats"
+                description="View the latest stats"
+                onClick={() => window.open("https://samplelink.com/stats", "_blank")}
+              >
+                Stats
+              </DropdownItem>
+              <DropdownItem onClick={() => window.location.href = "/referral"}>
+                Referrals
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </div>
       </div>
 
