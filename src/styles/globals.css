@@ -69,7 +69,7 @@ a {
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --ring: 240 3.7% 15.9%;  /* Changed this to match dark border color */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -91,6 +91,17 @@ a {
 .no-spinners {
   appearance: textfield;
   -moz-appearance: textfield;
+}
+
+/* Add this to remove outline for mouse users but keep it for keyboard navigation */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: none;
+  ring-color: hsl(var(--ring));
+  ring-offset-color: hsl(var(--background));
 }
 
 @layer base {

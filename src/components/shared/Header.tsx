@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import DepositBox from "../features/trading/deposit";
 import Link from "next/link";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
-import { Menu, MoreHorizontal } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
 
 export function Header() {
   return (
@@ -34,7 +34,7 @@ export function Header() {
           <Dropdown>
             <DropdownTrigger>
               <Button variant="ghost" className="gap-1">
-                More <MoreHorizontal size={16} />
+                More <ChevronDown size={16} />
               </Button>
             </DropdownTrigger>
             <DropdownMenu 
