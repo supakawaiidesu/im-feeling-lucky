@@ -1,4 +1,5 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import Image from 'next/image';
 import { Button } from "../ui/button";
 import DepositBox from "../features/trading/deposit";
 import Link from "next/link";
@@ -14,7 +15,15 @@ export function Header() {
   return (
     <header className="flex items-center px-4 h-14">
       <div className="flex items-center space-x-4">
-        <Link href="/" className="font-bold hover:opacity-80">UniDex</Link>
+        <Link href="/" className="hover:opacity-80">
+          <Image
+            src="/static/images/logo-large.png"
+            alt="UniDex Logo"
+            width={100}
+            height={32}
+            priority
+          />
+        </Link>
         
         {/* Desktop Navigation */}
         <nav className="items-center hidden space-x-4 md:flex">
