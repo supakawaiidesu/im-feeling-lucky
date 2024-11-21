@@ -14,6 +14,8 @@ import { usePairFromUrl } from "../hooks/use-pair-from-url";
 export default function TradingInterface() {
   const { selectedPair, setPair } = usePairFromUrl();
   const [leverage, setLeverage] = useState("20");
+  const router = useRouter();
+  const { ref } = router.query;
   const { address } = useAccount();
   const { allMarkets } = useMarketData();
   const { prices } = usePrices();
@@ -52,6 +54,7 @@ export default function TradingInterface() {
               leverage={leverage}
               onLeverageChange={setLeverage}
               assetId={assetId}
+              initialReferralCode={typeof ref === 'string' ? ref : undefined}
             />
           </div>
         </div>

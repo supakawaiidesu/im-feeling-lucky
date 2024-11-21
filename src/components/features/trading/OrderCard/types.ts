@@ -2,6 +2,7 @@ export interface OrderCardProps {
   leverage: string;
   onLeverageChange: (value: string) => void;
   assetId: string;
+  initialReferralCode?: string;
 }
 
 export interface TradeDetails {

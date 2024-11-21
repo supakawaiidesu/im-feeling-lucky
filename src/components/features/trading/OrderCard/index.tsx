@@ -27,6 +27,7 @@ export function OrderCard({
   leverage,
   onLeverageChange,
   assetId,
+  initialReferralCode,
 }: OrderCardProps) {
   const { isConnected } = useAccount();
   const { smartAccount, setupSessionKey, error, isNetworkSwitching } =
@@ -45,17 +46,35 @@ export function OrderCard({
   const [tempReferrerCode, setTempReferrerCode] = useState(""); // Add this for temporary input value
 
   useEffect(() => {
-    const storedCode = localStorage.getItem(STORAGE_KEY_CODE);
-    const storedAddress = localStorage.getItem(STORAGE_KEY_ADDRESS);
-    
-    if (storedCode) {
-      setReferrerCode(storedCode);
-      setTempReferrerCode(storedCode); // Also set the temporary code
-    }
-    if (storedAddress) {
-      setResolvedReferrer(storedAddress);
-    }
-  }, []);
+    const initializeReferralCode = async () => {
+      // First check URL parameter
+      if (initialReferralCode) {
+        const address = await getReferralAddress(initialReferralCode);
+        if (address !== DEFAULT_REFERRER) {
+          setReferrerCode(initialReferralCode);
+          setTempReferrerCode(initialReferralCode);
+          setResolvedReferrer(address);
+          localStorage.setItem(STORAGE_KEY_CODE, initialReferralCode);
+          localStorage.setItem(STORAGE_KEY_ADDRESS, address);
+          return;
+        }
+      }
+
+      // Fall back to stored code if no valid URL parameter
+      const storedCode = localStorage.getItem(STORAGE_KEY_CODE);
+      const storedAddress = localStorage.getItem(STORAGE_KEY_ADDRESS);
+      
+      if (storedCode) {
+        setReferrerCode(storedCode);
+        setTempReferrerCode(storedCode);
+      }
+      if (storedAddress) {
+        setResolvedReferrer(storedAddress);
+      }
+    };
+
+    initializeReferralCode();
+  }, [initialReferralCode]);
 
   const {
     formState,
@@ -398,21 +417,24 @@ export function OrderCard({
               variant="market"
               className="w-full mt-4"
               disabled={
-                placingOrders ||
-                isNetworkSwitching ||
-                (activeTab === "market" && !tradeDetails.entryPrice) ||
-                (activeTab === "limit" && !formState.limitPrice) ||
-                hasInsufficientBalance ||
-                !isValid(formState.amount) || // Add this condition
-                (() => {
-                  const availableLiquidity = formState.isLong
-                    ? market?.availableLiquidity?.long
-                    : market?.availableLiquidity?.short;
-                  return (
-                    availableLiquidity !== undefined &&
-                    calculatedSize > availableLiquidity
-                  );
-                })()
+                // Only check these conditions if we have a smart account
+                smartAccount?.address
+                  ? (placingOrders ||
+                     isNetworkSwitching ||
+                     (activeTab === "market" && !tradeDetails.entryPrice) ||
+                     (activeTab === "limit" && !formState.limitPrice) ||
+                     hasInsufficientBalance ||
+                     !isValid(formState.amount) ||
+                     (() => {
+                       const availableLiquidity = formState.isLong
+                         ? market?.availableLiquidity?.long
+                         : market?.availableLiquidity?.short;
+                       return (
+                         availableLiquidity !== undefined &&
+                         calculatedSize > availableLiquidity
+                       );
+                     })())
+                  : false // Not disabled when showing "Establish Connection"
               }
               onClick={handleButtonClick}
             >
