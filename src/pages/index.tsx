@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import { useAccount } from "wagmi";
 import { Header } from "../components/shared/Header";
 import { PairSelector } from "../components/features/trading/PairSelector";
@@ -8,15 +9,15 @@ import { PositionsTable } from "../components/features/trading/PositionsTable";
 import { PairHeader } from "../components/features/trading/PairHeader";
 import { useMarketData } from "../hooks/use-market-data";
 import { usePrices } from "../lib/websocket-price-context";
+import { usePairFromUrl } from "../hooks/use-pair-from-url";
 
 export default function TradingInterface() {
-  const [selectedPair, setSelectedPair] = useState("ETH/USD");
+  const { selectedPair, setPair } = usePairFromUrl();
   const [leverage, setLeverage] = useState("20");
   const { address } = useAccount();
   const { allMarkets } = useMarketData();
   const { prices } = usePrices();
 
-  // Find the assetId for the selected pair
   const selectedMarket = allMarkets.find(
     (market) => market.pair === selectedPair
   );
@@ -44,7 +45,7 @@ export default function TradingInterface() {
         <div className="w-full px-2 md:w-auto">
           <PairSelector
             selectedPair={selectedPair}
-            onPairChange={setSelectedPair}
+            onPairChange={setPair}
           />
           <div className="pt-0.25">
             <OrderCard
