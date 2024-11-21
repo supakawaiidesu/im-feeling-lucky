@@ -1,6 +1,12 @@
 // Assuming you're working in a browser environment that supports fetch and ReadableStream
 const streamingUrl = 'https://benchmarks.pyth.network/v1/shims/tradingview/streaming'
 const channelToSubscription = new Map()
+let isConnected = false
+let heartbeatInterval = null
+let reconnectTimeout = null
+const INITIAL_RECONNECT_DELAY = 1000
+const MAX_RECONNECT_DELAY = 30000
+let currentReconnectDelay = INITIAL_RECONNECT_DELAY
 
 function handleStreamingData(data) {
   const { id, p, t } = data
@@ -43,9 +49,38 @@ function handleStreamingData(data) {
   channelToSubscription.set(channelString, subscriptionItem)
 }
 
+function startHeartbeat() {
+  clearInterval(heartbeatInterval)
+  heartbeatInterval = setInterval(() => {
+    if (!isConnected) {
+      console.warn('[stream] Connection lost, attempting to reconnect...')
+      reconnectWithBackoff()
+    }
+  }, 5000) // Check connection every 5 seconds
+}
+
+function reconnectWithBackoff() {
+  clearTimeout(reconnectTimeout)
+  if (currentReconnectDelay < MAX_RECONNECT_DELAY) {
+    currentReconnectDelay *= 2 // Exponential backoff
+  }
+  
+  reconnectTimeout = setTimeout(() => {
+    console.log(`[stream] Attempting to reconnect...`)
+    startStreaming()
+  }, currentReconnectDelay)
+}
+
 function startStreaming(retries = 3, delay = 3000) {
+  // Reset reconnect delay on successful connection
+  currentReconnectDelay = INITIAL_RECONNECT_DELAY
+  clearInterval(heartbeatInterval)
+  clearTimeout(reconnectTimeout)
+
   fetch(streamingUrl)
     .then((response) => {
+      isConnected = true
+      startHeartbeat()
       const reader = response.body.getReader()
 
       function streamData() {
@@ -54,6 +89,8 @@ function startStreaming(retries = 3, delay = 3000) {
           .then(({ value, done }) => {
             if (done) {
               console.error('[stream] Streaming ended.')
+              isConnected = false
+              reconnectWithBackoff()
               return
             }
 
@@ -75,7 +112,8 @@ function startStreaming(retries = 3, delay = 3000) {
           })
           .catch((error) => {
             console.error('[stream] Error reading from stream:', error)
-            attemptReconnect(retries, delay)
+            isConnected = false
+            reconnectWithBackoff()
           })
       }
 
@@ -86,6 +124,8 @@ function startStreaming(retries = 3, delay = 3000) {
         '[stream] Error fetching from the streaming endpoint:',
         error
       )
+      isConnected = false
+      reconnectWithBackoff()
     })
   function attemptReconnect(retriesLeft, delay) {
     if (retriesLeft > 0) {
@@ -127,8 +167,10 @@ export function subscribeOnStream(
   }
   channelToSubscription.set(channelString, subscriptionItem)
 
-  // Start streaming when the first subscription is made
-  startStreaming()
+  // Only start streaming if not already connected
+  if (!isConnected) {
+    startStreaming()
+  }
 }
 
 export function unsubscribeFromStream(subscriberUID) {
@@ -148,5 +190,12 @@ export function unsubscribeFromStream(subscriberUID) {
       channelToSubscription.delete(channelString)
       break
     }
+  }
+  
+  // If no more subscriptions, clear intervals and connection state
+  if (channelToSubscription.size === 0) {
+    clearInterval(heartbeatInterval)
+    clearTimeout(reconnectTimeout)
+    isConnected = false
   }
 }
