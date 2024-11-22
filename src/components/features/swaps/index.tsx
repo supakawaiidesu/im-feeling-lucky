@@ -21,6 +21,8 @@ import { Header } from "../../shared/Header"
 import { useTokenList } from '@/hooks/use-token-list'
 import { useTokenListBalances } from "@/hooks/use-tokenlist-balances"
 import { useOdosQuote } from "@/hooks/use-odos-quote"
+import { useOdosSwap } from '@/hooks/use-odos-swap'
+import { usePublicClient, useWalletClient } from 'wagmi'
 
 export function Swaps() {
   const { tokens } = useTokenList()
@@ -55,6 +57,10 @@ export function Swaps() {
     enabled: Boolean(inputAmount && inputToken && outputToken)
   })
 
+  const { data: walletClient } = useWalletClient()
+  const publicClient = usePublicClient()
+  const { executeSwap } = useOdosSwap()
+
   const handleTokenSelect = (token: { symbol: string; name: string; icon: string; address: string }) => {
       if (selectedField === 'input') {
         setInputToken(token)
@@ -76,6 +82,32 @@ export function Swaps() {
     const amount = BigInt(quote.outAmounts[0])
     return (Number(amount) / 1e18).toFixed(6) // Assuming 18 decimals for output token
   }, [quote])
+
+  const handleSwap = async () => {
+    if (!quote?.pathId || !walletClient) return
+    
+    try {
+      const request = await executeSwap(quote.pathId)
+      
+      const hash = await walletClient.sendTransaction({
+        to: request.to as `0x${string}`,
+        data: request.data as `0x${string}`,
+        value: BigInt(request.value || "0"),
+        account: walletClient.account
+      })
+
+      // Optional: Wait for transaction
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
+      
+      // Reset form or show success message
+      setInputAmount('')
+    } catch (error) {
+      console.error('Swap failed:', error)
+      // Handle error (show toast, etc)
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -186,8 +218,12 @@ export function Swaps() {
                 </div>
               </div>
 
-              <Button className="w-full py-6 text-white bg-pink-500 hover:bg-pink-600">
-                Review
+              <Button 
+                className="w-full py-6 text-white bg-pink-500 hover:bg-pink-600"
+                onClick={handleSwap}
+                disabled={!quote || !inputAmount}
+              >
+                {!quote ? 'Enter an amount' : 'Review'}
               </Button>
 
               <div className="space-y-3 text-sm">
