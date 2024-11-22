@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from "react"
-import type { JSX } from "react"
 import { Settings, ChevronDown, ArrowDown } from 'lucide-react'
 import { TokenSelector } from "./TokenSelector"
 import { Button } from "@/components/ui/button"
@@ -100,7 +99,6 @@ export function Swaps() {
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="space-y-4">
             <div className="flex items-center gap-2" />
-            <h1 className="text-2xl font-semibold text-white">Swaps</h1>
           </div>
           
           <TooltipProvider>
