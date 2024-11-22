@@ -59,15 +59,6 @@ export function useParaswapQuote({
         // Convert input amount to base units using correct decimals
         const baseUnitAmount = toBaseUnits(inputAmount, inputDecimals)
 
-        // Store quote context for swap
-        setParaswapQuoteContext({
-          srcToken: inputToken,
-          destToken: outputToken,
-          srcAmount: baseUnitAmount,
-          srcDecimals: inputDecimals,
-          destDecimals: outputDecimals
-        })
-
         // Construct URL with query parameters
         const params = new URLSearchParams({
           srcToken: inputToken,
@@ -86,6 +77,9 @@ export function useParaswapQuote({
         }
 
         const data: { priceRoute: ParaswapPriceRoute } = await response.json()
+        
+        // Store the full priceRoute for swap with correct arguments
+        setParaswapQuoteContext(data.priceRoute, address)
         
         // Convert Paraswap response to our common QuoteResponse format
         setQuote({

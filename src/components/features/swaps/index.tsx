@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from "react"
+import type { JSX } from "react"
 import { Settings, ChevronDown, ArrowDown } from 'lucide-react'
 import { TokenSelector } from "./TokenSelector"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,7 @@ export function Swaps() {
   const [selectedField, setSelectedField] = React.useState<'input' | 'output'>('input')
   const [inputAmount, setInputAmount] = React.useState("")
   const { balances } = useTokenListBalances(tokens)
+  const [routesExpanded, setRoutesExpanded] = React.useState(false)
   
   const defaultInputToken = tokens.find(t => t.address === '0xaf88d065e77c8cC2239327C5EDb3A432268e5831')
   const defaultOutputToken = tokens.find(t => t.address === '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1')
@@ -214,23 +216,8 @@ export function Swaps() {
                 </div>
               )}
 
-              <div className="space-y-3 text-sm">
-                {/* Route comparison section */}
-                <div className="p-4 space-y-2 rounded-lg bg-neutral-800">
-                  <div className="font-medium text-gray-400">Available Routes</div>
-                  {routeQuotes.map(({ name, amount, loading }) => (
-                    <div key={name} className="flex items-center justify-between">
-                      <span className={`capitalize ${name === selectedRouteName ? 'text-pink-500' : 'text-gray-400'}`}>
-                        {name}
-                        {name === selectedRouteName && ' (Best)'}
-                      </span>
-                      <span className="text-gray-300">
-                        {loading ? 'Loading...' : `${amount} ${outputToken.symbol}`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
 
+                {/* Rate Section */}
                 <div className="flex items-center justify-between text-gray-400">
                   <div className="flex items-center gap-1">
                     Rate: 1 {inputToken.symbol} = {exchangeRate} {outputToken.symbol}
@@ -240,6 +227,45 @@ export function Swaps() {
                   </div>
                   <ChevronDown className="w-4 h-4" />
                 </div>
+                
+              <div className="space-y-3 text-sm">
+                {/* Order Routing Section */}
+                <div
+                  onClick={() => setRoutesExpanded(!routesExpanded)}
+                  className="flex items-center justify-between text-gray-400 cursor-pointer"
+                >
+                  <Tooltip>
+                    <TooltipTrigger className="flex items-center gap-1">
+                      Order Routing
+                      <div className="w-4 h-4 text-xs text-center bg-gray-700 rounded-full">?</div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Selected route for best price</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <div className="flex items-center gap-2">
+                    <span className="capitalize">{selectedRouteName || 'Auto'}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${routesExpanded ? 'rotate-180' : ''}`} />
+                  </div>
+                </div>
+
+                {/* Expandable Route Details */}
+                {routesExpanded && (
+                  <div className="p-4 space-y-2 rounded-lg bg-neutral-800">
+                    <div className="font-medium text-gray-400">Available Routes</div>
+                    {routeQuotes.map(({ name, amount, loading }) => (
+                      <div key={name} className="flex items-center justify-between">
+                        <span className={`capitalize ${name === selectedRouteName ? 'text-pink-500' : 'text-gray-400'}`}>
+                          {name}
+                          {name === selectedRouteName && ' (Best)'}
+                        </span>
+                        <span className="text-gray-300">
+                          {loading ? 'Loading...' : `${amount} ${outputToken.symbol}`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between text-gray-400">
                   <Tooltip>
@@ -251,7 +277,7 @@ export function Swaps() {
                       <p>Price impact on trade</p>
                     </TooltipContent>
                   </Tooltip>
-                  <span>{quote?.priceImpact ? (quote.priceImpact * 100).toFixed(2) : '0.00'}%</span>
+                  <span>{quote?.priceImpact ? (quote.priceImpact).toFixed(2) : '0.00'}%</span>
                 </div>
 
                 <div className="flex items-center justify-between text-gray-400">

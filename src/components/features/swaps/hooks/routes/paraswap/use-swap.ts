@@ -1,21 +1,20 @@
 import { useState } from 'react'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import type { SwapRequest } from '../../types'
-import type { ParaswapSwapResponse } from './types'
+import type { ParaswapPriceRoute } from './types'
 
 interface SwapContext {
-  srcToken: string
-  destToken: string
-  srcAmount: string
-  srcDecimals: number
-  destDecimals: number
+  priceRoute: ParaswapPriceRoute | null
+  userAddress: string | null
 }
 
-// Store quote context globally since it's needed across renders
-let quoteContext: SwapContext | null = null
+let quoteContext: SwapContext = {
+  priceRoute: null,
+  userAddress: null
+}
 
-export function setParaswapQuoteContext(context: SwapContext) {
-  quoteContext = context
+export function setParaswapQuoteContext(priceRoute: ParaswapPriceRoute, userAddress: string) {
+  quoteContext = { priceRoute, userAddress }
 }
 
 export function useParaswapSwap() {
@@ -28,39 +27,45 @@ export function useParaswapSwap() {
   const executeSwap = async ({ pathId }: SwapRequest) => {
     if (!walletClient) throw new Error('Wallet not connected')
     if (!address) throw new Error('No address found')
-    if (!quoteContext) throw new Error('No quote context found')
+    if (!quoteContext.priceRoute) throw new Error('No quote context found')
     
     setIsLoading(true)
     setError(null)
 
     try {
-      // Get swap transaction data using stored context
-      const params = new URLSearchParams({
-        srcToken: quoteContext.srcToken,
-        destToken: quoteContext.destToken,
-        amount: quoteContext.srcAmount,
-        srcDecimals: quoteContext.srcDecimals.toString(),
-        destDecimals: quoteContext.destDecimals.toString(),
-        userAddress: address,
-        network: '42161', // Arbitrum
-        hmac: pathId
+      // Call /transactions endpoint to get swap transaction data
+      const response = await fetch('https://api.paraswap.io/transactions/42161', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          srcToken: quoteContext.priceRoute.srcToken,
+          destToken: quoteContext.priceRoute.destToken,
+          srcAmount: quoteContext.priceRoute.srcAmount,
+          srcDecimals: quoteContext.priceRoute.srcDecimals,
+          destDecimals: quoteContext.priceRoute.destDecimals,
+          priceRoute: quoteContext.priceRoute,
+          userAddress: address,
+          partner: 'builders-workshop',
+          slippage: 100, // 1%
+          deadline: Math.floor(Date.now()/1000) + 300 // 5 minutes
+        })
       })
 
-      const response = await fetch(`https://api.paraswap.io/swap?${params.toString()}`)
-
       if (!response.ok) {
-        throw new Error('Failed to assemble swap')
+        throw new Error('Failed to build transaction')
       }
 
-      const data: ParaswapSwapResponse = await response.json()
-      
+      const txData = await response.json()
+
       // Execute the transaction
       const hash = await walletClient.sendTransaction({
-        to: data.txParams.to as `0x${string}`,
-        data: data.txParams.data as `0x${string}`,
-        value: BigInt(data.txParams.value || '0'),
+        to: txData.to as `0x${string}`,
+        data: txData.data as `0x${string}`,
+        value: BigInt(txData.value || '0'),
         account: walletClient.account,
-        chainId: data.txParams.chainId
+        chainId: txData.chainId
       })
 
       // Wait for transaction confirmation
