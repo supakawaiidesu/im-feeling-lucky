@@ -33,6 +33,9 @@ export function Header() {
           <Link href="/">
             <Button variant="ghost">Trade</Button>
           </Link>
+          <Link href="/swaps">
+            <Button variant="ghost">Swaps</Button>
+          </Link>
           <Link href="/staking">
             <Button variant="ghost">Stake</Button>
           </Link>
@@ -123,6 +126,9 @@ export function Header() {
               </DropdownItem>
               <DropdownItem onClick={() => window.location.href = "/"}>
                 Trade
+              </DropdownItem>
+              <DropdownItem onClick={() => window.location.href = "/swaps"}>
+                Swaps
               </DropdownItem>
               <DropdownItem onClick={() => window.location.href = "/usdm"}>
                 USD.m
