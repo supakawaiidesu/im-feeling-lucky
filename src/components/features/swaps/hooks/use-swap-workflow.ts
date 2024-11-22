@@ -49,30 +49,29 @@ export function useSwapWorkflow({
     { routeName: 'paraswap', ...paraswapQuote }
   ], [odosQuote, paraswapQuote])
 
-  // Find the best quote (highest output amount)
+  // Find the best available quote (highest output amount)
   const bestRoute = useMemo(() => {
-    // Return null if no quotes or all quotes are loading
-    if (!routeQuotes.length || routeQuotes.every(rq => rq.isLoading)) {
+    // Return null only if no quotes are available yet
+    if (!routeQuotes.length) {
       return null
     }
 
-    return routeQuotes.reduce((best: RouteQuote | null, current) => {
-      // Skip if current quote is loading, has error, or no quote
-      if (current.isLoading || current.error || !current.quote?.outAmounts?.[0]) {
-        return best
-      }
+    // Find first available valid quote
+    const availableQuotes = routeQuotes.filter(
+      rq => !rq.isLoading && !rq.error && rq.quote?.outAmounts?.[0]
+    ) as (RouteQuote & { quote: NonNullable<QuoteResponse> })[] // Type assertion since we filtered nulls
 
-      // If no best quote yet, use current
-      if (!best || !best.quote?.outAmounts?.[0]) {
-        return current
-      }
+    if (!availableQuotes.length) {
+      return null
+    }
 
-      // Compare output amounts (already in decimal format from route hooks)
+    // Compare available quotes to find best
+    return availableQuotes.reduce((best, current) => {
       const currentAmount = parseFloat(current.quote.outAmounts[0])
       const bestAmount = parseFloat(best.quote.outAmounts[0])
 
       return currentAmount > bestAmount ? current : best
-    }, null)
+    }, availableQuotes[0])
   }, [routeQuotes])
 
   // Get the swap execution hook for the best route
@@ -126,9 +125,9 @@ export function useSwapWorkflow({
     return (outAmount / inAmount).toFixed(6)
   }
 
-  // Get quotes status
-  const isLoading = routeQuotes.some(rq => rq.isLoading) || swapLoading
-  const aggregatedError = error || swapError || routeQuotes.find(rq => rq.error)?.error || null
+  // Only consider swap loading state for overall loading
+  const isLoading = swapLoading
+  const aggregatedError = error || swapError || null
 
   return {
     quote: bestRoute?.quote || null,
