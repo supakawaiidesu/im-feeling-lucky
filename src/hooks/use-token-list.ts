@@ -26,8 +26,25 @@ interface TokenListResponse {
   }>
 }
 
+const DEFAULT_TOKENS: Token[] = [
+  {
+    symbol: "USDC",
+    name: "USD Coin",
+    address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
+    decimals: 6
+  },
+  {
+    symbol: "WETH",
+    name: "Wrapped Ether",
+    address: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+    icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png",
+    decimals: 18
+  }
+];
+
 export function useTokenList() {
-  const [tokens, setTokens] = useState<Token[]>([])
+  const [tokens, setTokens] = useState<Token[]>(DEFAULT_TOKENS)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -53,7 +70,13 @@ export function useTokenList() {
         }))
 
         console.log('Loaded tokens:', arbitrumTokens) // Debug log
-        setTokens(arbitrumTokens)
+
+        // Combine default tokens with fetched tokens, removing duplicates
+        const allTokens = [...DEFAULT_TOKENS, ...arbitrumTokens.filter(
+          token => !DEFAULT_TOKENS.some(defaultToken => defaultToken.address === token.address)
+        )]
+
+        setTokens(allTokens)
         setIsLoading(false)
       } catch (err) {
         console.error('Failed to fetch token list:', err) // Debug log

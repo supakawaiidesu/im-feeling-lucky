@@ -18,12 +18,26 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Header } from "../../shared/Header"
+import { useTokenList } from '@/hooks/use-token-list'
 
 export function Swaps() {
+  const { tokens } = useTokenList()
   const [tokenSelectorOpen, setTokenSelectorOpen] = React.useState(false)
   const [selectedField, setSelectedField] = React.useState<'input' | 'output'>('input')
-  const [inputToken, setInputToken] = React.useState({ symbol: 'USDC', name: 'USD Coin', icon: '/placeholder.svg?height=24&width=24' })
-  const [outputToken, setOutputToken] = React.useState({ symbol: 'ETH', name: 'Ethereum', icon: '/placeholder.svg?height=24&width=24' })
+  
+  const defaultInputToken = tokens.find(t => t.address === '0xaf88d065e77c8cC2239327C5EDb3A432268e5831')
+  const defaultOutputToken = tokens.find(t => t.address === '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1')
+  
+  const [inputToken, setInputToken] = React.useState(defaultInputToken || { 
+    symbol: 'USDC', 
+    name: 'USD Coin', 
+    icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png' 
+  })
+  const [outputToken, setOutputToken] = React.useState(defaultOutputToken || { 
+    symbol: 'WETH', 
+    name: 'Wrapped Ether', 
+    icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png' 
+  })
 
   const handleTokenSelect = (token: { symbol: string; name: string; icon: string }) => {
     if (selectedField === 'input') {
