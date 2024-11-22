@@ -5,24 +5,15 @@ import { Settings, ChevronDown, ArrowDown } from 'lucide-react'
 import { TokenSelector } from "./TokenSelector"
 import { Button } from "@/components/ui/button"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Header } from "../../shared/Header"
-import { useTokenList } from '@/hooks/use-token-list'
+import { useTokenList, type Token } from '@/hooks/use-token-list'
 import { useTokenListBalances } from "@/hooks/use-tokenlist-balances"
-import { useOdosQuote } from "@/hooks/use-odos-quote"
-import { useOdosSwap } from '@/hooks/use-odos-swap'
-import { usePublicClient, useWalletClient } from 'wagmi'
+import { useSwapWorkflow } from "./hooks"
 
 export function Swaps() {
   const { tokens } = useTokenList()
@@ -34,40 +25,46 @@ export function Swaps() {
   const defaultInputToken = tokens.find(t => t.address === '0xaf88d065e77c8cC2239327C5EDb3A432268e5831')
   const defaultOutputToken = tokens.find(t => t.address === '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1')
   
-  const [inputToken, setInputToken] = React.useState(defaultInputToken || { 
+  const [inputToken, setInputToken] = React.useState<Token>(defaultInputToken || { 
     symbol: 'USDC', 
     name: 'USD Coin', 
     icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
-    address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
+    address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+    decimals: 6
   })
-  const [outputToken, setOutputToken] = React.useState(defaultOutputToken || { 
+  const [outputToken, setOutputToken] = React.useState<Token>(defaultOutputToken || { 
     symbol: 'WETH', 
     name: 'Wrapped Ether', 
     icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
-    address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'
+    address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+    decimals: 18
   })
 
   const inputBalance = balances.find(t => t.address === inputToken.address)
   const outputBalance = balances.find(t => t.address === outputToken.address)
 
-  const { quote, isLoading: quoteLoading, error: quoteError } = useOdosQuote({
-    inputToken: inputToken.address,
-    outputToken: outputToken.address,
-    inputAmount: inputAmount ? inputAmount + "000000" : undefined, // Convert to proper decimals
-    enabled: Boolean(inputAmount && inputToken && outputToken)
+  const {
+    quote,
+    outputAmount,
+    exchangeRate,
+    isLoading,
+    error,
+    handleSwap,
+    selectedRouteName,
+    allQuotes
+  } = useSwapWorkflow({
+    inputToken,
+    outputToken,
+    inputAmount: inputAmount ? inputAmount : undefined,
   })
 
-  const { data: walletClient } = useWalletClient()
-  const publicClient = usePublicClient()
-  const { executeSwap } = useOdosSwap()
-
-  const handleTokenSelect = (token: { symbol: string; name: string; icon: string; address: string }) => {
-      if (selectedField === 'input') {
-        setInputToken(token)
-      } else {
-        setOutputToken(token)
-      }
+  const handleTokenSelect = (token: Token) => {
+    if (selectedField === 'input') {
+      setInputToken(token)
+    } else {
+      setOutputToken(token)
     }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only allow numbers and decimals
@@ -77,37 +74,22 @@ export function Swaps() {
     }
   }
 
-  const outputAmount = React.useMemo(() => {
-    if (!quote || !quote.outAmounts?.[0]) return "0.0"
-    const amount = BigInt(quote.outAmounts[0])
-    return (Number(amount) / 1e18).toFixed(6) // Assuming 18 decimals for output token
-  }, [quote])
-
-  const handleSwap = async () => {
-    if (!quote?.pathId || !walletClient) return
-    
+  const onSwap = async () => {
     try {
-      const request = await executeSwap(quote.pathId)
-      
-      const hash = await walletClient.sendTransaction({
-        to: request.to as `0x${string}`,
-        data: request.data as `0x${string}`,
-        value: BigInt(request.value || "0"),
-        account: walletClient.account
-      })
-
-      // Optional: Wait for transaction
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
-      }
-      
-      // Reset form or show success message
-      setInputAmount('')
+      await handleSwap()
+      setInputAmount('') // Reset form on success
     } catch (error) {
       console.error('Swap failed:', error)
-      // Handle error (show toast, etc)
+      // Error is handled by the hook and displayed in UI
     }
   }
+
+  // Get all route quotes for comparison display
+  const routeQuotes = Object.entries(allQuotes).map(([routeName, { quote, isLoading }]) => ({
+    name: routeName,
+    amount: quote?.outAmounts?.[0] || '0.0',
+    loading: isLoading
+  }))
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -121,7 +103,7 @@ export function Swaps() {
           
           <TooltipProvider>
             <div className="w-full max-w-md mx-auto space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-end">
                 <Button variant="ghost" size="icon" className="text-gray-400">
                   <Settings className="w-5 h-5" />
                 </Button>
@@ -185,7 +167,7 @@ export function Swaps() {
                   <div className="flex items-center justify-between">
                     <input
                       type="text"
-                      value={quoteLoading ? "Loading..." : outputAmount}
+                      value={isLoading ? "Loading..." : outputAmount}
                       readOnly
                       className="w-1/2 text-4xl bg-transparent opacity-50 cursor-not-allowed focus:outline-none"
                     />
@@ -220,40 +202,43 @@ export function Swaps() {
 
               <Button 
                 className="w-full py-6 text-white bg-pink-500 hover:bg-pink-600"
-                onClick={handleSwap}
-                disabled={!quote || !inputAmount}
+                onClick={onSwap}
+                disabled={!quote || !inputAmount || isLoading}
               >
-                {!quote ? 'Enter an amount' : 'Review'}
+                {isLoading ? 'Loading...' : !quote ? 'Enter an amount' : 'Review'}
               </Button>
 
+              {error && (
+                <div className="p-3 text-sm text-red-500 rounded-lg bg-red-500/10">
+                  {error}
+                </div>
+              )}
+
               <div className="space-y-3 text-sm">
+                {/* Route comparison section */}
+                <div className="p-4 space-y-2 rounded-lg bg-neutral-800">
+                  <div className="font-medium text-gray-400">Available Routes</div>
+                  {routeQuotes.map(({ name, amount, loading }) => (
+                    <div key={name} className="flex items-center justify-between">
+                      <span className={`capitalize ${name === selectedRouteName ? 'text-pink-500' : 'text-gray-400'}`}>
+                        {name}
+                        {name === selectedRouteName && ' (Best)'}
+                      </span>
+                      <span className="text-gray-300">
+                        {loading ? 'Loading...' : `${amount} ${outputToken.symbol}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
                 <div className="flex items-center justify-between text-gray-400">
                   <div className="flex items-center gap-1">
-                    Rate: 1 {inputToken.symbol} = {quote ? (Number(quote.outAmounts[0]) / Number(quote.inAmounts[0])).toFixed(6) : '0.00'} {outputToken.symbol}
+                    Rate: 1 {inputToken.symbol} = {exchangeRate} {outputToken.symbol}
                     <span className="text-gray-500">
                       (${quote?.inValues?.[0]?.toFixed(2) || "0.00"})
                     </span>
                   </div>
                   <ChevronDown className="w-4 h-4" />
-                </div>
-                <div className="flex items-center justify-between text-gray-400">
-                  <Tooltip>
-                    <TooltipTrigger className="flex items-center gap-1">
-                      Order Routing
-                      <div className="w-4 h-4 text-xs text-center bg-gray-700 rounded-full">?</div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Aggregator the trade routed through</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <div className="flex items-center gap-1">
-                    <img
-                      src="/placeholder.svg?height=16&width=16"
-                      className="w-4 h-4 rounded-full"
-                      alt="Network"
-                    />
-                    Odos
-                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-gray-400">

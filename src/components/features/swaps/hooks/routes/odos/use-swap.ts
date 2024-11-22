@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
+import { type SwapTransaction, type SwapRequest } from '../../types'
 
 interface AssembleResponse {
   transaction: {
@@ -10,10 +11,6 @@ interface AssembleResponse {
   }
 }
 
-interface SwapRequest {
-  pathId: string
-}
-
 export function useOdosSwap() {
   const { address } = useAccount()
   const { data: walletClient } = useWalletClient()
@@ -21,7 +18,7 @@ export function useOdosSwap() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const assembleTransaction = async (pathId: string) => {
+  const assembleTransaction = async (pathId: string): Promise<SwapTransaction> => {
     if (!address) throw new Error('No address found')
 
     const response = await fetch('https://api.odos.xyz/sor/assemble', {

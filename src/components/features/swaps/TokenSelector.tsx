@@ -9,17 +9,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useTokenList } from "@/hooks/use-token-list";
+import { useTokenList, type Token } from "@/hooks/use-token-list";
 import { useTokenListBalances } from "@/hooks/use-tokenlist-balances";
 
-interface Token {
-  address: string;
-  symbol: string;
-  name: string;
-  icon: string;
+interface TokenWithBalance extends Token {
   balance?: bigint;
   formattedBalance?: string;
-  decimals?: number;
 }
 
 interface TokenSelectorProps {
@@ -61,9 +56,8 @@ export function TokenSelector({ open, onClose, onSelect }: TokenSelectorProps) {
       return {
         ...token,
         balance: balance?.balance,
-        formattedBalance: balance?.formattedBalance,
-        decimals: balance?.decimals
-      };
+        formattedBalance: balance?.formattedBalance
+      } as TokenWithBalance;
     });
   }, [displayedTokens, balances]);
 
@@ -118,7 +112,9 @@ export function TokenSelector({ open, onClose, onSelect }: TokenSelectorProps) {
                   <button
                     key={token.address}
                     onClick={() => {
-                      onSelect(token);
+                      // Only pass the Token properties, not the balance info
+                      const { balance, formattedBalance, ...tokenWithoutBalance } = token;
+                      onSelect(tokenWithoutBalance);
                       onClose();
                     }}
                     className="flex items-center w-full gap-3 p-2 rounded-lg hover:bg-neutral-900"
