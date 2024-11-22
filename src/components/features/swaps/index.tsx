@@ -19,11 +19,15 @@ import {
 } from "@/components/ui/tooltip"
 import { Header } from "../../shared/Header"
 import { useTokenList } from '@/hooks/use-token-list'
+import { useTokenListBalances } from "@/hooks/use-tokenlist-balances"
+import { useOdosQuote } from "@/hooks/use-odos-quote"
 
 export function Swaps() {
   const { tokens } = useTokenList()
   const [tokenSelectorOpen, setTokenSelectorOpen] = React.useState(false)
   const [selectedField, setSelectedField] = React.useState<'input' | 'output'>('input')
+  const [inputAmount, setInputAmount] = React.useState("")
+  const { balances } = useTokenListBalances(tokens)
   
   const defaultInputToken = tokens.find(t => t.address === '0xaf88d065e77c8cC2239327C5EDb3A432268e5831')
   const defaultOutputToken = tokens.find(t => t.address === '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1')
@@ -31,21 +35,47 @@ export function Swaps() {
   const [inputToken, setInputToken] = React.useState(defaultInputToken || { 
     symbol: 'USDC', 
     name: 'USD Coin', 
-    icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png' 
+    icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
+    address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
   })
   const [outputToken, setOutputToken] = React.useState(defaultOutputToken || { 
     symbol: 'WETH', 
     name: 'Wrapped Ether', 
-    icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png' 
+    icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
+    address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'
   })
 
-  const handleTokenSelect = (token: { symbol: string; name: string; icon: string }) => {
-    if (selectedField === 'input') {
-      setInputToken(token)
-    } else {
-      setOutputToken(token)
+  const inputBalance = balances.find(t => t.address === inputToken.address)
+  const outputBalance = balances.find(t => t.address === outputToken.address)
+
+  const { quote, isLoading: quoteLoading, error: quoteError } = useOdosQuote({
+    inputToken: inputToken.address,
+    outputToken: outputToken.address,
+    inputAmount: inputAmount ? inputAmount + "000000" : undefined, // Convert to proper decimals
+    enabled: Boolean(inputAmount && inputToken && outputToken)
+  })
+
+  const handleTokenSelect = (token: { symbol: string; name: string; icon: string; address: string }) => {
+      if (selectedField === 'input') {
+        setInputToken(token)
+      } else {
+        setOutputToken(token)
+      }
+    }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Only allow numbers and decimals
+    const value = e.target.value
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      setInputAmount(value)
     }
   }
+
+  const outputAmount = React.useMemo(() => {
+    if (!quote || !quote.outAmounts?.[0]) return "0.0"
+    const amount = BigInt(quote.outAmounts[0])
+    return (Number(amount) / 1e18).toFixed(6) // Assuming 18 decimals for output token
+  }, [quote])
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -74,31 +104,42 @@ export function Swaps() {
                   <div className="flex items-center justify-between">
                     <input
                       type="text"
-                      value="10"
+                      value={inputAmount}
+                      onChange={handleInputChange}
+                      placeholder="0.0"
                       className="w-1/2 text-4xl bg-transparent focus:outline-none"
                     />
-                    <button
-                      onClick={() => {
-                        setSelectedField('input')
-                        setTokenSelectorOpen(true)
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-800"
-                    >
-                      <img
-                        src={inputToken.icon}
-                        className="w-6 h-6 rounded-full"
-                        alt={inputToken.name}
-                      />
-                      {inputToken.symbol}
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
+                    <div className="flex flex-col items-end">
+                      <button
+                        onClick={() => {
+                          setSelectedField('input')
+                          setTokenSelectorOpen(true)
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-800"
+                      >
+                        <img
+                          src={inputToken.icon}
+                          className="w-6 h-6 rounded-full"
+                          alt={inputToken.name}
+                        />
+                        {inputToken.symbol}
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                      {inputBalance && (
+                        <span className="mt-1 text-sm text-gray-400">
+                          Balance: {Number(inputBalance.formattedBalance).toFixed(4)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-400">$10.00</div>
+                  <div className="text-sm text-gray-400">
+                    ${quote?.inValues?.[0]?.toFixed(2) || "0.00"}
+                  </div>
                 </div>
 
                 <div className="relative flex justify-center">
                   <div className="absolute flex items-center -top-3 -bottom-3">
-                    <div className="p-2 rounded-xl bg-neutral-900">
+                    <div className="p-2 rounded-xl bg-[#232323]">
                       <ArrowDown className="w-4 h-4" />
                     </div>
                   </div>
@@ -112,26 +153,36 @@ export function Swaps() {
                   <div className="flex items-center justify-between">
                     <input
                       type="text"
-                      value="0.00297227"
-                      className="w-1/2 text-4xl bg-transparent focus:outline-none"
+                      value={quoteLoading ? "Loading..." : outputAmount}
+                      readOnly
+                      className="w-1/2 text-4xl bg-transparent opacity-50 cursor-not-allowed focus:outline-none"
                     />
-                    <button
-                      onClick={() => {
-                        setSelectedField('output')
-                        setTokenSelectorOpen(true)
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-800"
-                    >
-                      <img
-                        src={outputToken.icon}
-                        className="w-6 h-6 rounded-full"
-                        alt={outputToken.name}
-                      />
-                      {outputToken.symbol}
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
+                    <div className="flex flex-col items-end">
+                      <button
+                        onClick={() => {
+                          setSelectedField('output')
+                          setTokenSelectorOpen(true)
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-800"
+                      >
+                        <img
+                          src={outputToken.icon}
+                          className="w-6 h-6 rounded-full"
+                          alt={outputToken.name}
+                        />
+                        {outputToken.symbol}
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                      {outputBalance && (
+                        <span className="mt-1 text-sm text-gray-400">
+                          Balance: {Number(outputBalance.formattedBalance).toFixed(4)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-400">$9.98</div>
+                  <div className="text-sm text-gray-400">
+                    ${quote?.outValues?.[0]?.toFixed(2) || "0.00"}
+                  </div>
                 </div>
               </div>
 
@@ -142,23 +193,44 @@ export function Swaps() {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between text-gray-400">
                   <div className="flex items-center gap-1">
-                    1 USDC = 0.00029727 ETH
-                    <span className="text-gray-500">($1.00)</span>
+                    Rate: 1 {inputToken.symbol} = {quote ? (Number(quote.outAmounts[0]) / Number(quote.inAmounts[0])).toFixed(6) : '0.00'} {outputToken.symbol}
+                    <span className="text-gray-500">
+                      (${quote?.inValues?.[0]?.toFixed(2) || "0.00"})
+                    </span>
                   </div>
                   <ChevronDown className="w-4 h-4" />
+                </div>
+                <div className="flex items-center justify-between text-gray-400">
+                  <Tooltip>
+                    <TooltipTrigger className="flex items-center gap-1">
+                      Order Routing
+                      <div className="w-4 h-4 text-xs text-center bg-gray-700 rounded-full">?</div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Aggregator the trade routed through</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <div className="flex items-center gap-1">
+                    <img
+                      src="/placeholder.svg?height=16&width=16"
+                      className="w-4 h-4 rounded-full"
+                      alt="Network"
+                    />
+                    Odos
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-gray-400">
                   <Tooltip>
                     <TooltipTrigger className="flex items-center gap-1">
-                      Fee (0.25%)
+                      Price Impact
                       <div className="w-4 h-4 text-xs text-center bg-gray-700 rounded-full">?</div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Trading fee</p>
+                      <p>Price impact on trade</p>
                     </TooltipContent>
                   </Tooltip>
-                  <span>$0.03</span>
+                  <span>{quote?.priceImpact ? (quote.priceImpact * 100).toFixed(2) : '0.00'}%</span>
                 </div>
 
                 <div className="flex items-center justify-between text-gray-400">
@@ -177,34 +249,8 @@ export function Swaps() {
                       className="w-4 h-4 rounded-full"
                       alt="Network"
                     />
-                    $0.06
+                    ${quote?.gasEstimateValue?.toFixed(2) || '0.00'}
                   </div>
-                </div>
-
-                <div className="flex items-center justify-between text-gray-400">
-                  <Tooltip>
-                    <TooltipTrigger className="flex items-center gap-1">
-                      Order routing
-                      <div className="w-4 h-4 text-xs text-center bg-gray-700 rounded-full">?</div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Route for best price</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <span>Uniswap API</span>
-                </div>
-
-                <div className="flex items-center justify-between text-gray-400">
-                  <Tooltip>
-                    <TooltipTrigger className="flex items-center gap-1">
-                      Price impact
-                      <div className="w-4 h-4 text-xs text-center bg-gray-700 rounded-full">?</div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Price impact on trade</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <span>-0.567%</span>
                 </div>
 
                 <div className="flex items-center justify-between text-gray-400">
@@ -218,8 +264,8 @@ export function Swaps() {
                     </TooltipContent>
                   </Tooltip>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-1 bg-gray-800 rounded">Auto</span>
-                    <span>1%</span>
+                    <span className="px-2 bg-gray-800 rounded py-1px">Auto</span>
+                    <span>0.3%</span>
                   </div>
                 </div>
               </div>
