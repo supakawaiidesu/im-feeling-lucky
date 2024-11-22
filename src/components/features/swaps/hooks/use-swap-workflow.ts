@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { routes } from './routes'
 import type { SwapRouteHooks, QuoteResponse, TokenInfo } from './types'
 
@@ -21,6 +21,16 @@ export function useSwapWorkflow({
   inputAmount
 }: UseSwapWorkflowParams) {
   const [error, setError] = useState<string | null>(null)
+  const [debouncedAmount, setDebouncedAmount] = useState<string | undefined>(undefined)
+
+  // Debounce input amount changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedAmount(inputAmount)
+    }, 1000) // 1 second debounce
+
+    return () => clearTimeout(timer)
+  }, [inputAmount])
 
   // Call all route hooks unconditionally at the top level
   const odosQuote = routes.odos.useQuote({
@@ -28,8 +38,8 @@ export function useSwapWorkflow({
     inputDecimals: inputToken?.decimals,
     outputToken: outputToken?.address,
     outputDecimals: outputToken?.decimals,
-    inputAmount,
-    enabled: Boolean(inputAmount && inputToken && outputToken)
+    inputAmount: debouncedAmount,
+    enabled: Boolean(debouncedAmount && inputToken && outputToken)
   })
   const odosSwap = routes.odos.useSwap()
 
@@ -38,8 +48,8 @@ export function useSwapWorkflow({
     inputDecimals: inputToken?.decimals,
     outputToken: outputToken?.address,
     outputDecimals: outputToken?.decimals,
-    inputAmount,
-    enabled: Boolean(inputAmount && inputToken && outputToken)
+    inputAmount: debouncedAmount,
+    enabled: Boolean(debouncedAmount && inputToken && outputToken)
   })
   const paraswapSwap = routes.paraswap.useSwap()
 
