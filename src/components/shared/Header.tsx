@@ -99,7 +99,7 @@ export function Header() {
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
-          <Link href="/referral">
+          <Link href="/referrals">
             <Button variant="ghost">Referrals</Button>
           </Link>
         </nav>
