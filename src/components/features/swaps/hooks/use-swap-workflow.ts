@@ -23,16 +23,16 @@ export function useSwapWorkflow({
   const [error, setError] = useState<string | null>(null)
   const [debouncedAmount, setDebouncedAmount] = useState<string | undefined>(undefined)
 
-  // Debounce input amount changes
+  // Use useEffect for debouncing instead of useState directly
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedAmount(inputAmount)
-    }, 1000) // 1 second debounce
+    }, 500) // Reduced to 500ms for better UX
 
     return () => clearTimeout(timer)
   }, [inputAmount])
 
-  // Call all route hooks unconditionally at the top level
+  // Use debouncedAmount instead of inputAmount for route quotes
   const odosQuote = routes.odos.useQuote({
     inputToken: inputToken?.address,
     inputDecimals: inputToken?.decimals,
@@ -41,7 +41,6 @@ export function useSwapWorkflow({
     inputAmount: debouncedAmount,
     enabled: Boolean(debouncedAmount && inputToken && outputToken)
   })
-  const odosSwap = routes.odos.useSwap()
 
   const paraswapQuote = routes.paraswap.useQuote({
     inputToken: inputToken?.address,
@@ -52,6 +51,7 @@ export function useSwapWorkflow({
     enabled: Boolean(debouncedAmount && inputToken && outputToken)
   })
   const paraswapSwap = routes.paraswap.useSwap()
+  const odosSwap = routes.odos.useSwap()
 
   // Combine quotes into array for comparison
   const routeQuotes: RouteQuote[] = useMemo(() => [

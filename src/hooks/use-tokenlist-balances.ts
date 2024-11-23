@@ -52,8 +52,11 @@ export function useTokenListBalances(tokens: Token[]) {
     ])),
     query: {
       enabled: !!userAddress && tokens.length > 0,
-      staleTime: 5000,
-      refetchInterval: 10000,
+      staleTime: 30000, // Increase stale time to 30 seconds
+      refetchInterval: 30000, // Only poll every 30 seconds
+      refetchOnMount: true, // Fetch on mount
+      refetchOnWindowFocus: false, // Don't fetch on window focus
+      refetchOnReconnect: false, // Don't fetch on reconnect
     }
   })
 
