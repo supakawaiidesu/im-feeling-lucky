@@ -41,10 +41,9 @@ export function WalletBox() {
 
     const musdBalance = parseFloat(balances?.formattedMusdBalance || "0");
     const usdcBalance = parseFloat(balances?.formattedUsdcBalance || "0");
-    const eoaBalance = parseFloat(balances?.formattedEoaUsdcBalance || "0");
     const unrealizedPnl = totalUnrealizedPnl || 0;
 
-    const total = musdBalance + usdcBalance + eoaBalance + unrealizedPnl;
+    const total = musdBalance + usdcBalance + unrealizedPnl;
     return `$${total.toFixed(2)}`;
   };
 
@@ -86,15 +85,6 @@ export function WalletBox() {
             {balancesLoading
               ? "Loading..."
               : `$${formatBalance(balances?.formattedMusdBalance)} USD`}
-          </span>
-        </div>
-
-        <div className="flex justify-between">
-          <span>Web Wallet Balance</span>
-          <span>
-            {balancesLoading
-              ? "Loading..."
-              : `${formatBalance(balances?.formattedEoaUsdcBalance)} USDC`}
           </span>
         </div>
 
