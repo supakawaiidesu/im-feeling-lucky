@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import DepositBox from "../features/trading/deposit";
 import Link from "next/link";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown, Wallet } from "lucide-react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faQuestionCircle, 
@@ -19,13 +19,26 @@ export function Header() {
     <header className="flex items-center px-4 h-14">
       <div className="flex items-center space-x-4">
         <Link href="/" className="hover:opacity-80">
-          <Image
-            src="/static/images/logo-large.png"
-            alt="UniDex Logo"
-            width={100}
-            height={32}
-            priority
-          />
+          {/* Desktop Logo */}
+          <div className="hidden md:block">
+            <Image
+              src="/static/images/logo-large.png"
+              alt="UniDex Logo"
+              width={100}
+              height={32}
+              priority
+            />
+          </div>
+          {/* Mobile Logo */}
+          <div className="block md:hidden">
+            <Image
+              src="/static/images/logo-small.png"
+              alt="UniDex Logo"
+              width={32}
+              height={32}
+              priority
+            />
+          </div>
         </Link>
         
         {/* Desktop Navigation */}
@@ -177,15 +190,90 @@ export function Header() {
       </div>
 
       <div className="flex items-center ml-auto space-x-2">
-        <div className="hidden sm:block">
-          <DepositBox />
-        </div>
+        <DepositBox />
 
-        <ConnectButton
-          showBalance={false}
-          chainStatus="none"
-          accountStatus="address"
-        />
+        <ConnectButton.Custom>
+          {({
+            account,
+            chain,
+            openAccountModal,
+            openChainModal,
+            openConnectModal,
+            mounted,
+          }) => {
+            const ready = mounted;
+            const connected = ready && account && chain;
+
+            return (
+              <div
+                {...(!ready && {
+                  'aria-hidden': true,
+                  'style': {
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  },
+                })}
+              >
+                {(() => {
+                  if (!connected) {
+                    return (
+                      <>
+                        <Button 
+                          onClick={openConnectModal} 
+                          variant="outline"
+                          className="hidden sm:inline-flex h-9 px-3 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important"
+                        >
+                          Connect
+                        </Button>
+                        <Button 
+                          onClick={openConnectModal} 
+                          variant="outline"
+                          size="icon"
+                          className="sm:hidden h-9 w-9 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important flex items-center justify-center"
+                        >
+                          <Wallet className="w-5 h-5 text-white" />
+                        </Button>
+                      </>
+                    );
+                  }
+
+                  if (chain.unsupported) {
+                    return (
+                      <Button 
+                        onClick={openChainModal}
+                        variant="destructive"
+                        className="h-9 px-3 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important"
+                      >
+                        Wrong Network
+                      </Button>
+                    );
+                  }
+
+                  return (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={openAccountModal}
+                        variant="outline"
+                        className="hidden sm:inline-flex h-9 px-3 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important"
+                      >
+                        {account.displayName}
+                      </Button>
+                      <Button
+                        onClick={openAccountModal}
+                        variant="outline"
+                        size="icon"
+                        className="sm:hidden h-9 w-9 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important flex items-center justify-center"
+                      >
+                        <Wallet className="w-5 h-5 text-white" />
+                      </Button>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          }}
+        </ConnectButton.Custom>
       </div>
     </header>
   );
