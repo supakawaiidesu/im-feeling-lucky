@@ -196,7 +196,33 @@ export default function DepositBox() {
       </Button>
 
       {isOpen && (
-        <Card className="absolute z-50 p-6 space-y-6 top-14 right-4 w-[480px] bg-[hsl(var(--component-background))]">
+        <Card className={`
+          fixed 
+          z-50 
+          p-6 
+          space-y-6 
+          w-full
+          bg-[hsl(var(--component-background))]
+          
+          /* Mobile styles */
+          bottom-0
+          left-0
+          right-0
+          rounded-t-lg
+          rounded-b-none
+          max-h-[90vh]
+          overflow-y-auto
+          
+          /* Desktop styles */
+          md:fixed
+          md:bottom-auto
+          md:left-auto
+          md:right-4
+          md:top-14
+          md:w-[480px]
+          md:rounded-lg
+          md:max-h-none
+        `}>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Wallet Management</h3>
             <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
