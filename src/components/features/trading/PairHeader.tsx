@@ -12,6 +12,7 @@ import {
 import { Search } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import {
+  TokenIcon,
   TokenPairDisplay,
   PrefetchTokenImages,
 } from "../../../hooks/use-token-icon";
@@ -117,11 +118,12 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
             <Select value={selectedPair} onValueChange={onPairChange}>
               <SelectTrigger className="w-full h-full p-0 bg-transparent border-0 shadow-none cursor-pointer focus:ring-0 hover:bg-muted/60">
                 <div className="flex items-center px-4">
+                  <TokenIcon pair={selectedPair} size={32} className="mr-2" />
                   <div className="flex flex-col">
-                    <div className="flex items-center gap-2 mb-1 text-muted-foreground">
-                      <TokenPairDisplay pair={selectedPair} />
+                    <div className="flex items-center gap-2 px-2 mb-1 text-muted-foreground">
+                      <span>{selectedPair}</span>
                     </div>
-                    <div className="font-bold text-md font-mono w-[75px] text-left">
+                    <div className="px-2 font-mono font-bold text-left text-md ">
                       {currentPrice ? currentPrice.toLocaleString() : "Loading..."}
                     </div>
                   </div>
