@@ -113,7 +113,7 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
     <div className="w-full">
       <div className="p-2 my-2 border rounded-lg shadow-sm bg-[hsl(var(--component-background))] overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="flex items-center text-sm flex-nowrap" style={{ width: "fit-content", minWidth: '100%' }}>
+          <div className="flex items-center text-sm flex-nowrap" style={{ width: "fit-content", minWidth: '1200px' }}>
           {/* Price Group with Pair Selector */}
           <div className="flex min-w-[130px] pr-2 border-r">
             <Select value={selectedPair} onValueChange={onPairChange}>
