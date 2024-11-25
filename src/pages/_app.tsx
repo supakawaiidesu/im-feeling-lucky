@@ -18,6 +18,7 @@ import { arbitrum } from "viem/chains";
 import { PriceProvider } from "../lib/websocket-price-context";
 import { Footer } from "../components/shared/Footer";
 import { Toaster } from "../components/ui/toaster";
+import  NewVersionNotification from "../components/shared/NewVersionNotification";
 
 const client = new QueryClient();
 const Disclaimer: DisclaimerComponent = ({ Text, Link }) => (
@@ -54,12 +55,11 @@ function MyApp({ Component, pageProps }: AppProps) {
             >
               <PriceProvider>
                 <div className="pb-8">
-                  {" "}
-                  {/* Added padding bottom to prevent footer overlap */}
                   <Component {...pageProps} />
                 </div>
                 <Footer />
                 <Toaster />
+                <NewVersionNotification />
               </PriceProvider>
             </RainbowKitProvider>
           </QueryClientProvider>
