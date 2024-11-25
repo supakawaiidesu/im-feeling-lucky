@@ -177,7 +177,12 @@ export function PositionsContent({
                 </TableCell>
                 <TableCell className="flex justify-between md:table-cell">
                   <span className="md:hidden">Size:</span>
-                  <div>${formatNumber(position.size)}</div>
+                  <div>
+                    <div>${formatNumber(position.size)}</div>
+                    <div className="hidden text-muted-foreground md:block">
+                      {(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)} {basePair.toUpperCase()}
+                    </div>
+                  </div>
                 </TableCell>
                 <TableCell className="flex justify-between md:hidden">
                   <span>Notional Size:</span>
@@ -195,21 +200,35 @@ export function PositionsContent({
                 </TableCell>
                 <TableCell className="flex justify-between md:table-cell">
                   <span className="md:hidden">Market Price:</span>
-                  <div>{currentPrice ? `$${formatNumber(currentPrice.toFixed(2))}` : "Loading..."}</div>
+                  <div>
+                    <div>{currentPrice ? `$${formatNumber(currentPrice.toFixed(2))}` : "Loading..."}</div>
+                    <div className="hidden text-red-500 md:block">
+                      ${formatNumber(position.liquidationPrice)}
+                    </div>
+                  </div>
                 </TableCell>
                 <TableCell className="flex justify-between md:hidden">
                   <span>Liquidation Price:</span>
-                  <div className="text-red-500">${formatNumber(position.liquidationPrice)}</div>
+                  <div className="text-red-500">
+                    ${formatNumber(position.liquidationPrice)}
+                  </div>
                 </TableCell>
                 <TableCell 
                   className="flex justify-between md:table-cell cursor-pointer hover:bg-[#272734]"
                   onClick={(e) => handleSLTPClick(position, e)}
                 >
                   <span className="md:hidden">Stop Loss:</span>
-                  <div className="text-red-500">
-                    {triggerOrder?.stopLoss
-                      ? `$${formatNumber(triggerOrder.stopLoss.price)} (${triggerOrder.stopLoss.size}%)`
-                      : "-"}
+                  <div>
+                    <div className="text-red-500">
+                      {triggerOrder?.stopLoss
+                        ? `$${formatNumber(triggerOrder.stopLoss.price)} (${triggerOrder.stopLoss.size}%)`
+                        : "-"}
+                    </div>
+                    <div className="hidden text-green-500 md:block">
+                      {triggerOrder?.takeProfit
+                        ? `$${formatNumber(triggerOrder.takeProfit.price)} (${triggerOrder.takeProfit.size}%)`
+                        : "-"}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell 
