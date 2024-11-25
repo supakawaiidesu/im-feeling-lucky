@@ -1,57 +1,86 @@
-import React, { useState, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { RefreshCw } from 'lucide-react'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { motion } from 'framer-motion'
 
 const NewVersionNotification = () => {
-  const [showUpdateAlert, setShowUpdateAlert] = useState(false);
+  const [showUpdateAlert, setShowUpdateAlert] = useState(false)
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') return;
+    //if (process.env.NODE_ENV === 'development') return;
 
     const checkForNewVersion = async () => {
       try {
-        const currentBuildId = (document.querySelector('meta[name="build-id"]') as HTMLMetaElement)?.content;
+        const currentBuildId = (document.querySelector('meta[name="build-id"]') as HTMLMetaElement)?.content
         
-        const response = await fetch('/api/build-id');
-        const { buildId: latestBuildId } = await response.json();
+        const response = await fetch('/api/build-id')
+        const { buildId: latestBuildId } = await response.json()
 
         if (currentBuildId && latestBuildId && currentBuildId !== latestBuildId) {
-          setShowUpdateAlert(true);
+          setShowUpdateAlert(true)
         }
       } catch (error) {
-        console.error('Failed to check for updates:', error);
+        console.error('Failed to check for updates:', error)
       }
-    };
+    }
 
-    checkForNewVersion();
-    const interval = setInterval(checkForNewVersion, 5 * 60 * 1000);
+    checkForNewVersion()
+    const interval = setInterval(checkForNewVersion, 30 * 1000)
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
 
   const handleRefresh = () => {
-    window.location.reload();
-  };
+    window.location.reload()
+  }
 
-  if (!showUpdateAlert) return null;
+  //if (!showUpdateAlert) return null;
 
   return (
-    <div className="fixed z-50 max-w-sm bottom-4 right-4">
-      <Alert className="border-blue-200 bg-blue-50 dark:bg-gray-800 dark:border-gray-700">
-        <RefreshCw className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-        <AlertTitle className="text-blue-800 dark:text-blue-200">New Version Available</AlertTitle>
-        <AlertDescription className="mt-2">
-          <p className="mb-2 text-blue-600 dark:text-blue-300">A new version of the app is available.</p>
-          <button
-            onClick={handleRefresh}
-            className="px-4 py-2 text-white transition-colors bg-blue-500 rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
-          >
-            Refresh Now
-          </button>
-        </AlertDescription>
+    <motion.div 
+      className="fixed z-50 max-w-sm bottom-4 right-4"
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Alert className="border border-[#7142cf]/20 bg-[#17161d] shadow-lg shadow-[#7142cf]/10 backdrop-blur-sm transition-all duration-300 hover:border-[#7142cf]/30">
+        <div className="flex flex-col space-y-4">
+          <AlertTitle className="text-lg font-semibold text-white">
+            New Version Available
+          </AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p className="text-gray-400">
+             A new update is avaliable containing new features, bug fixes, and improvements.
+            </p>
+            <Button 
+              onClick={handleRefresh} 
+              className="w-full px-4 py-2 bg-[#7142cf] text-white rounded-lg font-medium
+                         transition-all duration-200 hover:bg-[#7142cf]/90 hover:shadow-md
+                         hover:shadow-[#7142cf]/20 active:transform active:scale-[0.98]
+                         bg-gradient-to-r from-[#7142cf] to-[#7142cf]/80"
+            >
+              <motion.div 
+                className="flex items-center justify-center space-x-2"
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.span
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </motion.span>
+                <span>Refresh Now</span>
+              </motion.div>
+            </Button>
+          </AlertDescription>
+        </div>
       </Alert>
-    </div>
-  );
-};
+    </motion.div>
+  )
+}
 
-export default NewVersionNotification;
+export default NewVersionNotification
+
