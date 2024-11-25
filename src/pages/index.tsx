@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAccount } from "wagmi";
 import { Header } from "../components/shared/Header";
-import { PairSelector } from "../components/features/trading/PairSelector";
 import { OrderCard } from "../components/features/trading/OrderCard";
 import { Chart } from "../components/features/trading/Chart";
 import { PositionsTable } from "../components/features/trading/PositionsTable";
@@ -45,11 +44,7 @@ export default function TradingInterface() {
       <main className="flex flex-col flex-1 overflow-y-auto md:flex-row">
         {/* Trading Panel */}
         <div className="w-full px-2 md:w-auto">
-          <PairSelector
-            selectedPair={selectedPair}
-            onPairChange={setPair}
-          />
-          <div className="pt-0.25">
+          <div className="pt-2">
             <OrderCard
               leverage={leverage}
               onLeverageChange={setLeverage}
@@ -61,7 +56,7 @@ export default function TradingInterface() {
 
         {/* Chart and Positions */}
         <div className="flex flex-col w-full">
-          <PairHeader selectedPair={selectedPair} />
+          <PairHeader selectedPair={selectedPair} onPairChange={setPair} />
           <div className="relative h-[350px] md:h-[500px]">
             <Chart selectedPair={selectedPair} />
           </div>
