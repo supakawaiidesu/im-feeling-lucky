@@ -177,11 +177,12 @@ export function PositionsContent({
                 </TableCell>
                 <TableCell className="flex justify-between md:table-cell">
                   <span className="md:hidden">Size:</span>
-                  <div>
-                    <div>${formatNumber(position.size)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)} {basePair.toUpperCase()}
-                    </div>
+                  <div>${formatNumber(position.size)}</div>
+                </TableCell>
+                <TableCell className="flex justify-between md:hidden">
+                  <span>Notional Size:</span>
+                  <div className="text-muted-foreground">
+                    {(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)} {basePair.toUpperCase()}
                   </div>
                 </TableCell>
                 <TableCell className="flex justify-between md:table-cell">
@@ -193,28 +194,33 @@ export function PositionsContent({
                   <div>${formatNumber(position.entryPrice)}</div>
                 </TableCell>
                 <TableCell className="flex justify-between md:table-cell">
-                  <span className="md:hidden">Market/Liq. Price:</span>
-                  <div>
-                    <div>{currentPrice ? `$${formatNumber(currentPrice.toFixed(2))}` : "Loading..."}</div>
-                    <div className="text-red-500">${formatNumber(position.liquidationPrice)}</div>
+                  <span className="md:hidden">Market Price:</span>
+                  <div>{currentPrice ? `$${formatNumber(currentPrice.toFixed(2))}` : "Loading..."}</div>
+                </TableCell>
+                <TableCell className="flex justify-between md:hidden">
+                  <span>Liquidation Price:</span>
+                  <div className="text-red-500">${formatNumber(position.liquidationPrice)}</div>
+                </TableCell>
+                <TableCell 
+                  className="flex justify-between md:table-cell cursor-pointer hover:bg-[#272734]"
+                  onClick={(e) => handleSLTPClick(position, e)}
+                >
+                  <span className="md:hidden">Stop Loss:</span>
+                  <div className="text-red-500">
+                    {triggerOrder?.stopLoss
+                      ? `$${formatNumber(triggerOrder.stopLoss.price)} (${triggerOrder.stopLoss.size}%)`
+                      : "-"}
                   </div>
                 </TableCell>
                 <TableCell 
-                  className="md:table-cell flex justify-between cursor-pointer hover:bg-[#272734]"
+                  className="flex justify-between md:hidden cursor-pointer hover:bg-[#272734]"
                   onClick={(e) => handleSLTPClick(position, e)}
                 >
-                  <span className="md:hidden">SL/TP:</span>
-                  <div>
-                    <div className="text-red-500">
-                      {triggerOrder?.stopLoss
-                        ? `$${formatNumber(triggerOrder.stopLoss.price)} (${triggerOrder.stopLoss.size}%)`
-                        : "-"}
-                    </div>
-                    <div className="text-green-500">
-                      {triggerOrder?.takeProfit
-                        ? `$${formatNumber(triggerOrder.takeProfit.price)} (${triggerOrder.takeProfit.size}%)`
-                        : "-"}
-                    </div>
+                  <span>Take Profit:</span>
+                  <div className="text-green-500">
+                    {triggerOrder?.takeProfit
+                      ? `$${formatNumber(triggerOrder.takeProfit.price)} (${triggerOrder.takeProfit.size}%)`
+                      : "-"}
                   </div>
                 </TableCell>
                 <TableCell
