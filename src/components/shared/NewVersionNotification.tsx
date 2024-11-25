@@ -10,7 +10,7 @@ const NewVersionNotification = () => {
   const [showUpdateAlert, setShowUpdateAlert] = useState(false)
 
   useEffect(() => {
-    //if (process.env.NODE_ENV === 'development') return;
+    if (process.env.NODE_ENV === 'development') return;
 
     const checkForNewVersion = async () => {
       try {
@@ -37,7 +37,7 @@ const NewVersionNotification = () => {
     window.location.reload()
   }
 
-  //if (!showUpdateAlert) return null;
+  if (!showUpdateAlert) return null;
 
   return (
     <motion.div 
