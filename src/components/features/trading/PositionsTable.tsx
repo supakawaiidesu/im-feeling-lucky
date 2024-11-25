@@ -94,7 +94,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
         </Button>
       </div>
       <div className="w-full overflow-x-auto">
-        <div style={{ minWidth: "1240px" }}>
+        <div style={{ minWidth: "300px" }}>
           <Table>
             {activeTab === "positions" && (
               <PositionsContent

@@ -104,7 +104,7 @@ export function PositionsContent({
 
   return (
     <>
-      <TableHeader>
+      <TableHeader className="hidden md:table-header-group">
         <TableRow>
           <TableHead>Pair</TableHead>
           <TableHead>Size</TableHead>
@@ -150,56 +150,86 @@ export function PositionsContent({
             return (
               <TableRow 
                 key={position.positionId}
-                className="cursor-pointer hover:[background-color:#1f1f29]"
+                className="cursor-pointer hover:[background-color:#1f1f29] md:table-row flex flex-col border-b"
                 onClick={() => handleRowClick(position)}
               >
-                <TableCell>
-                  <div>{position.market}</div>
-                  <div className={position.isLong ? "text-green-500" : "text-red-500"}>
-                    {leverage}x {position.isLong ? "Long" : "Short"}
+                <TableCell className="flex flex-col md:table-cell md:block">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div>{position.market}</div>
+                      <div className={position.isLong ? "text-green-500" : "text-red-500"}>
+                        {leverage}x {position.isLong ? "Long" : "Short"}
+                      </div>
+                    </div>
+                    <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleClosePosition(position)}
+                        disabled={closingPositions[Number(position.positionId)]}
+                      >
+                        {closingPositions[Number(position.positionId)]
+                          ? "Closing..."
+                          : "Close"}
+                      </Button>
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div>${formatNumber(position.size)}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)} {basePair.toUpperCase()}
+                <TableCell className="flex justify-between md:table-cell">
+                  <span className="md:hidden">Size:</span>
+                  <div>
+                    <div>${formatNumber(position.size)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {(parseFloat(position.size) / parseFloat(position.entryPrice)).toFixed(6)} {basePair.toUpperCase()}
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="flex justify-between md:table-cell">
+                  <span className="md:hidden">Margin:</span>
                   <div>${formatNumber(position.margin)}</div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="flex justify-between md:table-cell">
+                  <span className="md:hidden">Entry Price:</span>
                   <div>${formatNumber(position.entryPrice)}</div>
                 </TableCell>
-                <TableCell>
-                  <div>{currentPrice ? `$${formatNumber(currentPrice.toFixed(2))}` : "Loading..."}</div>
-                  <div className="text-red-500">${formatNumber(position.liquidationPrice)}</div>
+                <TableCell className="flex justify-between md:table-cell">
+                  <span className="md:hidden">Market/Liq. Price:</span>
+                  <div>
+                    <div>{currentPrice ? `$${formatNumber(currentPrice.toFixed(2))}` : "Loading..."}</div>
+                    <div className="text-red-500">${formatNumber(position.liquidationPrice)}</div>
+                  </div>
                 </TableCell>
                 <TableCell 
-                  className="cursor-pointer hover:bg-[#272734]"
+                  className="md:table-cell flex justify-between cursor-pointer hover:bg-[#272734]"
                   onClick={(e) => handleSLTPClick(position, e)}
                 >
-                  <div className="text-red-500">
-                    {triggerOrder?.stopLoss
-                      ? `$${formatNumber(triggerOrder.stopLoss.price)} (${triggerOrder.stopLoss.size}%)`
-                      : "-"}
-                  </div>
-                  <div className="text-green-500">
-                    {triggerOrder?.takeProfit
-                      ? `$${formatNumber(triggerOrder.takeProfit.price)} (${triggerOrder.takeProfit.size}%)`
-                      : "-"}
+                  <span className="md:hidden">SL/TP:</span>
+                  <div>
+                    <div className="text-red-500">
+                      {triggerOrder?.stopLoss
+                        ? `$${formatNumber(triggerOrder.stopLoss.price)} (${triggerOrder.stopLoss.size}%)`
+                        : "-"}
+                    </div>
+                    <div className="text-green-500">
+                      {triggerOrder?.takeProfit
+                        ? `$${formatNumber(triggerOrder.takeProfit.price)} (${triggerOrder.takeProfit.size}%)`
+                        : "-"}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell
                   ref={setRef(position.positionId)}
-                  className={pnlValue >= 0 ? "text-green-500" : "text-red-500"}
+                  className={`md:table-cell flex justify-between ${pnlValue >= 0 ? "text-green-500" : "text-red-500"}`}
                   onMouseEnter={() => handleMouseEnter(position.positionId)}
                   onMouseLeave={() => setHoveredPosition(null)}
                 >
-                  <div>{formatPnL(finalPnl)}</div>
-                  <div>{pnlPercentage}%</div>
+                  <span className="md:hidden">PnL:</span>
+                  <div>
+                    <div>{formatPnL(finalPnl)}</div>
+                    <div>{pnlPercentage}%</div>
+                  </div>
                 </TableCell>
-                <TableCell onClick={(e) => e.stopPropagation()}>
+                <TableCell className="hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
                   <Button
                     variant="destructive"
                     size="sm"
