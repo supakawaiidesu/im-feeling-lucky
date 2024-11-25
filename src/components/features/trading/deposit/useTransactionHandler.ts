@@ -76,11 +76,21 @@ export function useTransactionHandler({
 
       refetchBalances();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to approve and deposit USDC",
-        variant: "destructive",
-      });
+      if (error?.message?.includes("User rejected") || 
+          error?.message?.toLowerCase().includes("rejected") ||
+          error?.code === 4001) {  // MetaMask user rejection code
+        toast({
+          title: "Error",
+          description: "User rejected the transaction",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to approve and deposit USDC",
+          variant: "destructive",
+        });
+      }
       throw error;
     } finally {
       setIsApproving(false);
@@ -124,11 +134,21 @@ export function useTransactionHandler({
 
       refetchBalances();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || `Failed to ${type}`,
-        variant: "destructive",
-      });
+      if (error?.message?.includes("User rejected") || 
+          error?.message?.toLowerCase().includes("rejected") ||
+          error?.code === 4001) {  // MetaMask user rejection code
+        toast({
+          title: "Error",
+          description: "User rejected the transaction",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to ${type}`,
+          variant: "destructive",
+        });
+      }
       throw error;
     } finally {
       setIsLoading(false);

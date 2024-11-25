@@ -249,11 +249,17 @@ export default function DepositBox() {
                 selectedNetwork={selectedNetwork}
               />
               <Tabs defaultValue="smart-account" className="w-full">
-                <TabsList className="w-full">
-                  <TabsTrigger value="smart-account" className="flex-1">
+                <TabsList className="w-full bg-[#272734]">
+                  <TabsTrigger 
+                    value="smart-account" 
+                    className="flex-1 data-[state=active]:bg-[#1f1f29]"
+                  >
                     1CT Wallet
                   </TabsTrigger>
-                  <TabsTrigger value="trading" className="flex-1">
+                  <TabsTrigger 
+                    value="trading" 
+                    className="flex-1 data-[state=active]:bg-[#1f1f29]"
+                  >
                     Margin Balance
                   </TabsTrigger>
                 </TabsList>

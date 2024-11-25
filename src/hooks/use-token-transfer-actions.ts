@@ -69,12 +69,22 @@ export function useTokenTransferActions() {
 
       return hash;
     } catch (error: any) {
-      console.error('Error transferring to smart account:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to transfer to smart account',
-        variant: 'destructive',
-      });
+      // Check for user rejection first
+      if (error?.message?.includes("User rejected") || 
+          error?.message?.toLowerCase().includes("rejected") ||
+          error?.code === 4001) {  // MetaMask user rejection code
+        toast({
+          title: 'Error',
+          description: 'User rejected the transaction',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to transfer to smart account',
+          variant: 'destructive',
+        });
+      }
       throw error;
     } finally {
       setIsTransferring(false);
