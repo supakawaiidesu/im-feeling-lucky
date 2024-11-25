@@ -55,7 +55,7 @@ export default function TradingInterface() {
         </div>
 
         {/* Chart and Positions */}
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full px-2">
           <PairHeader selectedPair={selectedPair} onPairChange={setPair} />
           <div className="relative h-[350px] md:h-[500px]">
             <Chart selectedPair={selectedPair} />
