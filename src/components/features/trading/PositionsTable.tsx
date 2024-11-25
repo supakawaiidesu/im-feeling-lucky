@@ -90,7 +90,7 @@ export function PositionsTable({ address }: PositionsTableProps) {
           size="sm"
           onClick={() => setActiveTab("trades")}
         >
-          Trades
+          History
         </Button>
       </div>
       <div className="w-full overflow-x-auto">
