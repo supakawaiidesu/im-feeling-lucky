@@ -7,14 +7,34 @@ export function useGTradeSdk() {
   const publicClient = usePublicClient();
   
   const sdk = useMemo(() => {
-    if (!publicClient?.transport.url) return null;
-    
-    const tradingSdk = new TradingSDK({ 
-      chainId: SupportedChainId.Arbitrum,
-      rpcProviderUrl: publicClient.transport.url // Pass our existing RPC URL
-    });
-    return tradingSdk;
-  }, [publicClient?.transport?.url]);
+    try {
+      if (!publicClient) {
+        console.warn('Public client not available');
+        return null;
+      }
+
+      if (!publicClient.transport || !('url' in publicClient.transport)) {
+        console.warn('RPC URL not available in transport');
+        return null;
+      }
+
+      const rpcUrl = publicClient.transport.url;
+      if (typeof rpcUrl !== 'string') {
+        console.warn('Invalid RPC URL format');
+        return null;
+      }
+
+      const tradingSdk = new TradingSDK({ 
+        chainId: SupportedChainId.Arbitrum,
+        rpcProviderUrl: rpcUrl
+      });
+
+      return tradingSdk;
+    } catch (error) {
+      console.error('Error initializing gTrade SDK:', error);
+      return null;
+    }
+  }, [publicClient]);
 
   return sdk;
 }

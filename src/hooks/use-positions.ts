@@ -170,6 +170,27 @@ function calculatePnL(
   };
 }
 
+// Add this helper function at the top with other helpers
+function calculateGTradePnL(
+  position: GTradePosition,
+  currentPrice: number
+): { pnl: number; netPnlPct: number } {
+  const { avgEntryPrice, notionalValue, side } = position;
+  
+  // Calculate position size in base currency (e.g., LINK)
+  const sizeInToken = notionalValue / avgEntryPrice;
+  
+  // Calculate PnL
+  const priceDiff = side === 0 ? // 0 is LONG
+    (currentPrice - avgEntryPrice) :
+    (avgEntryPrice - currentPrice);
+  
+  const pnl = priceDiff * sizeInToken;
+  const netPnlPct = (priceDiff / avgEntryPrice) * 100;
+  
+  return { pnl, netPnlPct };
+}
+
 export function usePositions() {
   const [positions, setPositions] = useState<Position[]>([]);
   const { prices } = usePrices();
@@ -209,38 +230,61 @@ export function usePositions() {
   // Separate effect for fetching positions with proper dependencies
   useEffect(() => {
     async function fetchAllPositions() {
-      if (!smartAccount?.address || !isGTradeInitialized) {
+      if (!smartAccount?.address || !isGTradeInitialized || !gTradeSdk) {
         setPositions([]);
         return;
       }
 
       try {
         // Fetch gTrade positions
-        const state = await gTradeSdk?.getState();
-        if (!state) return;
-        const userTrades = await gTradeSdk?.getUserTrades(smartAccount.address);
-        if (!userTrades) return;
+        const state = await gTradeSdk.getState();
+        if (!state) {
+          console.warn('gTrade state is null');
+          return;
+        }
+
+        const userTrades = await gTradeSdk.getUserTrades(smartAccount.address);
+        if (!userTrades) {
+          console.warn('No user trades found');
+          return;
+        }
+
         const gTradePositions = getPositions(state, userTrades);
+        if (!gTradePositions?.length) {
+          console.debug('No gTrade positions found');
+        }
 
         // Format gTrade positions
-        const formattedGTradePositions = gTradePositions.map((pos: GTradePosition): Position => ({
-          market: `${state.pairs[pos.marketKey].from}/${state.pairs[pos.marketKey].to}`,
-          size: pos.notionalValue.toString(),
-          entryPrice: pos.avgEntryPrice.toString(),
-          markPrice: prices[state.pairs[pos.marketKey].from.toLowerCase()]?.price?.toString() || 'Loading...',
-          pnl: pos.unrealizedPnl.pnl >= 0 
-            ? `+$${pos.unrealizedPnl.pnl.toFixed(2)}`
-            : `-$${Math.abs(pos.unrealizedPnl.pnl).toFixed(2)}`,
-          positionId: `g-${pos.marketKey}-${pos.user}`, // Prefix with 'g-' to distinguish from UniDEX positions
-          isLong: pos.side === 0,
-          margin: (pos.notionalValue / pos.leverage).toString(),
-          liquidationPrice: pos.liquidationPrice.toString(),
-          fees: {
-            positionFee: '0', // These might need to be calculated differently for gTrade
-            borrowFee: pos.owedInterest.toString(),
-            fundingFee: '0'
-          }
-        }));
+        const formattedGTradePositions = (gTradePositions || []).map((pos: GTradePosition): Position => {
+          const currentPrice = prices[state.pairs[pos.marketKey].from.toLowerCase()]?.price;
+          const pnlCalc = currentPrice ? 
+            calculateGTradePnL(pos, currentPrice) : 
+            { pnl: 0, netPnlPct: 0 };
+
+          // Calculate size in token
+          const sizeInToken = pos.notionalValue / pos.avgEntryPrice;
+
+          return {
+            market: `${state.pairs[pos.marketKey].from}/${state.pairs[pos.marketKey].to}`,
+            size: pos.notionalValue.toFixed(2), // This is the USD size
+            entryPrice: pos.avgEntryPrice.toFixed(2),
+            markPrice: currentPrice?.toFixed(2) || 'Loading...',
+            pnl: pnlCalc.pnl >= 0 
+              ? `+$${pnlCalc.pnl.toFixed(2)}`
+              : `-$${Math.abs(pnlCalc.pnl).toFixed(2)}`,
+            positionId: `g-${pos.marketKey}-${pos.user}`,
+            isLong: pos.side === 0,
+            margin: (pos.notionalValue / pos.leverage).toFixed(2),
+            liquidationPrice: pos.liquidationPrice.toFixed(2),
+            fees: {
+              positionFee: (pos.totalFees * 0.1).toFixed(2), // 10% of total fees
+              borrowFee: pos.owedInterest.toFixed(2),
+              fundingFee: ((pos.totalFees * 0.9) - pos.owedInterest).toFixed(2)
+            }
+          };
+        });
+
+        console.log('formattedGTradePositions', formattedGTradePositions);
 
         // Process UniDEX positions
         let unidexPositions: Position[] = [];
