@@ -42,17 +42,6 @@ interface ContractPosition {
   accruedBorrowFee: bigint;
 }
 
-interface ContractOrder {
-  status: number;
-  lmtPrice: bigint;
-  size: bigint;
-  collateral: bigint;
-  positionType: bigint;
-  stepAmount: bigint;
-  stepType: bigint;
-  stpPrice: bigint;
-  timestamp: bigint;
-}
 
 interface ContractPaidFees {
   paidPositionFee: bigint;
@@ -93,15 +82,6 @@ function getPriceKeyFromTokenId(tokenId: string): string {
   return symbol;
 }
 
-// Helper functions for bigint conversions
-const fromBigInt = (value: bigint): number => {
-  return Number(value) / Number(SCALING_FACTOR);
-};
-
-const toBigInt = (value: number): bigint => {
-  return BigInt(Math.floor(value * Number(SCALING_FACTOR)));
-};
-
 function calculateLiquidationPrice(
   position: ContractPosition, 
   entryPrice: number,
@@ -109,7 +89,6 @@ function calculateLiquidationPrice(
 ): string {
   const margin = Number(formatUnits(position.collateral, SCALING_FACTOR));
   const size = Number(formatUnits(position.size, SCALING_FACTOR));
-  const leverage = size / margin;
   
   // Convert fees to numbers
   const totalFees = Number(formatUnits(accruedFees.borrowFee + accruedFees.fundingFee, SCALING_FACTOR));
@@ -244,6 +223,7 @@ export function usePositions() {
         }
 
         const userTrades = await gTradeSdk.getUserTrades(smartAccount.address);
+        console.log('userTrades', userTrades);
         if (!userTrades) {
           console.warn('No user trades found');
           return;
@@ -261,23 +241,26 @@ export function usePositions() {
             calculateGTradePnL(pos, currentPrice) : 
             { pnl: 0, netPnlPct: 0 };
 
-          // Calculate size in token
-          const sizeInToken = pos.notionalValue / pos.avgEntryPrice;
+          // Get the actual trade index from the raw trade data
+          const rawTrade = userTrades.find(t => 
+            t.trade.pairIndex === pos.marketKey && 
+            t.trade.user.toLowerCase() === pos.user.toLowerCase()
+          );
 
           return {
             market: `${state.pairs[pos.marketKey].from}/${state.pairs[pos.marketKey].to}`,
-            size: pos.notionalValue.toFixed(2), // This is the USD size
+            size: pos.notionalValue.toFixed(2),
             entryPrice: pos.avgEntryPrice.toFixed(2),
             markPrice: currentPrice?.toFixed(2) || 'Loading...',
             pnl: pnlCalc.pnl >= 0 
               ? `+$${pnlCalc.pnl.toFixed(2)}`
               : `-$${Math.abs(pnlCalc.pnl).toFixed(2)}`,
-            positionId: `g-${pos.marketKey}-${pos.user}`,
+            positionId: `g-${rawTrade?.trade.index ?? 0}-${pos.user}`,
             isLong: pos.side === 0,
             margin: (pos.notionalValue / pos.leverage).toFixed(2),
             liquidationPrice: pos.liquidationPrice.toFixed(2),
             fees: {
-              positionFee: (pos.totalFees * 0.1).toFixed(2), // 10% of total fees
+              positionFee: (pos.totalFees * 0.1).toFixed(2),
               borrowFee: pos.owedInterest.toFixed(2),
               fundingFee: ((pos.totalFees * 0.9) - pos.owedInterest).toFixed(2)
             }
