@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useMarketOrderActions } from './use-market-order-actions';
 import { useGTradeOrderActions } from './use-gtrade-order-actions';
 import { useMarketData } from './use-market-data';
+import { GTRADE_PAIR_MAPPING } from './use-gtrade-pairs';
 
 export type RouteId = 'unidexv4' | 'gtrade';
 
@@ -49,6 +50,8 @@ export function useRouting(assetId: string) {
       };
     }
 
+    const isGTradeSupported = GTRADE_PAIR_MAPPING[market.pair] !== undefined;
+
     const routes: Record<RouteId, RouteInfo> = {
       unidexv4: {
         id: 'unidexv4',
@@ -59,8 +62,9 @@ export function useRouting(assetId: string) {
       gtrade: {
         id: 'gtrade',
         name: 'gTrade',
-        tradingFee: 0.0006, // Example 0.08% fee, adjust based on actual gTrade fees
-        available: true
+        tradingFee: 0.0006,
+        available: isGTradeSupported,
+        reason: isGTradeSupported ? undefined : 'Pair not supported on gTrade'
       }
     };
 
