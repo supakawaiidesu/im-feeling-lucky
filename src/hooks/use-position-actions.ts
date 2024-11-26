@@ -118,6 +118,8 @@ export function usePositionActions() {
           
           return;
         }
+
+        positionId = parseInt(positionId);
       }
 
       const allowedPrice = isLong ? currentPrice * 0.95 : currentPrice * 1.05;
