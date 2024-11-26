@@ -1,4 +1,3 @@
-
 export interface Market {
   assetId: string;
   pair: string;
@@ -43,12 +42,10 @@ export type RouteId = 'unidexv4' | 'gtrade';
 export interface RouteInfo {
   id: RouteId;
   name: string;
-  getMarketData: (assetId: string, marketData: Market) => {
-    tradingFee: number;
-    available: boolean;
-    reason?: string;
-  };
-  executeOrder: (orderParams: OrderParams) => Promise<void>;
+  tradingFee: number;
+  available: boolean;
+  minMargin: number;
+  reason?: string;
 }
 
 export interface RoutingResult {
@@ -105,6 +102,7 @@ export interface TradeDetailsProps {
 export interface RoutingInfo {
   selectedRoute: RouteId;
   routes: Record<RouteId, {
+    minMargin: number;
     tradingFee: number;
     available: boolean;
     reason?: string;

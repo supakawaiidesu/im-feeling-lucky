@@ -32,8 +32,7 @@ export function OrderCard({
   initialReferralCode,
 }: OrderCardProps) {
   const { isConnected } = useAccount();
-  const { smartAccount, setupSessionKey, error, isNetworkSwitching } =
-    useSmartAccount();
+  const { smartAccount, setupSessionKey, error, isNetworkSwitching } = useSmartAccount();
   const [activeTab, setActiveTab] = useState("market");
   const { allMarkets } = useMarketData();
   const { prices } = usePrices();
@@ -43,9 +42,29 @@ export function OrderCard({
   const [resolvedReferrer, setResolvedReferrer] = useState(DEFAULT_REFERRER);
   const [isEditingReferrer, setIsEditingReferrer] = useState(false);
   const referrerInputRef = useRef<HTMLInputElement>(null);
-  const [tempReferrerCode, setTempReferrerCode] = useState(""); // Add this for temporary input value
+  const [tempReferrerCode, setTempReferrerCode] = useState("");
   const [placingOrders, setPlacingOrders] = useState(false);
-  const { bestRoute, routes, executeOrder } = useRouting(assetId);
+
+  const {
+    formState,
+    handleAmountChange,
+    handleMarginChange,
+    handleLimitPriceChange,
+    handleSliderChange,
+    toggleDirection,
+    toggleTPSL,
+    handleTakeProfitChange,
+    handleStopLossChange,
+    setFormState,
+    isValid,
+  } = useOrderForm({ leverage });
+
+  const { bestRoute, routes, executeOrder } = useRouting(
+    assetId,
+    formState.amount,
+    leverage
+  );
+
   const isValidRoutes = (routes: any): routes is Record<RouteId, { tradingFee: number; available: boolean; reason?: string; }> => {
     return routes !== undefined && routes !== null;
   };
@@ -54,16 +73,18 @@ export function OrderCard({
     routes: isValidRoutes(routes) ? routes : {
       unidexv4: {
         tradingFee: 0,
-        available: true
+        available: true,
+        minMargin: 1
       },
       gtrade: {
         tradingFee: 0,
         available: false,
+        minMargin: 6,
         reason: "Route not available"
       }
     },
     routeNames: {
-      unidexv4: 'Unidex v4',
+      unidexv4: 'UniDex',
       gtrade: 'gTrade'
     }
   };
@@ -98,20 +119,6 @@ export function OrderCard({
 
     initializeReferralCode();
   }, [initialReferralCode]);
-
-  const {
-    formState,
-    handleAmountChange,
-    handleMarginChange,  // Add this
-    handleLimitPriceChange,
-    handleSliderChange,
-    toggleDirection,
-    toggleTPSL,
-    handleTakeProfitChange,
-    handleStopLossChange,
-    setFormState,
-    isValid, // Add this
-  } = useOrderForm({ leverage });
 
   const calculatedMargin = formState.amount
     ? parseFloat(formState.amount) / parseFloat(leverage)
@@ -277,7 +284,12 @@ const totalRequired = calculatedMargin + tradingFee;
       return "Enter Limit Price";
     if (placingOrders) return "Placing Order...";
     if (hasInsufficientBalance) return "Insufficient Balance";
-    if (!isValid(formState.amount)) return "Minimum Margin: 1 USD";
+    
+    // Add minimum margin check based on selected route
+    const selectedRoute = routingInfo.routes[routingInfo.selectedRoute];
+    if (calculatedMargin < selectedRoute.minMargin) {
+      return `Minimum Margin: ${selectedRoute.minMargin} USD`;
+    }
 
     const availableLiquidity = formState.isLong
       ? market?.availableLiquidity?.long

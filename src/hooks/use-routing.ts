@@ -12,6 +12,7 @@ interface RouteInfo {
   name: string;
   tradingFee: number;
   available: boolean;
+  minMargin: number;
   reason?: string;
 }
 
@@ -28,10 +29,20 @@ interface OrderParams {
   referrer?: string;
 }
 
-export function useRouting(assetId: string) {
+const MIN_MARGIN = {
+  unidexv4: 1,
+  gtrade: 5
+} as const;
+
+export function useRouting(assetId: string, amount: string, leverage: string) {
   const { placeMarketOrder: placeUnidexOrder } = useMarketOrderActions();
   const { placeGTradeOrder } = useGTradeOrderActions();
   const { allMarkets } = useMarketData();
+
+  const currentMargin = useMemo(() => {
+    if (!amount || !leverage) return 0;
+    return parseFloat(amount) / parseFloat(leverage);
+  }, [amount, leverage]);
 
   const routingInfo = useMemo(() => {
     const market = allMarkets.find(m => m.assetId === assetId);
@@ -41,9 +52,10 @@ export function useRouting(assetId: string) {
         routes: {
           unidexv4: {
             id: 'unidexv4',
-            name: 'Unidex v4',
+            name: 'UniDex',
             tradingFee: 0,
             available: false,
+            minMargin: MIN_MARGIN.unidexv4,
             reason: 'Market not found'
           }
         }
@@ -55,33 +67,40 @@ export function useRouting(assetId: string) {
     const routes: Record<RouteId, RouteInfo> = {
       unidexv4: {
         id: 'unidexv4',
-        name: 'Unidex v4',
-        tradingFee: market.longTradingFee,
-        available: true
+        name: 'UniDex',
+        tradingFee: market.longTradingFee / 10,
+        available: true,
+        minMargin: MIN_MARGIN.unidexv4
       },
       gtrade: {
         id: 'gtrade',
         name: 'gTrade',
         tradingFee: 0.0006,
         available: isGTradeSupported,
+        minMargin: MIN_MARGIN.gtrade,
         reason: isGTradeSupported ? undefined : 'Pair not supported on gTrade'
       }
     };
 
-    // Find route with lowest fee
+    // Find best route considering minimum margins
     const bestRoute = Object.entries(routes)
       .filter(([_, info]) => info.available)
-      .reduce((best, [routeId, info]) => 
-        !best || info.tradingFee < routes[best].tradingFee 
+      .reduce((best, [routeId, info]) => {
+        // If current margin is less than gTrade minimum, force unidexv4
+        if (currentMargin < MIN_MARGIN.gtrade) {
+          return 'unidexv4';
+        }
+        // Otherwise choose based on fees
+        return !best || info.tradingFee < routes[best].tradingFee 
           ? routeId as RouteId 
-          : best
-      , 'unidexv4' as RouteId);
+          : best;
+      }, 'unidexv4' as RouteId);
 
     return {
       bestRoute,
       routes
     };
-  }, [assetId, allMarkets]);
+  }, [assetId, allMarkets, currentMargin]);
 
   const executeOrder = async (params: OrderParams) => {
     if (routingInfo.bestRoute === 'gtrade') {
