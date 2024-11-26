@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { TradeDetails as TradeDetailsType, RouteId, TradeDetailsProps } from "../types";
 
 export function TradeDetails({ 
@@ -15,8 +16,34 @@ export function TradeDetails({
     return new Intl.NumberFormat('en-US').format(value);
   };
 
+  const getRouteLogo = (routeId: RouteId) => {
+    switch (routeId) {
+      case 'gtrade':
+        return '/static/images/gtrade.svg';
+      case 'unidexv4':
+        return '/static/images/logo-small.png';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+      <div className="flex justify-between items-center">
+        <span>Route</span>
+        <div className="flex items-center gap-1.5">
+          <Image 
+            src={getRouteLogo(routingInfo.selectedRoute)}
+            alt={routingInfo.routeNames[routingInfo.selectedRoute]}
+            width={16}
+            height={16}
+          />
+          <span className="text-primary">
+            {routingInfo.routeNames[routingInfo.selectedRoute]}
+          </span>
+        </div>
+      </div>
+
       <div className="flex justify-between">
         <span>Entry Price</span>
         <span>${entryPrice ? formatNumber(parseFloat(entryPrice.toFixed(6))) : "0.00"}</span>
@@ -56,26 +83,6 @@ export function TradeDetails({
       </div>
       
       {referrerSection}
-      
-      <div className="pt-2 border-t border-border">
-        <div className="flex justify-between">
-          <span>Route</span>
-          <span className="text-primary">
-            {routingInfo.routeNames[routingInfo.selectedRoute]}
-          </span>
-        </div>
-        {Object.entries(routingInfo.routes).map(([routeId, data]) => (
-          <div key={routeId} className="flex justify-between text-xs">
-            <span>{routingInfo.routeNames[routeId as RouteId]}</span>
-            <span>
-              {data.available 
-                ? `${(data.tradingFee * 100).toFixed(3)}%` 
-                : data.reason || 'Unavailable'
-              }
-            </span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
