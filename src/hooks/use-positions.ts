@@ -6,6 +6,8 @@ import { useSmartAccount } from './use-smart-account';
 import { lensAbi } from '../lib/abi/lens';
 import { arbitrum } from 'viem/chains';
 import { TRADING_PAIRS } from './use-market-data';
+import { useGTradeSdk } from './use-gtrade-sdk';
+import { getPositions } from "@gainsnetwork/trading-sdk/lib/adapters/kwenta";
 
 const LENS_CONTRACT_ADDRESS = '0xeae57c7bce5caf160343a83440e98bc976ab7274' as `0x${string}`;
 const SCALING_FACTOR = 30; // For formatUnits
@@ -62,6 +64,23 @@ interface ContractAccruedFees {
   positionFee: bigint;
   borrowFee: bigint;
   fundingFee: bigint;
+}
+
+interface GTradePosition {
+  marketKey: number;
+  user: string;
+  side: number; // 0 for LONG, 1 for SHORT
+  avgEntryPrice: number;
+  notionalValue: number;
+  size: number;
+  owedInterest: number;
+  totalFees: number;
+  liquidationPrice: number;
+  leverage: number;
+  unrealizedPnl: {
+    pnl: number;
+    netPnlPct: number;
+  };
 }
 
 // Helper function to get price key from token ID
@@ -155,7 +174,26 @@ export function usePositions() {
   const [positions, setPositions] = useState<Position[]>([]);
   const { prices } = usePrices();
   const { smartAccount } = useSmartAccount();
+  const gTradeSdk = useGTradeSdk();
+  const [isGTradeInitialized, setIsGTradeInitialized] = useState(false);
 
+  // Initialize gTrade SDK only once
+  useEffect(() => {
+    async function initializeGTrade() {
+      if (!isGTradeInitialized && gTradeSdk) {
+        try {
+          await gTradeSdk.initialize();
+          setIsGTradeInitialized(true);
+        } catch (error) {
+          console.error('Failed to initialize gTrade SDK:', error);
+        }
+      }
+    }
+
+    initializeGTrade();
+  }, [gTradeSdk, isGTradeInitialized]);
+
+  // Existing UniDEX contract read with 5s polling
   const { data: contractResult, isError, isLoading, refetch } = useReadContract({
     address: LENS_CONTRACT_ADDRESS,
     abi: lensAbi,
@@ -168,60 +206,113 @@ export function usePositions() {
     chainId: arbitrum.id // Explicitly set chainId to Arbitrum
   });
 
+  // Separate effect for fetching positions with proper dependencies
   useEffect(() => {
-    if (!contractResult || !Array.isArray(contractResult)) {
-      setPositions([]);
-      return;
+    async function fetchAllPositions() {
+      if (!smartAccount?.address || !isGTradeInitialized) {
+        setPositions([]);
+        return;
+      }
+
+      try {
+        // Fetch gTrade positions
+        const state = await gTradeSdk?.getState();
+        if (!state) return;
+        const userTrades = await gTradeSdk?.getUserTrades(smartAccount.address);
+        if (!userTrades) return;
+        const gTradePositions = getPositions(state, userTrades);
+
+        // Format gTrade positions
+        const formattedGTradePositions = gTradePositions.map((pos: GTradePosition): Position => ({
+          market: `${state.pairs[pos.marketKey].from}/${state.pairs[pos.marketKey].to}`,
+          size: pos.notionalValue.toString(),
+          entryPrice: pos.avgEntryPrice.toString(),
+          markPrice: prices[state.pairs[pos.marketKey].from.toLowerCase()]?.price?.toString() || 'Loading...',
+          pnl: pos.unrealizedPnl.pnl >= 0 
+            ? `+$${pos.unrealizedPnl.pnl.toFixed(2)}`
+            : `-$${Math.abs(pos.unrealizedPnl.pnl).toFixed(2)}`,
+          positionId: `g-${pos.marketKey}-${pos.user}`, // Prefix with 'g-' to distinguish from UniDEX positions
+          isLong: pos.side === 0,
+          margin: (pos.notionalValue / pos.leverage).toString(),
+          liquidationPrice: pos.liquidationPrice.toString(),
+          fees: {
+            positionFee: '0', // These might need to be calculated differently for gTrade
+            borrowFee: pos.owedInterest.toString(),
+            fundingFee: '0'
+          }
+        }));
+
+        // Process UniDEX positions
+        let unidexPositions: Position[] = [];
+        if (contractResult && Array.isArray(contractResult)) {
+          const [posIds, positionsData, , , paidFeesData, accruedFeesData] = contractResult;
+
+          if (!positionsData.length) {
+            unidexPositions = [];
+          } else {
+            unidexPositions = positionsData.map((position: ContractPosition, index: number) => {
+              const tokenId = position.tokenId.toString();
+              const market = TRADING_PAIRS[tokenId] || `Token${tokenId}/USD`;
+              const priceKey = getPriceKeyFromTokenId(tokenId);
+              const currentPrice = priceKey && prices[priceKey]?.price;
+              const entryPrice = Number(formatUnits(position.averagePrice, SCALING_FACTOR));
+            
+              const { pnl, fees } = currentPrice ?
+                calculatePnL(
+                  position,
+                  currentPrice,
+                  paidFeesData[index],
+                  accruedFeesData[index]
+                ) :
+                { pnl: 'Loading...', fees: { positionFee: '0', borrowFee: '0', fundingFee: '0' } };
+            
+              return {
+                positionId: posIds[index].toString(),
+                market,
+                size: Number(formatUnits(position.size, SCALING_FACTOR)).toFixed(2),
+                entryPrice: entryPrice.toFixed(2),
+                markPrice: currentPrice ? currentPrice.toFixed(2) : 'Loading...',
+                pnl,
+                isLong: position.isLong,
+                margin: Number(formatUnits(position.collateral, SCALING_FACTOR)).toFixed(2),
+                liquidationPrice: currentPrice ? calculateLiquidationPrice(
+                  position, 
+                  entryPrice,
+                  accruedFeesData[index]
+                ) : 'Loading...',
+                fees
+              };
+            });
+          }
+        }
+
+        // Combine both position types
+        setPositions([...unidexPositions, ...formattedGTradePositions]);
+      } catch (error) {
+        console.error('Error fetching positions:', error);
+      }
     }
 
-    const [posIds, positionsData, , , paidFeesData, accruedFeesData] = contractResult;
+    // Set up polling for gTrade positions
+    const intervalId = setInterval(fetchAllPositions, 5000);
+    fetchAllPositions(); // Initial fetch
 
-    if (!positionsData.length) {
-      setPositions([]);
-      return;
-    }
-
-    const formattedPositions = positionsData.map((position: ContractPosition, index: number) => {
-      const tokenId = position.tokenId.toString();
-      const market = TRADING_PAIRS[tokenId] || `Token${tokenId}/USD`;
-      const priceKey = getPriceKeyFromTokenId(tokenId);
-      const currentPrice = priceKey && prices[priceKey]?.price;
-      const entryPrice = Number(formatUnits(position.averagePrice, SCALING_FACTOR));
-    
-      const { pnl, fees } = currentPrice ?
-        calculatePnL(
-          position,
-          currentPrice,
-          paidFeesData[index],
-          accruedFeesData[index]
-        ) :
-        { pnl: 'Loading...', fees: { positionFee: '0', borrowFee: '0', fundingFee: '0' } };
-    
-      return {
-        positionId: posIds[index].toString(),
-        market,
-        size: Number(formatUnits(position.size, SCALING_FACTOR)).toFixed(2),
-        entryPrice: entryPrice.toFixed(2),
-        markPrice: currentPrice ? currentPrice.toFixed(2) : 'Loading...',
-        pnl,
-        isLong: position.isLong,
-        margin: Number(formatUnits(position.collateral, SCALING_FACTOR)).toFixed(2),
-        liquidationPrice: currentPrice ? calculateLiquidationPrice(
-          position, 
-          entryPrice,
-          accruedFeesData[index]
-        ) : 'Loading...',
-        fees
-      };
-    });
-
-    setPositions(formattedPositions);
-  }, [contractResult, prices]);
+    return () => clearInterval(intervalId);
+  }, [
+    contractResult,
+    prices,
+    smartAccount?.address,
+    gTradeSdk,
+    isGTradeInitialized
+  ]);
 
   return {
     positions,
-    loading: isLoading,
+    loading: isLoading || !isGTradeInitialized,
     error: isError ? new Error('Failed to fetch positions') : null,
-    refetch
+    refetch: async () => {
+      refetch();
+      // Manual refresh of gTrade positions will happen automatically via polling
+    }
   };
 }

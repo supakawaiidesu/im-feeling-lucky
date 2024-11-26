@@ -70,9 +70,10 @@ export function useGTradeOrderActions() {
       if (gTradePairIndex === undefined) {
         throw new Error(`Pair ${unidexPairName} not supported on gTrade`);
       }
-
       setPlacingOrders(true);
-      await tradingSdk.initialize();
+      if (tradingSdk) {
+        await tradingSdk.initialize();
+      }
 
       const marginInWei = parseUnits(margin.toString(), 6);
 
@@ -97,9 +98,8 @@ export function useGTradeOrderActions() {
         tradeType: orderType === "market" ? 0 : 1,
         maxSlippage: 1 + (slippagePercent / 100),
       };
-
       // Build trade transaction
-      const tx = await tradingSdk.build.openTrade(args);
+      const tx = await tradingSdk?.build.openTrade(args);
 
       // If allowance is insufficient, bundle approve + trade
       if (currentAllowance < marginInWei) {
@@ -116,17 +116,19 @@ export function useGTradeOrderActions() {
               data: approveCalldata,
             },
             {
-              to: tx.to as `0x${string}`,
-              data: tx.data as `0x${string}`,
+              to: tx?.to as `0x${string}`,
+              data: tx?.data as `0x${string}`,
             },
           ],
         });
       } else {
         // Just send the trade transaction
-        await kernelClient.sendTransaction({
-          to: tx.to as `0x${string}`,
-          data: tx.data as `0x${string}`,
-        });
+        if (tx) {
+          await kernelClient.sendTransaction({
+            to: tx.to as `0x${string}`, 
+            data: tx.data as `0x${string}`,
+          });
+        }
       }
 
       toast({
