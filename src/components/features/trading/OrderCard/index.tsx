@@ -14,11 +14,13 @@ import { TradeDetails } from "./components/TradeDetails";
 import { WalletBox } from "../WalletEquity";
 import { useOrderForm } from "./hooks/useOrderForm";
 import { useTradeCalculations } from "./hooks/useTradeCalculations";
-import { OrderCardProps } from "./types";
+import { OrderCardProps, RoutingInfo } from "./types";
 import { useBalances } from "../../../../hooks/use-balances";
 import { useReferralContract } from "../../../../hooks/use-referral-contract";
+import { useRouting, RouteId } from '../../../../hooks/use-routing';
+import { toast } from "@/hooks/use-toast";
 
-const TRADING_FEE_RATE = 0.001; // 0.1% fee
+
 const DEFAULT_REFERRER = "0x0000000000000000000000000000000000000000";
 const STORAGE_KEY_CODE = 'unidex-referral-code';
 const STORAGE_KEY_ADDRESS = 'unidex-referral-address';
@@ -30,11 +32,8 @@ export function OrderCard({
   initialReferralCode,
 }: OrderCardProps) {
   const { isConnected } = useAccount();
-  const { smartAccount, setupSessionKey, error, isNetworkSwitching } =
-    useSmartAccount();
+  const { smartAccount, setupSessionKey, error, isNetworkSwitching } = useSmartAccount();
   const [activeTab, setActiveTab] = useState("market");
-  const { placeMarketOrder, placeLimitOrder, placingOrders } =
-    useMarketOrderActions();
   const { allMarkets } = useMarketData();
   const { prices } = usePrices();
   const { balances } = useBalances("arbitrum");
@@ -43,7 +42,52 @@ export function OrderCard({
   const [resolvedReferrer, setResolvedReferrer] = useState(DEFAULT_REFERRER);
   const [isEditingReferrer, setIsEditingReferrer] = useState(false);
   const referrerInputRef = useRef<HTMLInputElement>(null);
-  const [tempReferrerCode, setTempReferrerCode] = useState(""); // Add this for temporary input value
+  const [tempReferrerCode, setTempReferrerCode] = useState("");
+  const [placingOrders, setPlacingOrders] = useState(false);
+
+  const {
+    formState,
+    handleAmountChange,
+    handleMarginChange,
+    handleLimitPriceChange,
+    handleSliderChange,
+    toggleDirection,
+    toggleTPSL,
+    handleTakeProfitChange,
+    handleStopLossChange,
+    setFormState,
+    isValid,
+  } = useOrderForm({ leverage });
+
+  const { bestRoute, routes, executeOrder } = useRouting(
+    assetId,
+    formState.amount,
+    leverage
+  );
+
+  const isValidRoutes = (routes: any): routes is Record<RouteId, { tradingFee: number; available: boolean; reason?: string; }> => {
+    return routes !== undefined && routes !== null;
+  };
+  const routingInfo: RoutingInfo = {
+    selectedRoute: bestRoute || 'unidexv4',
+    routes: isValidRoutes(routes) ? routes : {
+      unidexv4: {
+        tradingFee: 0,
+        available: true,
+        minMargin: 1
+      },
+      gtrade: {
+        tradingFee: 0,
+        available: false,
+        minMargin: 6,
+        reason: "Route not available"
+      }
+    },
+    routeNames: {
+      unidexv4: 'UniDex',
+      gtrade: 'gTrade'
+    }
+  };
 
   useEffect(() => {
     const initializeReferralCode = async () => {
@@ -76,27 +120,14 @@ export function OrderCard({
     initializeReferralCode();
   }, [initialReferralCode]);
 
-  const {
-    formState,
-    handleAmountChange,
-    handleMarginChange,  // Add this
-    handleLimitPriceChange,
-    handleSliderChange,
-    toggleDirection,
-    toggleTPSL,
-    handleTakeProfitChange,
-    handleStopLossChange,
-    setFormState,
-    isValid, // Add this
-  } = useOrderForm({ leverage });
-
   const calculatedMargin = formState.amount
     ? parseFloat(formState.amount) / parseFloat(leverage)
     : 0;
 
-  const calculatedSize = formState.amount ? parseFloat(formState.amount) : 0;
-  const tradingFee = calculatedSize * TRADING_FEE_RATE;
-  const totalRequired = calculatedMargin + tradingFee;
+// Update the trading fee calculation
+const calculatedSize = formState.amount ? parseFloat(formState.amount) : 0;
+const tradingFee = calculatedSize * (isValidRoutes(routes) && bestRoute ? routes[bestRoute].tradingFee : 0);
+const totalRequired = calculatedMargin + tradingFee;
 
   const marginWalletBalance = parseFloat(balances?.formattedMusdBalance || "0");
   const onectWalletBalance = parseFloat(balances?.formattedUsdcBalance || "0");
@@ -104,6 +135,7 @@ export function OrderCard({
   const hasInsufficientBalance = totalRequired > combinedBalance;
   const needsDeposit = totalRequired > marginWalletBalance && totalRequired <= combinedBalance;
 
+  
   const tradeDetails = useTradeCalculations({
     amount: formState.amount,
     leverage,
@@ -209,40 +241,37 @@ export function OrderCard({
     return referrerCode || `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!isConnected || !smartAccount?.address) return;
-
-    const tpsl = formState.tpslEnabled
-      ? {
-          takeProfit: formState.takeProfit,
-          stopLoss: formState.stopLoss,
-        }
-      : {};
-
-    if (activeTab === "market" && tradeDetails.entryPrice) {
-      placeMarketOrder(
-        parseInt(assetId, 10),
-        formState.isLong,
-        tradeDetails.entryPrice,
-        100,
-        calculatedMargin,
-        calculatedSize,
-        tpsl.takeProfit,
-        tpsl.stopLoss,
-        resolvedReferrer
-      );
-    } else if (activeTab === "limit" && formState.limitPrice) {
-      placeLimitOrder(
-        parseInt(assetId, 10),
-        formState.isLong,
-        parseFloat(formState.limitPrice),
-        100,
-        calculatedMargin,
-        calculatedSize,
-        tpsl.takeProfit,
-        tpsl.stopLoss,
-        resolvedReferrer
-      );
+  
+    try {
+      setPlacingOrders(true);
+  
+      const orderParams = {
+        pair: parseInt(assetId, 10),
+        isLong: formState.isLong,
+        price: tradeDetails.entryPrice!,
+        slippagePercent: 100,
+        margin: calculatedMargin,
+        size: calculatedSize,
+        orderType: activeTab as "market" | "limit",
+        takeProfit: formState.tpslEnabled ? formState.takeProfit : undefined,
+        stopLoss: formState.tpslEnabled ? formState.stopLoss : undefined,
+        referrer: resolvedReferrer
+      };
+  
+      // The routing logic will now handle the order appropriately based on the selected route
+      await executeOrder(orderParams);
+  
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to place order",
+        variant: "destructive",
+      });
+    } finally {
+      setPlacingOrders(false);
     }
   };
 
@@ -255,7 +284,12 @@ export function OrderCard({
       return "Enter Limit Price";
     if (placingOrders) return "Placing Order...";
     if (hasInsufficientBalance) return "Insufficient Balance";
-    if (!isValid(formState.amount)) return "Minimum Margin: 1 USD";
+    
+    // Add minimum margin check based on selected route
+    const selectedRoute = routingInfo.routes[routingInfo.selectedRoute];
+    if (calculatedMargin < selectedRoute.minMargin) {
+      return `Minimum Margin: ${selectedRoute.minMargin} USD`;
+    }
 
     const availableLiquidity = formState.isLong
       ? market?.availableLiquidity?.long
@@ -390,13 +424,14 @@ export function OrderCard({
             />
           </TabsContent>
 
-          <TradeDetails 
-            details={tradeDetails} 
-            pair={market?.pair} 
-            tradingFee={tradingFee}
-            totalRequired={totalRequired}
-            referrerSection={referrerSection}
-          />
+<TradeDetails 
+  details={tradeDetails} 
+  pair={market?.pair} 
+  tradingFee={tradingFee}
+  totalRequired={totalRequired}
+  referrerSection={referrerSection}
+  routingInfo={routingInfo}
+/>
 
           {!isConnected ? (
             <div className="w-full mt-4">
