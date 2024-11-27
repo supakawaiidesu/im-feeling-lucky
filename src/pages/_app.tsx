@@ -2,6 +2,7 @@ import "../styles/globals.css";
 import "@rainbow-me/rainbowkit/styles.css";
 import type { AppProps } from "next/app";
 import Script from "next/script";
+import Head from "next/head";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
@@ -34,7 +35,7 @@ const Disclaimer: DisclaimerComponent = ({ Text, Link }) => (
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <>
-      <head>
+      <Head>
         <meta name="application-name" content="Your App Name" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -46,7 +47,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-      </head>
+      </Head>
       <Script
         src="/static/charting_library/charting_library.standalone.js"
         strategy="beforeInteractive"
