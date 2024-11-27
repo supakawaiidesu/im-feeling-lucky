@@ -17,7 +17,6 @@ import { ThemeProvider } from "next-themes";
 import { config } from "../wagmi";
 import { arbitrum } from "viem/chains";
 import { PriceProvider } from "../lib/websocket-price-context";
-import { Footer } from "../components/shared/Footer";
 import { Toaster } from "../components/ui/toaster";
 import  NewVersionNotification from "../components/shared/NewVersionNotification";
 
@@ -71,7 +70,6 @@ function MyApp({ Component, pageProps }: AppProps) {
                 <div className="pb-8">
                   <Component {...pageProps} />
                 </div>
-                <Footer />
                 <Toaster />
                 <NewVersionNotification />
               </PriceProvider>

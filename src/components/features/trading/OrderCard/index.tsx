@@ -3,15 +3,8 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "../../../ui/button";
 import { Card, CardContent } from "../../../ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs";
-import { useMarketOrderActions } from "../../../../hooks/use-market-order-actions";
-import { useSmartAccount } from "../../../../hooks/use-smart-account";
-import { useMarketData } from "../../../../hooks/use-market-data";
-import { usePrices } from "../../../../lib/websocket-price-context";
 import { MarketOrderForm } from "./components/MarketOrderForm";
-import { LimitOrderForm } from "./components/LimitOrderForm";
 import { TradeDetails } from "./components/TradeDetails";
-import { WalletBox } from "../WalletEquity";
 import { useOrderForm } from "./hooks/useOrderForm";
 import { useTradeCalculations } from "./hooks/useTradeCalculations";
 import { OrderCardProps, RoutingInfo } from "./types";
@@ -19,6 +12,10 @@ import { useBalances } from "../../../../hooks/use-balances";
 import { useReferralContract } from "../../../../hooks/use-referral-contract";
 import { useRouting, RouteId } from '../../../../hooks/use-routing';
 import { toast } from "@/hooks/use-toast";
+import { useMarketOrderActions } from "../../../../hooks/use-market-order-actions";
+import { useSmartAccount } from "../../../../hooks/use-smart-account";
+import { useMarketData } from "../../../../hooks/use-market-data";
+import { usePrices } from "../../../../lib/websocket-price-context";
 
 
 const DEFAULT_REFERRER = "0x0000000000000000000000000000000000000000";
@@ -300,11 +297,11 @@ const totalRequired = calculatedMargin + tradingFee;
     }
 
     if (needsDeposit) {
-      return `Deposit & Place ${formState.isLong ? "Long" : "Short"}`;
+      return `Deposit & Bet ${formState.isLong ? "Up" : "Down"}`;
     }
 
-    return `Place ${activeTab === "market" ? "Market" : "Limit"} ${
-      formState.isLong ? "Long" : "Short"
+    return `Bet ${
+      formState.isLong ? "Up" : "Down"
     }`;
   };
 
@@ -314,6 +311,25 @@ const totalRequired = calculatedMargin + tradingFee;
     } else {
       handlePlaceOrder();
     }
+  };
+
+  const handleMaxClick = () => {
+    // Get the trading fee percentage from the selected route
+    const tradingFeePercent = isValidRoutes(routes) && bestRoute 
+      ? routes[bestRoute].tradingFee 
+      : 0;
+
+    // Calculate maximum possible size considering fees
+    // Formula: maxSize = availableBalance / (1/leverage + tradingFeePercent)
+    const combinedBalance = marginWalletBalance + onectWalletBalance;
+    const leverageNum = parseFloat(leverage);
+    
+    // The denominator accounts for both the margin requirement (1/leverage) and the trading fee percentage
+    const maxSize = (combinedBalance / ((1/leverageNum) + tradingFeePercent)) - 0.01;
+    
+    handleAmountChange({
+      target: { value: maxSize.toFixed(2) }
+    } as React.ChangeEvent<HTMLInputElement>);
   };
 
   const referrerSection = (
@@ -348,140 +364,90 @@ const totalRequired = calculatedMargin + tradingFee;
           <div className="mb-4 text-red-500">Error: {error.message}</div>
         )}
 
-        <Tabs defaultValue="market" onValueChange={setActiveTab}>
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <Button
-              variant={formState.isLong ? "default" : "outline"}
-              className={`w-full ${
-                formState.isLong ? "bg-green-600 hover:bg-green-700" : ""
-              }`}
-              onClick={() => formState.isLong || toggleDirection()}
-            >
-              Long
-            </Button>
-            <Button
-              variant={!formState.isLong ? "default" : "outline"}
-              className={`w-full ${
-                !formState.isLong ? "bg-red-600 hover:bg-red-700" : ""
-              }`}
-              onClick={() => !formState.isLong || toggleDirection()}
-            >
-              Short
-            </Button>
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <Button
+            variant={formState.isLong ? "default" : "outline"}
+            className={`w-full ${
+              formState.isLong ? "bg-green-600 hover:bg-green-700" : ""
+            }`}
+            onClick={() => formState.isLong || toggleDirection()}
+          >
+            Long
+          </Button>
+          <Button
+            variant={!formState.isLong ? "default" : "outline"}
+            className={`w-full ${
+              !formState.isLong ? "bg-red-600 hover:bg-red-700" : ""
+            }`}
+            onClick={() => !formState.isLong || toggleDirection()}
+          >
+            Short
+          </Button>
+        </div>
+
+        <MarketOrderForm
+          formState={formState}
+          calculatedMargin={calculatedMargin}
+          handleAmountChange={handleAmountChange}
+          handleMarginChange={handleMarginChange}
+          leverage={leverage}
+          onLeverageChange={onLeverageChange}
+          accountBalance={balances?.formattedUsdcBalance || "0.00"}
+          tradingBalance={balances?.formattedMusdBalance || "0.00"}
+          handleMaxClick={handleMaxClick}
+        />
+
+        <TradeDetails 
+          details={tradeDetails} 
+          pair={market?.pair} 
+          tradingFee={tradingFee}
+          totalRequired={totalRequired}
+          referrerSection={referrerSection}
+          routingInfo={routingInfo}
+        />
+
+        {!isConnected ? (
+          <div className="w-full mt-4">
+            <ConnectButton.Custom>
+              {({ openConnectModal }: { openConnectModal: () => void }) => (
+                <Button
+                  variant="market"
+                  className="w-full"
+                  onClick={openConnectModal}
+                >
+                  Connect Wallet
+                </Button>
+              )}
+            </ConnectButton.Custom>
           </div>
+        ) : (
+          <Button
+            variant="market"
+            className="w-full mt-4"
+            disabled={
+              smartAccount?.address
+                ? (placingOrders ||
+                   isNetworkSwitching ||
+                   !tradeDetails.entryPrice ||
+                   hasInsufficientBalance ||
+                   !isValid(formState.amount) ||
+                   (() => {
+                     const availableLiquidity = formState.isLong
+                       ? market?.availableLiquidity?.long
+                       : market?.availableLiquidity?.short;
+                     return (
+                       availableLiquidity !== undefined &&
+                       calculatedSize > availableLiquidity
+                     );
+                   })())
+                : false
+            }
+            onClick={handleButtonClick}
+          >
+            {getButtonText()}
+          </Button>
+        )}
 
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <TabsList className="flex gap-4 p-0 bg-transparent border-0">
-              <TabsTrigger
-                value="market"
-                className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
-              >
-                Market
-              </TabsTrigger>
-              <TabsTrigger
-                value="limit"
-                className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
-              >
-                Limit
-              </TabsTrigger>
-              <TabsTrigger
-                value="stop"
-                className="bg-transparent border-0 p-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-primary"
-              >
-                Stop
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="market">
-            <MarketOrderForm
-              formState={formState}
-              calculatedMargin={calculatedMargin}
-              handleAmountChange={handleAmountChange}
-              handleMarginChange={handleMarginChange}  // Add this
-              handleSliderChange={handleSliderChange}
-              toggleTPSL={toggleTPSL}
-              handleTakeProfitChange={(value) => handleTakeProfitChange(value)}
-              handleStopLossChange={(value) => handleStopLossChange(value)}
-              leverage={leverage}
-              onLeverageChange={onLeverageChange}
-            />
-          </TabsContent>
-
-          <TabsContent value="limit">
-            <LimitOrderForm
-              formState={formState}
-              calculatedMargin={calculatedMargin}
-              handleAmountChange={handleAmountChange}
-              handleMarginChange={handleMarginChange}  // Add this
-              handleLimitPriceChange={handleLimitPriceChange}
-              handleSliderChange={handleSliderChange}
-              toggleTPSL={toggleTPSL}
-              handleTakeProfitChange={(value) => handleTakeProfitChange(value)}
-              handleStopLossChange={(value) => handleStopLossChange(value)}
-              leverage={leverage}
-              onLeverageChange={onLeverageChange}
-            />
-          </TabsContent>
-
-<TradeDetails 
-  details={tradeDetails} 
-  pair={market?.pair} 
-  tradingFee={tradingFee}
-  totalRequired={totalRequired}
-  referrerSection={referrerSection}
-  routingInfo={routingInfo}
-/>
-
-          {!isConnected ? (
-            <div className="w-full mt-4">
-              <ConnectButton.Custom>
-                {({ openConnectModal }) => (
-                  <Button
-                    variant="market"
-                    className="w-full"
-                    onClick={openConnectModal}
-                  >
-                    Connect Wallet
-                  </Button>
-                )}
-              </ConnectButton.Custom>
-            </div>
-          ) : (
-            <Button
-              variant="market"
-              className="w-full mt-4"
-              disabled={
-                // Only check these conditions if we have a smart account
-                smartAccount?.address
-                  ? (placingOrders ||
-                     isNetworkSwitching ||
-                     (activeTab === "market" && !tradeDetails.entryPrice) ||
-                     (activeTab === "limit" && !formState.limitPrice) ||
-                     hasInsufficientBalance ||
-                     !isValid(formState.amount) ||
-                     (() => {
-                       const availableLiquidity = formState.isLong
-                         ? market?.availableLiquidity?.long
-                         : market?.availableLiquidity?.short;
-                       return (
-                         availableLiquidity !== undefined &&
-                         calculatedSize > availableLiquidity
-                       );
-                     })())
-                  : false // Not disabled when showing "Establish Connection"
-              }
-              onClick={handleButtonClick}
-            >
-              {getButtonText()}
-            </Button>
-          )}
-
-          <div className="h-px my-4 bg-border" />
-          <div className="mt-4">
-            <WalletBox />
-          </div>
-        </Tabs>
       </CardContent>
     </Card>
   );

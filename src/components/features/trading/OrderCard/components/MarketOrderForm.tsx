@@ -2,20 +2,17 @@ import React from "react";
 import { Input } from "../../../../ui/input";
 import { Button } from "../../../../ui/button";
 import { OrderFormState } from "../types";
-import TPSLInputSection from "./TPSLInputSection";
-import { Slider } from "../../../../ui/slider";
 
 interface MarketOrderFormProps {
   formState: OrderFormState;
   calculatedMargin: number;
   handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSliderChange: (value: number[]) => void;
-  toggleTPSL: () => void;
-  handleTakeProfitChange: (value: string) => void; // Updated
-  handleStopLossChange: (value: string) => void; // Updated
   handleMarginChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   leverage: string;
   onLeverageChange: (value: string) => void;
+  accountBalance: string;
+  tradingBalance: string;
+  handleMaxClick: () => void;
 }
 
 export function MarketOrderForm({
@@ -23,12 +20,11 @@ export function MarketOrderForm({
   calculatedMargin,
   handleAmountChange,
   handleMarginChange,
-  handleSliderChange,
-  toggleTPSL,
-  handleTakeProfitChange,
-  handleStopLossChange,
   leverage,
   onLeverageChange,
+  accountBalance,
+  tradingBalance,
+  handleMaxClick,
 }: MarketOrderFormProps) {
   return (
     <div className="space-y-4">
@@ -37,112 +33,63 @@ export function MarketOrderForm({
           <Input
             type="number"
             placeholder="0.00"
-            value={formState.amount || ''}
-            onChange={handleAmountChange}
-            className="text-right pr-7"
-            label="Size"
-            suppressHydrationWarning
-          />
-          <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
-            USD
-          </div>
-        </div>
-        <div className="relative">
-          <Input
-            type="number"
-            placeholder="0.00"
             value={calculatedMargin ? calculatedMargin.toFixed(2) : ''}
             onChange={handleMarginChange}
-            className="text-right pr-7"
-            label="Margin"
+            className="pr-16 text-right"
+            label="Bet Amount"
             suppressHydrationWarning
           />
-          <div className="absolute text-sm -translate-y-1/2 right-3 top-1/2 text-muted-foreground">
-            USD
+          <button
+            onClick={handleMaxClick}
+            className="absolute px-2 py-1 text-xs font-medium -translate-y-1/2 right-2 top-1/2 text-primary hover:text-primary/80"
+            type="button"
+          >
+            Max
+          </button>
+        </div>
+        <div className="flex flex-col px-1 pt-1 text-sm text-muted-foreground">
+          <div className="flex justify-between">
+            <span>Account Balance:</span>
+            <span>{accountBalance} USDC</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Trading Balance:</span>
+            <span>{tradingBalance} USDC</span>
           </div>
         </div>
+      </div>
 
-        {/* Replace slider with percentage buttons */}
-        <div className="grid grid-cols-4 gap-2 pt-2">
+      <div className="pt-2 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm">Leverage:</span>
+          <span className="text-sm">{leverage}x</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleSliderChange([25])}
+            onClick={() => onLeverageChange("25")}
             className="w-full text-xs"
           >
-            25%
+            25x
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleSliderChange([50])}
+            onClick={() => onLeverageChange("50")}
             className="w-full text-xs"
           >
-            50%
+            50x
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleSliderChange([75])}
+            onClick={() => onLeverageChange("100")}
             className="w-full text-xs"
           >
-            75%
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleSliderChange([100])}
-            className="w-full text-xs"
-          >
-            100%
+            100x
           </Button>
         </div>
-
-        <div className="pt-2 space-y-4"> {/* Changed from space-y-2 */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Leverage:</span>
-            <div className="relative w-16">
-              <Input
-                type="number"
-                value={leverage || ''}
-                onChange={(e) => {
-                  const value = Math.min(Math.max(1, Number(e.target.value)), 100);
-                  onLeverageChange(value.toString());
-                }}
-                className="text-sm text-center h-9 no-spinners" // Changed text-right to text-center
-                suppressHydrationWarning
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Slider
-              value={[Number(leverage)]}
-              min={1}
-              max={100}
-              step={1}
-              onValueChange={(value) => onLeverageChange(value[0].toString())}
-            />
-            <div className="flex justify-between px-1 text-xs text-muted-foreground">
-              <span>1x</span>
-              <span>25x</span>
-              <span>50x</span>
-              <span>75x</span>
-              <span>100x</span>
-            </div>
-          </div>
-        </div>
-
-        {/* New TP/SL Section using the TPSLInputSection component */}
-        <TPSLInputSection
-          enabled={formState.tpslEnabled}
-          takeProfit={formState.takeProfit}
-          stopLoss={formState.stopLoss}
-          entryPrice={formState.entryPrice || 0}
-          isLong={formState.isLong} // Add this line
-          onTakeProfitChange={handleTakeProfitChange}
-          onStopLossChange={handleStopLossChange}
-          toggleTPSL={toggleTPSL}
-        />
       </div>
     </div>
   );

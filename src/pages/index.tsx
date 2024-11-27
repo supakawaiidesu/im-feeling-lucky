@@ -42,8 +42,19 @@ export default function TradingInterface() {
       <Header />
 
       <main className="flex flex-col flex-1 overflow-y-auto md:flex-row">
-        {/* Trading Panel */}
+        {/* Chart and Positions */}
+        <div className="flex flex-col w-full px-2">
+          <div className="relative h-[350px] md:h-[500px]">
+            <Chart selectedPair={selectedPair} />
+          </div>
+          <div className="mt-2 md:mt-2">
+            <PositionsTable address={address} />
+          </div>
+        </div>
+
+        {/* Trading Panel with PairHeader above OrderCard */}
         <div className="w-full px-2 md:w-auto">
+          <PairHeader selectedPair={selectedPair} onPairChange={setPair} />
           <div className="pt-2">
             <OrderCard
               leverage={leverage}
@@ -51,17 +62,6 @@ export default function TradingInterface() {
               assetId={assetId}
               initialReferralCode={typeof ref === 'string' ? ref : undefined}
             />
-          </div>
-        </div>
-
-        {/* Chart and Positions */}
-        <div className="flex flex-col w-full px-2">
-          <PairHeader selectedPair={selectedPair} onPairChange={setPair} />
-          <div className="relative h-[350px] md:h-[500px]">
-            <Chart selectedPair={selectedPair} />
-          </div>
-          <div className="mt-2 md:mt-2">
-            <PositionsTable address={address} />
           </div>
         </div>
       </main>

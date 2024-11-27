@@ -1,12 +1,10 @@
 import { Button } from "../../ui/button";
 import { Table } from "../../ui/table";
 import { usePositions, Position } from "../../../hooks/use-positions";
-import { useOrders } from "../../../hooks/use-orders";
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { usePositionActions } from "../../../hooks/use-position-actions";
 import { PositionsContent } from "./PositionTable/PositionsContent";
-import { OrdersContent } from "./PositionTable/OrdersContent";
 import { TradesContent } from "./PositionTable/TradesContent";
 import { PnLTooltip } from "./PositionTable/PnLTooltip";
 
@@ -14,7 +12,7 @@ interface PositionsTableProps {
   address: string | undefined;
 }
 
-type ActiveTab = "positions" | "orders" | "trades";
+type ActiveTab = "positions" | "trades";
 
 export function PositionsTable({ address }: PositionsTableProps) {
   const {
@@ -22,12 +20,6 @@ export function PositionsTable({ address }: PositionsTableProps) {
     loading: positionsLoading,
     error: positionsError,
   } = usePositions();
-  const {
-    orders,
-    triggerOrders,
-    loading: ordersLoading,
-    error: ordersError,
-  } = useOrders();
   const { closePosition, closingPositions } = usePositionActions();
   const [activeTab, setActiveTab] = useState<ActiveTab>("positions");
   const [hoveredPosition, setHoveredPosition] = useState<string | null>(null);
@@ -79,13 +71,6 @@ export function PositionsTable({ address }: PositionsTableProps) {
           Positions
         </Button>
         <Button
-          variant={activeTab === "orders" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setActiveTab("orders")}
-        >
-          Orders
-        </Button>
-        <Button
           variant={activeTab === "trades" ? "default" : "ghost"}
           size="sm"
           onClick={() => setActiveTab("trades")}
@@ -99,7 +84,6 @@ export function PositionsTable({ address }: PositionsTableProps) {
             {activeTab === "positions" && (
               <PositionsContent
                 positions={positions}
-                triggerOrders={triggerOrders}
                 loading={positionsLoading}
                 error={positionsError}
                 closingPositions={closingPositions}
@@ -107,14 +91,6 @@ export function PositionsTable({ address }: PositionsTableProps) {
                 setRef={setRef}
                 handleMouseEnter={handleMouseEnter}
                 setHoveredPosition={setHoveredPosition}
-              />
-            )}
-            {activeTab === "orders" && (
-              <OrdersContent
-                orders={orders}
-                triggerOrders={triggerOrders}
-                loading={ordersLoading}
-                error={ordersError}
               />
             )}
             {activeTab === "trades" && (

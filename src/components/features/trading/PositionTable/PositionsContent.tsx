@@ -1,5 +1,4 @@
 import { Position } from "../../../../hooks/use-positions";
-import { TriggerOrder } from "../../../../hooks/use-orders";
 import { Button } from "../../../ui/button";
 import {
   TableBody,
@@ -11,12 +10,10 @@ import {
 import { usePrices } from "../../../../lib/websocket-price-context";
 import { useState } from "react";
 import { PositionDialog } from "./PositionDialog";
-import { PositionSLTPDialog } from "./PositionSLTPDialog";
 import { PositionCollateralDialog } from "./PositionCollateralDialog";
 
 interface PositionsContentProps {
   positions: Position[];
-  triggerOrders?: TriggerOrder[];
   loading: boolean;
   error: Error | null;
   closingPositions: { [key: number]: boolean };
@@ -28,7 +25,6 @@ interface PositionsContentProps {
 
 export function PositionsContent({
   positions,
-  triggerOrders = [],
   loading,
   error,
   closingPositions,
@@ -40,8 +36,6 @@ export function PositionsContent({
   const { prices } = usePrices();
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isSLTPDialogOpen, setIsSLTPDialogOpen] = useState(false);
-  const [selectedSLTPPosition, setSelectedSLTPPosition] = useState<Position | null>(null);
   const [isCollateralDialogOpen, setIsCollateralDialogOpen] = useState(false);
   const [selectedCollateralPosition, setSelectedCollateralPosition] = useState<Position | null>(null);
 
@@ -82,19 +76,6 @@ export function PositionsContent({
     setIsDialogOpen(true);
   };
 
-  const handleSLTPClick = (position: Position, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedSLTPPosition(position);
-    setIsSLTPDialogOpen(true);
-  };
-
-  const handleOpenSLTP = () => {
-    if (selectedPosition) {
-      setSelectedSLTPPosition(selectedPosition);
-      setIsSLTPDialogOpen(true);
-    }
-  };
-
   const handleOpenCollateral = () => {
     if (selectedPosition) {
       setSelectedCollateralPosition(selectedPosition);
@@ -111,7 +92,6 @@ export function PositionsContent({
           <TableHead>Margin</TableHead>
           <TableHead>Entry Price</TableHead>
           <TableHead>Market/Liq. Price</TableHead>
-          <TableHead>SL/TP</TableHead>
           <TableHead>uPnL</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
@@ -143,9 +123,6 @@ export function PositionsContent({
             const pnlPercentage = calculatePnLPercentage(pnlValue, position.margin);
             const basePair = position.market.split("/")[0].toLowerCase();
             const currentPrice = prices[basePair]?.price;
-            const triggerOrder = triggerOrders.find(
-              (order) => order.positionId === position.positionId
-            );
 
             return (
               <TableRow 
@@ -213,35 +190,6 @@ export function PositionsContent({
                     ${formatNumber(position.liquidationPrice)}
                   </div>
                 </TableCell>
-                <TableCell 
-                  className="flex justify-between md:table-cell cursor-pointer hover:bg-[#272734]"
-                  onClick={(e) => handleSLTPClick(position, e)}
-                >
-                  <span className="md:hidden">Stop Loss:</span>
-                  <div>
-                    <div className="text-red-500">
-                      {triggerOrder?.stopLoss
-                        ? `$${formatNumber(triggerOrder.stopLoss.price)} (${triggerOrder.stopLoss.size}%)`
-                        : "-"}
-                    </div>
-                    <div className="hidden text-green-500 md:block">
-                      {triggerOrder?.takeProfit
-                        ? `$${formatNumber(triggerOrder.takeProfit.price)} (${triggerOrder.takeProfit.size}%)`
-                        : "-"}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell 
-                  className="flex justify-between md:hidden cursor-pointer hover:bg-[#272734]"
-                  onClick={(e) => handleSLTPClick(position, e)}
-                >
-                  <span>Take Profit:</span>
-                  <div className="text-green-500">
-                    {triggerOrder?.takeProfit
-                      ? `$${formatNumber(triggerOrder.takeProfit.price)} (${triggerOrder.takeProfit.size}%)`
-                      : "-"}
-                  </div>
-                </TableCell>
                 <TableCell
                   ref={setRef(position.positionId)}
                   className={`md:table-cell flex justify-between ${pnlValue >= 0 ? "text-green-500" : "text-red-500"}`}
@@ -274,9 +222,6 @@ export function PositionsContent({
 
       <PositionDialog
         position={selectedPosition}
-        triggerOrder={triggerOrders.find(
-          (order) => order.positionId === selectedPosition?.positionId
-        )}
         isOpen={isDialogOpen}
         onClose={() => {
           setIsDialogOpen(false);
@@ -284,35 +229,8 @@ export function PositionsContent({
         }}
         onClosePosition={handleClosePosition}
         isClosing={selectedPosition ? closingPositions[Number(selectedPosition.positionId)] : false}
-        onOpenSLTP={handleOpenSLTP}
         onOpenCollateral={handleOpenCollateral}
       />
-
-      {selectedSLTPPosition && (
-        <PositionSLTPDialog
-          position={{
-            id: Number(selectedSLTPPosition.positionId),
-            symbol: selectedSLTPPosition.market,
-            isLong: selectedSLTPPosition.isLong,
-            entryPrice: parseFloat(selectedSLTPPosition.entryPrice),
-            markPrice: prices[selectedSLTPPosition.market.split("/")[0].toLowerCase()]?.price || 0,
-            pnl: formatPnL(calculateFinalPnl(selectedSLTPPosition)),
-            pnlPercentage: parseFloat(calculatePnLPercentage(
-              parseFloat(calculateFinalPnl(selectedSLTPPosition)),
-              selectedSLTPPosition.margin
-            )),
-            size: selectedSLTPPosition.size,
-            margin: selectedSLTPPosition.margin,
-            liquidationPrice: selectedSLTPPosition.liquidationPrice,
-            fees: selectedSLTPPosition.fees
-          }}
-          isOpen={isSLTPDialogOpen}
-          onClose={() => {
-            setIsSLTPDialogOpen(false);
-            setSelectedSLTPPosition(null);
-          }}
-        />
-      )}
 
       <PositionCollateralDialog
         position={selectedCollateralPosition}
