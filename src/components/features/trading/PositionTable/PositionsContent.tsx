@@ -127,7 +127,7 @@ export function PositionsContent({
             return (
               <TableRow 
                 key={position.positionId}
-                className="cursor-pointer hover:[background-color:#1f1f29] md:table-row flex flex-col border-b"
+                className="cursor-pointer hover:[background-color:#060129] md:table-row flex flex-col border-b"
                 onClick={() => handleRowClick(position)}
               >
                 <TableCell className="flex flex-col md:table-cell md:block">

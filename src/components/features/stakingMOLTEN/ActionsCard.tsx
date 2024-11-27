@@ -137,7 +137,7 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
                 placeholder="Enter amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full h-10 bg-[#272734] border-[#373745] text-white placeholder:text-[#A0AEC0] pr-16"
+                className="w-full h-10 bg-[#110d31] border-[#373745] text-white placeholder:text-[#A0AEC0] pr-16"
               />
               <Button
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 bg-[#373745] hover:bg-[#474755] text-white text-xs px-2"
@@ -147,14 +147,14 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
               </Button>
             </div>
             <Button
-              className="bg-[#272734] hover:bg-[#373745] text-white w-24"
+              className="bg-[#110d31] hover:bg-[#373745] text-white w-24"
               onClick={handleStakeOrApprove}
               disabled={!canStake()}
             >
               {needsApproval() ? 'Approve' : 'Stake'}
             </Button>
             <Button
-              className="bg-[#272734] hover:bg-[#373745] text-white w-24"
+              className="bg-[#110d31] hover:bg-[#373745] text-white w-24"
               onClick={handleStakeOrWithdraw}
               disabled={!canUnstake()}
             >
@@ -162,9 +162,9 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
             </Button>
           </div>
 
-          <div className="border-t border-[#272734]" />
+          <div className="border-t border-[#110d31]" />
           
-          <div className="flex items-center justify-between p-4 bg-[#272734] rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-[#110d31] rounded-lg">
             <div className="space-y-1">
               <div className="text-sm text-[#A0AEC0]">MOLTEN Staking Rewards</div>
               <div className="text-white">

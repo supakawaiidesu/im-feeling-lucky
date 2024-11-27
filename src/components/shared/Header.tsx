@@ -46,12 +46,6 @@ export function Header() {
           <Link href="/">
             <Button variant="ghost">Trade</Button>
           </Link>
-          <Link href="/swaps">
-            <Button variant="ghost">Swaps</Button>
-          </Link>
-          <Link href="/staking">
-            <Button variant="ghost">Stake</Button>
-          </Link>
           <Link href="/usdm">
             <Button variant="ghost">USD.m</Button>
           </Link>
@@ -222,7 +216,7 @@ export function Header() {
                         <Button 
                           onClick={openConnectModal} 
                           variant="outline"
-                          className="hidden sm:inline-flex h-9 px-3 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important"
+                          className="hidden sm:inline-flex h-9 px-3 bg-[#060129] hover:bg-[#060129]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important"
                         >
                           Connect
                         </Button>
@@ -230,7 +224,7 @@ export function Header() {
                           onClick={openConnectModal} 
                           variant="outline"
                           size="icon"
-                          className="sm:hidden h-9 w-9 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important flex items-center justify-center"
+                          className="sm:hidden h-9 w-9 bg-[#060129] hover:bg-[#060129]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important flex items-center justify-center"
                         >
                           <Wallet className="w-5 h-5 text-white" />
                         </Button>
@@ -243,7 +237,7 @@ export function Header() {
                       <Button 
                         onClick={openChainModal}
                         variant="destructive"
-                        className="h-9 px-3 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important"
+                        className="h-9 px-3 bg-[#060129] hover:bg-[#060129]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important"
                       >
                         Wrong Network
                       </Button>
@@ -255,7 +249,7 @@ export function Header() {
                       <Button
                         onClick={openAccountModal}
                         variant="outline"
-                        className="hidden sm:inline-flex h-9 px-3 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important"
+                        className="hidden sm:inline-flex h-9 px-3 bg-[#060129] hover:bg-[#060129]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important"
                       >
                         {account.displayName}
                       </Button>
@@ -263,7 +257,7 @@ export function Header() {
                         onClick={openAccountModal}
                         variant="outline"
                         size="icon"
-                        className="sm:hidden h-9 w-9 bg-[#1f1f29] hover:bg-[#1f1f29]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important flex items-center justify-center"
+                        className="sm:hidden h-9 w-9 bg-[#060129] hover:bg-[#060129]/90 [&>*]:text-white [&>*]:font-normal [&>*]:!important flex items-center justify-center"
                       >
                         <Wallet className="w-5 h-5 text-white" />
                       </Button>

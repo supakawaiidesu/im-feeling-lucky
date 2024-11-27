@@ -84,7 +84,7 @@ export const PairHeader: React.FC<PairHeaderProps> = ({
                 <TokenIcon pair={selectedPair} size={24} />
                 <span className="text-muted-foreground">{selectedPair}</span>
               </div>
-              <div className="font-mono font-bold">
+              <div className="font-mono font-bold min-w-[180px] text-right mr-4">
                 {currentPrice ? currentPrice.toLocaleString() : "Loading..."}
               </div>
             </div>

@@ -71,7 +71,7 @@ export function MarketOrderForm({
             onClick={() => onLeverageChange("25")}
             className="w-full text-xs"
           >
-            25x
+            250x
           </Button>
           <Button
             variant="outline"
@@ -79,7 +79,7 @@ export function MarketOrderForm({
             onClick={() => onLeverageChange("50")}
             className="w-full text-xs"
           >
-            50x
+            500x
           </Button>
           <Button
             variant="outline"
@@ -87,7 +87,7 @@ export function MarketOrderForm({
             onClick={() => onLeverageChange("100")}
             className="w-full text-xs"
           >
-            100x
+            1000x
           </Button>
         </div>
       </div>

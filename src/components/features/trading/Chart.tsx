@@ -82,8 +82,8 @@ export function Chart({ selectedPair = "ETH/USD" }: ChartProps) {
           ],
           theme: "dark",
           overrides: {
-            "paneProperties.background": "#17161d",
-            "scalesProperties.bgColor": "#17161d",
+            "paneProperties.background": "#0F0B29",
+            "scalesProperties.bgColor": "#0F0B29",
             "paneProperties.backgroundType": "solid",
             "paneProperties.legendProperties.showBackground": false,
           },
@@ -105,7 +105,7 @@ export function Chart({ selectedPair = "ETH/USD" }: ChartProps) {
               "1D",
             ] as ResolutionString[],
           },
-          loading_screen: { backgroundColor: "#17161d" },
+          loading_screen: { backgroundColor: "#0F0B29" },
           visible_range: {
             from: now - 24 * 60 * 60,
             to: now,

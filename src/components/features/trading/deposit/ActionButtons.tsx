@@ -43,14 +43,14 @@ export function ActionButtons({
   return (
     <div className="flex space-x-2">
       <Button
-        className="flex-1 bg-[#1f1f29] hover:bg-[#1f1f29]/80 text-white"
+        className="flex-1 bg-[#060129] hover:bg-[#060129]/80 text-white"
         onClick={onDeposit}
         disabled={depositDisabled || isLoading || isApproving}
       >
         {getDepositText()}
       </Button>
       <Button
-        className="flex-1 bg-[#1f1f29] hover:bg-[#1f1f29]/80 text-white"
+        className="flex-1 bg-[#060129] hover:bg-[#060129]/80 text-white"
         onClick={onWithdraw}
         disabled={withdrawDisabled || isLoading}
       >

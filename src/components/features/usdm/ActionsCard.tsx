@@ -216,14 +216,14 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
           <div className="flex gap-2">
             <Button 
               variant="ghost" 
-              className={`text-gray-400 hover:text-white ${action === 'mint' ? 'bg-[#272734]' : ''}`}
+              className={`text-gray-400 hover:text-white ${action === 'mint' ? 'bg-[#110d31]' : ''}`}
               onClick={() => setAction('mint')}
             >
               Mint
             </Button>
             <Button 
               variant="ghost" 
-              className={`text-gray-400 hover:text-white ${action === 'burn' ? 'bg-[#272734]' : ''}`}
+              className={`text-gray-400 hover:text-white ${action === 'burn' ? 'bg-[#110d31]' : ''}`}
               onClick={() => setAction('burn')}
             >
               Burn
@@ -236,7 +236,7 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
           <div className="relative mb-2">
             <div className="flex gap-2">
               <Select defaultValue="usdc" disabled>
-                <SelectTrigger className="w-[140px] h-[42px] bg-[#272734] border-0 focus:ring-0">
+                <SelectTrigger className="w-[140px] h-[42px] bg-[#110d31] border-0 focus:ring-0">
                   <SelectValue>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center justify-center w-6 h-6 text-sm bg-blue-500 rounded-full">
@@ -255,7 +255,7 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
                   type="text"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full h-[42px] bg-[#272734] border-0 text-lg pr-20"
+                  className="w-full h-[42px] bg-[#110d31] border-0 text-lg pr-20"
                   placeholder="0.00"
                 />
                 <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
@@ -274,7 +274,7 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
               <Button
                 key={percent}
                 variant="outline"
-                className="bg-[#272734] border-0 hover:bg-[#373745]"
+                className="bg-[#110d31] border-0 hover:bg-[#373745]"
                 onClick={() => handlePercentageClick(Number(percent) / 100)}
               >
                 {percent}%
@@ -283,11 +283,11 @@ export function ActionsCard({ isStaking, setIsStaking }: ActionsCardProps) {
           </div>
 
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-[#272734] rounded-lg">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-[#110d31] rounded-lg">
               <span className="text-lg text-gray-300">Summary</span>
               <ChevronDown className={`h-5 w-5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </CollapsibleTrigger>
-            <CollapsibleContent className="bg-[#272734] rounded-lg mt-px p-4">
+            <CollapsibleContent className="bg-[#110d31] rounded-lg mt-px p-4">
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Balance</span>

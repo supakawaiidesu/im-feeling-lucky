@@ -36,7 +36,7 @@ export function PositionDialog({
   return (
     <>
       <Dialog open={isOpen} modal={true}>
-        <DialogContent className="sm:max-w-[425px] p-4 bg-[#17161d] border-zinc-800" onPointerDownOutside={() => onClose()}>
+        <DialogContent className="sm:max-w-[425px] p-4 bg-[#0F0B29] border-zinc-800" onPointerDownOutside={() => onClose()}>
           <PositionDetails
             position={position}
             triggerOrder={triggerOrder}
